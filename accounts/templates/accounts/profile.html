@@ -1,0 +1,323 @@
+{% extends "portal_base.html" %}
+{% block title %}Profile — {{ ORG_NAME }}{% endblock %}
+{% block breadcrumb %}My Profile{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6">
+
+  <!-- HEADER -->
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-mapnavy tracking-tight">My Profile</h1>
+    <p class="text-[13px] text-gray-500 mt-1">
+      Update your personal details, contact info, and photo.
+    </p>
+  </div>
+
+  <!-- MESSAGES -->
+  {% if messages %}
+    <div class="space-y-2 mb-5">
+      {% for m in messages %}
+        <div role="alert"
+             class="rounded-xl px-4 py-3 text-[13px] border flex items-start gap-2.5
+                    {% if m.tags == 'error' %}bg-red-50 text-red-700 border-red-200{% else %}bg-green-50 text-green-700 border-green-200{% endif %}">
+          <span class="mt-0.5 shrink-0" aria-hidden="true">
+            {% if m.tags == 'error' %}⚠{% else %}✓{% endif %}
+          </span>
+          <span class="flex-1">{{ m }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- ERROR SUMMARY -->
+  {% if form.errors or userprofile_form.errors %}
+    <div role="alert"
+         class="error-summary mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-700"
+         tabindex="-1">
+      <div class="font-semibold">Please fix the following:</div>
+      <ul class="mt-1.5 space-y-1 list-disc list-inside">
+        {% for field in form %}
+          {% if field.errors %}
+            <li><a href="#{{ field.id_for_label }}" class="font-medium underline-offset-2 hover:underline">{{ field.label }}</a>: {{ field.errors|join:" " }}</li>
+          {% endif %}
+        {% endfor %}
+        {% for field in userprofile_form %}
+          {% if field.errors %}
+            <li><a href="#{{ field.id_for_label }}" class="font-medium underline-offset-2 hover:underline">{{ field.label }}</a>: {{ field.errors|join:" " }}</li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" id="profile-form" novalidate>
+    {% csrf_token %}
+
+    <!-- SECTION: Personal -->
+    <section class="bg-white rounded-xl border border-[#e5e9f0] p-6 mb-5">
+      <header class="mb-4">
+        <h2 class="text-[14px] font-semibold text-mapnavy">Personal</h2>
+        <p class="text-[11.5px] text-gray-500 mt-0.5">Your name and how we reach you.</p>
+      </header>
+
+      <div class="grid md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <label for="{{ form.first_name.id_for_label }}"
+                 class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+            {{ form.first_name.label }}
+          </label>
+          {{ form.first_name }}
+          {% if form.first_name.errors %}
+            <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.first_name.errors|join:" " }}</p>
+          {% endif %}
+        </div>
+        <div>
+          <label for="{{ form.last_name.id_for_label }}"
+                 class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+            {{ form.last_name.label }}
+          </label>
+          {{ form.last_name }}
+          {% if form.last_name.errors %}
+            <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.last_name.errors|join:" " }}</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label for="{{ form.email.id_for_label }}"
+                 class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+            {{ form.email.label }}
+          </label>
+          {{ form.email }}
+          {% if form.email.errors %}
+            <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.email.errors|join:" " }}</p>
+          {% endif %}
+        </div>
+        <div>
+          <label for="{{ form.phone.id_for_label }}"
+                 class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+            {{ form.phone.label }}
+          </label>
+          {{ form.phone }}
+          {% if form.phone.errors %}
+            <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.phone.errors|join:" " }}</p>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: Photo -->
+    <section class="bg-white rounded-xl border border-[#e5e9f0] p-6 mb-5">
+      <header class="mb-4">
+        <h2 class="text-[14px] font-semibold text-mapnavy">Photo</h2>
+        <p class="text-[11.5px] text-gray-500 mt-0.5">Square images look best. PNG or JPG, max 5 MB.</p>
+      </header>
+
+      <div class="flex items-start gap-4">
+        <div class="h-20 w-20 rounded-full bg-mapbg border border-mapborder flex items-center justify-center overflow-hidden shrink-0">
+          {% if userprofile_form.instance.photo %}
+            <img id="current-photo" src="{{ userprofile_form.instance.photo.url }}"
+                 alt="Current profile photo" class="w-full h-full object-cover">
+          {% else %}
+            <span class="text-2xl text-gray-300" aria-hidden="true" id="current-photo-placeholder">👤</span>
+          {% endif %}
+        </div>
+        <div class="flex-1 min-w-0">
+          <label for="{{ userprofile_form.photo.id_for_label }}"
+                 class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+            {{ userprofile_form.photo.label }}
+          </label>
+          {{ userprofile_form.photo }}
+          {% if userprofile_form.photo.help_text %}
+            <p class="text-[11.5px] text-gray-500 mt-1.5">{{ userprofile_form.photo.help_text }}</p>
+          {% endif %}
+          {% if userprofile_form.photo.errors %}
+            <p class="mt-1.5 text-[12.5px] text-red-600">{{ userprofile_form.photo.errors|join:" " }}</p>
+          {% endif %}
+          {% if userprofile_form.instance.photo %}
+            <label class="inline-flex items-center gap-1 mt-2 text-[11.5px] text-red-600 cursor-pointer">
+              <input type="checkbox" name="photo-clear" id="photo-clear" class="h-3 w-3">
+              Remove current photo
+            </label>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: Address -->
+    <section class="bg-white rounded-xl border border-[#e5e9f0] p-6 mb-5">
+      <header class="mb-4">
+        <h2 class="text-[14px] font-semibold text-mapnavy">Address</h2>
+        <p class="text-[11.5px] text-gray-500 mt-0.5">Optional — helps us understand where our supporters are.</p>
+      </header>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label for="{{ userprofile_form.address.id_for_label }}"
+                 class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+            {{ userprofile_form.address.label }}
+          </label>
+          {{ userprofile_form.address }}
+          {% if userprofile_form.address.errors %}
+            <p class="mt-1.5 text-[12.5px] text-red-600">{{ userprofile_form.address.errors|join:" " }}</p>
+          {% endif %}
+        </div>
+        <div>
+          <label for="{{ userprofile_form.city.id_for_label }}"
+                 class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+            {{ userprofile_form.city.label }}
+          </label>
+          {{ userprofile_form.city }}
+          {% if userprofile_form.city.errors %}
+            <p class="mt-1.5 text-[12.5px] text-red-600">{{ userprofile_form.city.errors|join:" " }}</p>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: Bio -->
+    <section class="bg-white rounded-xl border border-[#e5e9f0] p-6 mb-5">
+      <header class="mb-4">
+        <h2 class="text-[14px] font-semibold text-mapnavy">Bio</h2>
+        <p class="text-[11.5px] text-gray-500 mt-0.5">A short intro about yourself.</p>
+      </header>
+
+      <div>
+        <label for="{{ userprofile_form.bio.id_for_label }}"
+               class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+          {{ userprofile_form.bio.label }}
+        </label>
+        {{ userprofile_form.bio }}
+        {% if userprofile_form.bio.help_text %}
+          <p class="text-[11.5px] text-gray-500 mt-1.5">{{ userprofile_form.bio.help_text }}</p>
+        {% endif %}
+        {% if userprofile_form.bio.errors %}
+          <p class="mt-1.5 text-[12.5px] text-red-600">{{ userprofile_form.bio.errors|join:" " }}</p>
+        {% endif %}
+      </div>
+    </section>
+
+    <!-- ACTION BAR -->
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <a href="{% url 'accounts:password_reset' %}"
+         class="text-[12.5px] font-medium text-gray-500 hover:text-mapnavy underline">
+        Change password →
+      </a>
+
+      <div class="flex items-center gap-2">
+        <a href="/" class="inline-flex items-center h-10 px-3.5 rounded-lg border border-mapborder bg-white text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition">
+          Cancel
+        </a>
+        <button type="submit" id="profile-submit"
+                class="btn-primary inline-flex items-center gap-2 h-10 text-[13px] !px-5 disabled:opacity-60 disabled:cursor-not-allowed">
+          <svg id="submit-spinner" class="hidden animate-spin" width="14" height="14"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+          </svg>
+          <span id="submit-label">Save changes</span>
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<style>
+  #profile-form input[type="text"],
+  #profile-form input[type="email"],
+  #profile-form input[type="tel"],
+  #profile-form input[type="url"],
+  #profile-form input[type="number"],
+  #profile-form select,
+  #profile-form textarea {
+    @apply block w-full rounded-lg border border-mapborder bg-white px-3 py-2.5
+           text-[14px] text-mapnavy placeholder-gray-400 transition
+           hover:border-gray-300
+           focus:outline-none focus:border-mapgreen focus:ring-2 focus:ring-mapgreen/20;
+  }
+
+  #profile-form textarea { min-height: 120px; resize: vertical; line-height: 1.6; }
+
+  #profile-form input[type="file"] {
+    @apply block w-full text-[13px] text-gray-600
+           file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border-0
+           file:text-[12.5px] file:font-semibold
+           file:bg-mapgreen-50 file:text-mapgreen
+           hover:file:bg-mapgreen/15 file:cursor-pointer cursor-pointer;
+  }
+
+  #profile-form input[type="checkbox"] {
+    @apply h-4 w-4 rounded border-gray-300 text-mapgreen
+           focus:outline-none focus:ring-2 focus:ring-mapgreen/40;
+  }
+</style>
+
+<script>
+(function () {
+  const form    = document.getElementById('profile-form');
+  const submit  = document.getElementById('profile-submit');
+  const label   = document.getElementById('submit-label');
+  const spinner = document.getElementById('submit-spinner');
+
+  if (!form) return;
+
+  // Live photo preview
+  const photoInput = form.querySelector('input[type="file"]');
+  const currentImg = document.getElementById('current-photo');
+  const placeholder = document.getElementById('current-photo-placeholder');
+
+  photoInput?.addEventListener('change', () => {
+    const file = photoInput.files && photoInput.files[0];
+    if (!file) return;
+
+    // Type + size check
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file.');
+      photoInput.value = '';
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image is too large. Maximum 5 MB.');
+      photoInput.value = '';
+      return;
+    }
+
+    const url = URL.createObjectURL(file);
+
+    if (currentImg) {
+      // Existing photo — swap the src
+      currentImg.src = url;
+    } else if (photoInput.closest('.flex.items-start')) {
+      // No photo yet — replace the placeholder with an <img>
+      const circle = photoInput.closest('.flex.items-start')?.querySelector('.h-20.w-20');
+      if (circle) {
+        circle.innerHTML = `<img id="current-photo" src="${url}" alt="New profile photo" class="w-full h-full object-cover">`;
+      }
+    }
+  });
+
+  // Unsaved changes guard
+  let dirty = false;
+  form.addEventListener('input',  () => { dirty = true; });
+  form.addEventListener('change', () => { dirty = true; });
+  form.addEventListener('submit', () => { dirty = false; });
+
+  window.addEventListener('beforeunload', (e) => {
+    if (!dirty) return;
+    e.preventDefault();
+    e.returnValue = '';
+  });
+
+  // Submit guard
+  form.addEventListener('submit', () => {
+    if (submit) submit.disabled = true;
+    if (label) label.textContent = 'Saving…';
+    spinner?.classList.remove('hidden');
+  });
+
+  // Focus first error
+  const firstError = form.querySelector('[aria-invalid="true"]');
+  if (firstError) setTimeout(() => firstError.focus(), 100);
+})();
+</script>
+{% endblock %}

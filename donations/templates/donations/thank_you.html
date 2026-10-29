@@ -1,0 +1,252 @@
+{% extends "public_base.html" %}
+{% load humanize %}
+{% block title %}Thank you — {{ ORG_NAME }}{% endblock %}
+{% block meta_description %}Thank you for supporting {{ ORG_NAME }}.{% endblock %}
+
+{% block content %}
+
+<section class="relative bg-mapbg overflow-hidden">
+  <div class="absolute inset-0 pointer-events-none opacity-[0.06]"
+       style="background-image: radial-gradient(#1e9e5f 1px, transparent 1px);
+         background-size: 22px 22px;"></div>
+
+  <div class="relative max-w-3xl mx-auto px-5 lg:px-8 py-14 lg:py-16">
+
+    <!-- ============================================================
+         CHECK ICON
+         ============================================================ -->
+    <div class="relative mx-auto w-20 h-20">
+      <span class="absolute inset-0 rounded-full bg-mapgreen/15 blur-lg" aria-hidden="true"></span>
+      <div class="relative mx-auto h-20 w-20 rounded-full bg-mapgreen-50 text-mapgreen
+                  ring-1 ring-mapgreen/20 flex items-center justify-center
+                  animate-[pop_500ms_ease-out]">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true">
+          <path d="M20 6L9 17l-5-5"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         HEADLINE
+         ============================================================ -->
+    <div class="text-center mt-7" role="status" aria-live="polite">
+      <h1 class="text-2xl md:text-3xl font-bold text-mapnavy tracking-tight">
+        {% if donation.status == 'received' %}
+          Thank you for your donation
+        {% elif donation.status == 'pending' %}
+          Almost there — thank you
+        {% else %}
+          Thank you
+        {% endif %}
+      </h1>
+      <p class="mt-3 text-[14.5px] text-gray-600 max-w-md mx-auto leading-relaxed">
+        {% if donation.status == 'received' %}
+          Your gift of
+          <span class="font-semibold text-mapnavy">
+            K {{ donation.amount|floatformat:0|intcomma }}
+          </span>
+          has been received. Your support makes our work possible.
+        {% elif donation.status == 'pending' %}
+          We've registered your donation. It will be confirmed once the payment
+          clears — usually within a few minutes.
+        {% else %}
+          We appreciate your support.
+        {% endif %}
+      </p>
+    </div>
+
+    <!-- ============================================================
+         SUMMARY CARD
+         ============================================================ -->
+    <div class="card p-6 sm:p-7 mt-8">
+
+      <!-- Amount row -->
+      <div class="flex items-start justify-between gap-3 pb-5 border-b border-mapborder">
+        <div>
+          <div class="text-[11px] uppercase tracking-[0.14em] font-semibold text-gray-500">
+            Amount
+          </div>
+          <div class="mt-1 text-[26px] font-bold text-mapnavy tabular-nums leading-none">
+            K {{ donation.amount|floatformat:0|intcomma }}
+            {% if donation.currency %}<span class="text-[14px] font-medium text-gray-500 ml-1">{{ donation.currency }}</span>{% endif %}
+          </div>
+        </div>
+
+        {% if donation.status == 'received' %}
+          <span class="badge badge-success">{{ donation.get_status_display }}</span>
+        {% elif donation.status == 'pending' %}
+          <span class="badge badge-warning">{{ donation.get_status_display }}</span>
+        {% elif donation.status == 'failed' %}
+          <span class="badge badge-danger">{{ donation.get_status_display }}</span>
+        {% else %}
+          <span class="badge badge-muted">{{ donation.get_status_display }}</span>
+        {% endif %}
+      </div>
+
+      <!-- Detail rows -->
+      <dl class="divide-y divide-mapborder text-[13.5px]">
+
+        <div class="flex items-center justify-between gap-3 py-3">
+          <dt class="text-gray-500">Reference</dt>
+          <dd>
+            <button type="button"
+                    onclick="navigator.clipboard.writeText('{{ donation.reference }}'); this.querySelector('.lbl').textContent='Copied';"
+                    class="group inline-flex items-center gap-1.5 font-mono text-[12.5px] text-mapnavy
+                           hover:text-mapgreen transition"
+                    title="Copy reference">
+              {{ donation.reference }}
+              <span class="lbl text-[10.5px] text-gray-400 group-hover:text-mapgreen">copy</span>
+            </button>
+          </dd>
+        </div>
+
+        <div class="flex items-center justify-between gap-3 py-3">
+          <dt class="text-gray-500">Type</dt>
+          <dd class="text-mapnavy">{{ donation.get_kind_display }}</dd>
+        </div>
+
+        {% if donation.campaign %}
+          <div class="flex items-center justify-between gap-3 py-3">
+            <dt class="text-gray-500">Campaign</dt>
+            <dd class="text-right">
+              <a href="{{ donation.campaign.get_absolute_url }}"
+                 class="text-mapnavy hover:text-mapgreen hover:underline">
+                {{ donation.campaign.name }}
+              </a>
+            </dd>
+          </div>
+        {% endif %}
+
+        <div class="flex items-center justify-between gap-3 py-3">
+          <dt class="text-gray-500">Date</dt>
+          <dd class="text-mapnavy tabular-nums">
+            <time datetime="{{ donation.created_at|date:'c' }}">
+              {{ donation.created_at|date:"M j, Y · H:i" }}
+            </time>
+          </dd>
+        </div>
+      </dl>
+    </div>
+
+    <!-- ============================================================
+         WHAT'S NEXT
+         ============================================================ -->
+    <div class="mt-6 rounded-xl border border-mapborder bg-white p-5">
+      <h2 class="text-[11px] uppercase tracking-[0.14em] font-semibold text-gray-500 mb-3">
+        What happens next
+      </h2>
+      <ul class="space-y-2.5 text-[13px] text-gray-600">
+        {% if donation.status == 'received' %}
+          <li class="flex items-start gap-2.5">
+            <span class="text-mapgreen mt-0.5 shrink-0" aria-hidden="true">✓</span>
+            <span>A receipt has been emailed to you{% if donation.donor_email %} at <span class="font-medium text-mapnavy">{{ donation.donor_email }}</span>{% endif %}.</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <span class="text-mapgreen mt-0.5 shrink-0" aria-hidden="true">✓</span>
+            <span>Your gift will be allocated to {% if donation.campaign %}the <span class="font-medium text-mapnavy">{{ donation.campaign.name }}</span> campaign{% else %}our general programs{% endif %}.</span>
+          </li>
+        {% elif donation.status == 'pending' %}
+          <li class="flex items-start gap-2.5">
+            <span class="text-amber-500 mt-0.5 shrink-0" aria-hidden="true">•</span>
+            <span>We're waiting for the payment to clear. This usually takes a few minutes.</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <span class="text-amber-500 mt-0.5 shrink-0" aria-hidden="true">•</span>
+            <span>Once confirmed, a receipt will be emailed to you.</span>
+          </li>
+        {% endif %}
+        <li class="flex items-start gap-2.5">
+          <span class="text-mapgreen mt-0.5 shrink-0" aria-hidden="true">✓</span>
+          <span>We'll send you an update showing how your gift creates impact.</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- ============================================================
+         ACTIONS
+         ============================================================ -->
+    <div class="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
+
+      {% if donation.status == 'received' %}
+        <a href="{% if donation.donor_id %}{% url 'donor_portal:receipt' donation.reference %}{% else %}/{% endif %}"
+           class="inline-flex items-center justify-center h-11 px-6 rounded-lg
+                  bg-mapgreen text-white text-[14px] font-semibold
+                  hover:bg-mapgreen-600 transition shadow-sm
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/50">
+          View receipt
+        </a>
+      {% endif %}
+
+      {% if user.is_authenticated %}
+        <a href="{% url 'donor_portal:dashboard' %}"
+           class="inline-flex items-center justify-center h-11 px-5 rounded-lg
+                  border border-mapborder bg-white text-[14px] font-semibold text-mapnavy
+                  hover:bg-gray-50 transition
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40">
+          Go to my dashboard
+        </a>
+      {% else %}
+        <a href="{% url 'accounts:register' %}"
+           class="inline-flex items-center justify-center h-11 px-5 rounded-lg
+                  border border-mapborder bg-white text-[14px] font-semibold text-mapnavy
+                  hover:bg-gray-50 transition
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40">
+          Create an account
+        </a>
+      {% endif %}
+
+      <a href="/"
+         class="inline-flex items-center justify-center h-11 px-5 rounded-lg
+                text-[14px] font-medium text-gray-600 hover:text-mapnavy transition">
+        Back to home
+      </a>
+    </div>
+
+    <!-- ============================================================
+         SHARE
+         ============================================================ -->
+    <div class="mt-10 pt-6 border-t border-mapborder text-center">
+      <p class="text-[12.5px] text-gray-500 mb-3">
+        Want to do more? Share the cause with your network.
+      </p>
+      <div class="flex items-center justify-center gap-2">
+        <a href="https://twitter.com/intent/tweet?text={{ ORG_NAME|urlencode }}&url={{ request.build_absolute_uri|urlencode }}"
+           target="_blank" rel="noopener noreferrer"
+           aria-label="Share on X"
+           class="inline-flex items-center justify-center h-9 w-9 rounded-lg
+                  border border-mapborder bg-white text-mapnavy hover:bg-gray-50 transition">
+          𝕏
+        </a>
+        <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri|urlencode }}"
+           target="_blank" rel="noopener noreferrer"
+           aria-label="Share on Facebook"
+           class="inline-flex items-center justify-center h-9 w-9 rounded-lg
+                  border border-mapborder bg-white text-mapnavy hover:bg-gray-50 transition">
+          f
+        </a>
+        <a href="mailto:?subject={{ 'I just supported '|add:ORG_NAME|urlencode }}&body={{ request.build_absolute_uri|urlencode }}"
+           aria-label="Share by email"
+           class="inline-flex items-center justify-center h-9 w-9 rounded-lg
+                  border border-mapborder bg-white text-mapnavy hover:bg-gray-50 transition">
+          ✉
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Page-scoped animation for the check icon -->
+<style>
+  @keyframes pop {
+    0% { transform: scale(0.6); opacity: 0; }
+    60% { transform: scale(1.06); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .animate-\[pop_500ms_ease-out\] { animation: none !important; }
+  }
+</style>
+
+{% endblock %}

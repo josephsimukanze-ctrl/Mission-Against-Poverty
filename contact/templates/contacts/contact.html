@@ -1,0 +1,169 @@
+{% extends "public_base.html" %}
+{% block title %}Contact Us — {{ site.site_name|default:ORG_NAME }}{% endblock %}
+{% block content %}
+
+<!-- Hero -->
+<section class="relative bg-mapnavy overflow-hidden">
+  <div class="absolute inset-0 pointer-events-none opacity-10">
+    <div class="absolute -right-16 -top-20 h-72 w-72 rounded-full border-[35px] border-white"></div>
+    <div class="absolute -right-5 -bottom-32 h-64 w-64 rounded-full border-[25px] border-white"></div>
+  </div>
+  <div class="relative max-w-7xl mx-auto px-5 lg:px-8 py-14 md:py-20">
+    <div class="max-w-2xl">
+      <span class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-green-200">
+        <span class="h-2 w-2 rounded-full bg-green-400"></span> WE'D LOVE TO HEAR FROM YOU
+      </span>
+      <h1 class="mt-5 text-3xl sm:text-4xl md:text-5xl font-bold leading-tight text-white">
+        Get in touch with us.
+      </h1>
+      <p class="mt-5 max-w-xl text-sm md:text-base leading-7 text-gray-300">
+        Have a question about our work, a partnership idea, or want to get involved?
+        Send us a message — our team replies within 2 business days.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Content -->
+<section class="bg-gray-50">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8 py-10 md:py-14 grid lg:grid-cols-3 gap-8 items-start">
+
+    <!-- Form -->
+    <div class="lg:col-span-2">
+      <div class="card overflow-hidden">
+        <div class="border-b border-gray-100 px-5 sm:px-8 py-6">
+          <p class="text-xs font-bold uppercase tracking-wider text-mapgreen">Send a message</p>
+          <h2 class="mt-2 text-xl sm:text-2xl font-bold text-mapnavy">Contact form</h2>
+          <p class="mt-2 text-sm text-gray-500">Fill in the form and we'll get back to you shortly.</p>
+        </div>
+
+        {% if messages %}
+          <div class="px-5 sm:px-8 pt-5">
+            {% for m in messages %}
+              <div class="rounded-lg px-4 py-3 text-sm mb-2 border {% if m.tags == 'error' %}bg-red-50 text-red-700 border-red-200{% else %}bg-green-50 text-green-700 border-green-200{% endif %}">{{ m }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <form method="post" class="space-y-5 px-5 sm:px-8 py-7">
+          {% csrf_token %}
+
+          <div class="grid sm:grid-cols-2 gap-5">
+            <div>
+              <label for="name" class="form-label">Full name <span class="text-red-500">*</span></label>
+              <input type="text" id="name" name="name" required class="form-input" placeholder="Your name">
+            </div>
+            <div>
+              <label for="email" class="form-label">Email <span class="text-red-500">*</span></label>
+              <input type="email" id="email" name="email" required class="form-input" placeholder="you@example.com">
+            </div>
+          </div>
+
+          <div class="grid sm:grid-cols-2 gap-5">
+            <div>
+              <label for="phone" class="form-label">Phone <span class="text-gray-400 font-normal">(optional)</span></label>
+              <input type="tel" id="phone" name="phone" class="form-input" placeholder="+260 …">
+            </div>
+            <div>
+              <label for="subject" class="form-label">Subject <span class="text-red-500">*</span></label>
+              <input type="text" id="subject" name="subject" required class="form-input" placeholder="How can we help?">
+            </div>
+          </div>
+
+          <div>
+            <label for="message" class="form-label">Message <span class="text-red-500">*</span></label>
+            <textarea id="message" name="message" rows="6" required class="form-input" placeholder="Tell us more about your question or idea…"></textarea>
+          </div>
+
+          <div class="flex items-start gap-2">
+            <input type="checkbox" id="consent" name="consent" required class="mt-1">
+            <label for="consent" class="text-[12.5px] text-gray-600">
+              I agree that my message may be stored and processed so the team can respond.
+            </label>
+          </div>
+
+          <button type="submit" class="btn-primary w-full justify-center">Send message →</button>
+
+          <p class="text-center text-xs text-gray-500">
+            Alternatively, email us at
+            <a href="mailto:{{ site.contact_email|default:'info@map.org' }}" class="text-mapgreen hover:underline">
+              {{ site.contact_email|default:"info@map.org" }}
+            </a>
+          </p>
+        </form>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="space-y-5">
+
+      <!-- Contact details -->
+      <div class="card p-5">
+        <h3 class="font-semibold text-mapnavy mb-4 text-[15px]">Direct contact</h3>
+        <dl class="space-y-3 text-[13.5px]">
+          {% if site.contact_email %}
+            <div class="flex items-start gap-3">
+              <span class="stat-icon bg-mapgreen-50 text-mapgreen shrink-0">✉</span>
+              <div>
+                <div class="text-[10.5px] uppercase tracking-wider text-gray-500 font-semibold mb-0.5">Email</div>
+                <a href="mailto:{{ site.contact_email }}" class="text-mapnavy hover:text-mapgreen break-all">{{ site.contact_email }}</a>
+              </div>
+            </div>
+          {% endif %}
+          {% if site.contact_phone %}
+            <div class="flex items-start gap-3">
+              <span class="stat-icon bg-mapgreen-50 text-mapgreen shrink-0">📞</span>
+              <div>
+                <div class="text-[10.5px] uppercase tracking-wider text-gray-500 font-semibold mb-0.5">Phone</div>
+                <a href="tel:{{ site.contact_phone }}" class="text-mapnavy hover:text-mapgreen">{{ site.contact_phone }}</a>
+              </div>
+            </div>
+          {% endif %}
+          {% if site.address %}
+            <div class="flex items-start gap-3">
+              <span class="stat-icon bg-mapgreen-50 text-mapgreen shrink-0">📍</span>
+              <div>
+                <div class="text-[10.5px] uppercase tracking-wider text-gray-500 font-semibold mb-0.5">Address</div>
+                <div class="text-gray-700 whitespace-pre-line">{{ site.address }}</div>
+              </div>
+            </div>
+          {% endif %}
+          {% if site.office_hours %}
+            <div class="flex items-start gap-3">
+              <span class="stat-icon bg-mapgreen-50 text-mapgreen shrink-0">🕐</span>
+              <div>
+                <div class="text-[10.5px] uppercase tracking-wider text-gray-500 font-semibold mb-0.5">Office hours</div>
+                <div class="text-gray-700">{{ site.office_hours }}</div>
+              </div>
+            </div>
+          {% endif %}
+        </dl>
+      </div>
+
+      <!-- Response time -->
+      <div class="rounded-2xl border border-mapgreen/20 bg-mapgreen-50 p-5">
+        <div class="flex items-start gap-3">
+          <span class="stat-icon bg-white text-mapgreen shrink-0">⏱</span>
+          <div>
+            <h3 class="text-sm font-bold text-mapnavy">Fast response</h3>
+            <p class="mt-1 text-[12.5px] text-gray-700 leading-relaxed">
+              We respond to most messages within 2 business days. Urgent inquiries — call us directly.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Other ways to reach -->
+      <div class="card p-5">
+        <h3 class="font-semibold text-mapnavy mb-3 text-[14px]">Other ways to get involved</h3>
+        <ul class="space-y-2 text-[13px]">
+          <li><a href="/volunteer/" class="text-mapgreen hover:underline">→ Volunteer with us</a></li>
+          <li><a href="/partnerships/" class="text-mapgreen hover:underline">→ Partner with us</a></li>
+          <li><a href="/donate/" class="text-mapgreen hover:underline">→ Make a donation</a></li>
+          <li><a href="/request-assistance/" class="text-mapgreen hover:underline">→ Request assistance</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+</section>
+{% endblock %}

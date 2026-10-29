@@ -1,0 +1,66 @@
+{% extends "portal_base.html" %}
+{% load humanize %}
+{% block title %}Volunteer Dashboard — {{ ORG_NAME }}{% endblock %}
+{% block nav %}
+  <a href="{% url 'volunteer_portal:portal_assignments' %}" class="sidebar-link">My Assignments</a>
+  <a href="{% url 'volunteer_portal:portal_hours' %}" class="sidebar-link">Volunteer Hours</a>
+  <a href="{% url 'volunteer_portal:portal_certificates' %}" class="sidebar-link">Certificates</a>
+  <a href="{% url 'accounts:profile' %}" class="sidebar-link">Profile</a>
+{% endblock %}
+{% block breadcrumb %}Volunteer Dashboard{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold text-mapnavy">Welcome, {{ user.first_name|default:user.username }}</h1>
+<p class="text-sm text-gray-500 mt-1">Thank you for giving your time to our mission.</p>
+
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+  <div class="stat-card"><div class="stat-value">{{ total_hours }}</div><div class="stat-label">Hours Logged</div></div>
+  <div class="stat-card"><div class="stat-value">{{ completed_assignments }}</div><div class="stat-label">Completed</div></div>
+  <div class="stat-card"><div class="stat-value">{{ pending_assignments }}</div><div class="stat-label">Pending</div></div>
+  <div class="stat-card"><div class="stat-value">{{ certificates_count }}</div><div class="stat-label">Certificates</div></div>
+</div>
+
+<div class="mt-8 grid lg:grid-cols-2 gap-5">
+  <div class="card p-5">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="font-semibold text-mapnavy">My Assignments</h2>
+      <a href="{% url 'volunteer_portal:portal_assignments' %}" class="text-[12px] text-mapgreen hover:underline">View all →</a>
+    </div>
+    {% if assignments %}
+      <div class="space-y-3">
+        {% for a in assignments %}
+          <div class="border border-[#e5e9f0] rounded-lg p-3">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex-1 min-w-0">
+                <div class="font-medium text-mapnavy text-[14px]">{{ a.title }}</div>
+                {% if a.scheduled_for %}<div class="text-[11.5px] text-gray-500 mt-0.5">{{ a.scheduled_for|date:"M d, Y H:i" }}</div>{% endif %}
+              </div>
+              {% if a.status == 'accepted' %}<span class="badge badge-success">Accepted</span>
+              {% elif a.status == 'proposed' %}<span class="badge badge-warning">Proposed</span>
+              {% elif a.status == 'completed' %}<span class="badge badge-muted">Completed</span>
+              {% else %}<span class="badge badge-muted">{{ a.get_status_display }}</span>{% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-sm text-gray-500 py-4">No assignments yet. Check back soon.</p>
+    {% endif %}
+  </div>
+
+  <div class="card p-5">
+    <h2 class="font-semibold text-mapnavy mb-3">Recent Hours</h2>
+    {% if hours %}
+      <div class="divide-y divide-gray-100 text-[13px]">
+        {% for h in hours %}
+          <div class="py-2 flex items-center justify-between">
+            <span>{{ h.date|date:"M d, Y" }}</span>
+            <span class="font-semibold text-mapnavy">{{ h.hours }} h</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-sm text-gray-500 py-4">No hours logged yet. <a href="{% url 'volunteer_portal:portal_hours' %}" class="text-mapgreen">Log hours →</a></p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,691 @@
+{% extends "management_base.html" %}
+{% load humanize %}
+{% block title %}Donation {{ donation.reference }} — {{ ORG_NAME }}{% endblock %}
+{% block breadcrumb %}Donations / {{ donation.reference }}{% endblock %}
+
+{% block content %}
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<div class="mb-6 print:mb-4">
+  <a href="/management/donations/"
+     class="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-gray-500
+            hover:text-mapnavy transition print:hidden">
+    <span aria-hidden="true">←</span> All donations
+  </a>
+
+  <div class="mt-3 flex flex-wrap items-start justify-between gap-4">
+
+    <!-- Left: amount + reference + timestamps -->
+    <div class="min-w-0">
+      <div class="flex items-center gap-2.5 flex-wrap">
+        <h1 class="text-[26px] font-bold text-mapnavy tracking-tight tabular-nums leading-none">
+          K {{ donation.amount|floatformat:2|intcomma }}
+        </h1>
+        <span class="text-[14px] text-gray-400">·</span>
+        <button type="button"
+                data-copy="{{ donation.reference }}"
+                class="copy-btn group inline-flex items-center gap-1.5 font-mono text-[13px] text-gray-600
+                       hover:text-mapgreen transition"
+                title="Copy reference">
+          {{ donation.reference }}
+          <span class="copy-label text-[10.5px] text-gray-400 group-hover:text-mapgreen">copy</span>
+        </button>
+      </div>
+
+      <p class="text-[12.5px] text-gray-500 mt-1.5">
+        Created
+        <time datetime="{{ donation.created_at|date:'c' }}" class="text-mapnavy font-medium">
+          {{ donation.created_at|date:"M j, Y · H:i" }}
+        </time>
+        {% if donation.updated_at and donation.updated_at != donation.created_at %}
+          <span class="text-gray-300 mx-1.5">·</span>
+          Updated
+          <time datetime="{{ donation.updated_at|date:'c' }}">
+            {{ donation.updated_at|date:"M j, Y" }}
+          </time>
+        {% endif %}
+      </p>
+    </div>
+
+    <!-- Right: status + actions -->
+    <div class="flex flex-wrap items-center gap-2 print:hidden">
+      {% if donation.status == 'received' %}
+        <span class="badge badge-success">{{ donation.get_status_display }}</span>
+      {% elif donation.status == 'pending' %}
+        <span class="badge badge-warning">{{ donation.get_status_display }}</span>
+      {% elif donation.status == 'failed' %}
+        <span class="badge badge-danger">{{ donation.get_status_display }}</span>
+      {% else %}
+        <span class="badge badge-muted">{{ donation.get_status_display }}</span>
+      {% endif %}
+
+      {% if receipt %}
+        <a href="{% url 'donor_portal:receipt' donation.reference %}"
+           class="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg
+                  border border-mapgreen/40 bg-mapgreen-50 text-[12.5px] font-semibold text-mapgreen
+                  hover:bg-mapgreen/15 transition
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40">
+          <span aria-hidden="true">📄</span> Receipt
+        </a>
+      {% endif %}
+
+      <a href="/management/donations/{{ donation.pk }}/edit/"
+         class="btn-secondary inline-flex items-center h-9 text-[12.5px] !px-3.5">
+        Edit
+      </a>
+      <a href="/management/donations/{{ donation.pk }}/delete/"
+         class="inline-flex items-center h-9 px-3.5 rounded-lg border border-red-200 bg-white
+                text-[12.5px] font-semibold text-red-600 hover:bg-red-50 transition
+                focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300">
+        Delete
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     BODY
+     ============================================================ -->
+<div class="grid lg:grid-cols-3 gap-5">
+
+  <!-- ==========================================
+       LEFT: Details column (2/3)
+       ========================================== -->
+  <div class="lg:col-span-2 space-y-5">
+
+    <!-- Donation details -->
+    <section class="card p-6">
+      <h2 class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-4">
+        Donation details
+      </h2>
+      <dl class="grid sm:grid-cols-2 gap-x-8 gap-y-5 text-[13.5px]">
+
+        <div>
+          <dt class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-1">
+            Amount
+          </dt>
+          <dd class="text-[18px] font-bold text-mapnavy tabular-nums">
+            K {{ donation.amount|floatformat:2|intcomma }}
+            <span class="text-[13px] font-normal text-gray-500 ml-0.5">{{ donation.currency }}</span>
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-1">
+            Type
+          </dt>
+          <dd class="text-[14px] text-mapnavy">{{ donation.get_kind_display }}</dd>
+        </div>
+
+        <div>
+          <dt class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-1">
+            Frequency
+          </dt>
+          <dd class="text-[14px] text-mapnavy">{{ donation.get_frequency_display }}</dd>
+        </div>
+
+        <div>
+          <dt class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-1">
+            Submitted
+          </dt>
+          <dd class="text-[14px] text-mapnavy tabular-nums">
+            <time datetime="{{ donation.created_at|date:'c' }}">
+              {{ donation.created_at|date:"Y-m-d H:i" }}
+            </time>
+          </dd>
+        </div>
+      </dl>
+    </section>
+
+    <!-- Donor -->
+    <section class="card p-6">
+      <h2 class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-4">
+        Donor
+      </h2>
+
+      <div class="flex items-start gap-4">
+        <div class="h-12 w-12 rounded-full bg-mapgreen-50 text-mapgreen
+                    flex items-center justify-center text-[16px] font-bold shrink-0 ring-1 ring-mapgreen/15">
+          {% if donation.is_anonymous %}
+            <span aria-hidden="true">👤</span>
+          {% elif donation.donor_name %}
+            {{ donation.donor_name|first|upper }}
+          {% else %}
+            ?
+          {% endif %}
+        </div>
+
+        <div class="min-w-0 flex-1">
+          <div class="font-semibold text-mapnavy text-[15px]">
+            {% if donation.is_anonymous %}
+              <span class="text-gray-500 italic">Anonymous donor</span>
+            {% elif donation.donor %}
+              <a href="/management/users/{{ donation.donor.pk }}/"
+                 class="hover:text-mapgreen transition">
+                {{ donation.donor_name|default:donation.donor.get_username }}
+              </a>
+            {% else %}
+              {{ donation.donor_name|default:"Not provided" }}
+            {% endif %}
+          </div>
+
+          <div class="mt-1.5 space-y-1 text-[12.5px]">
+            {% if donation.donor_email %}
+              <div class="flex items-center gap-1.5 text-gray-600">
+                <span aria-hidden="true">✉</span>
+                <a href="mailto:{{ donation.donor_email }}"
+                   class="text-mapgreen hover:underline break-all">
+                  {{ donation.donor_email }}
+                </a>
+              </div>
+            {% endif %}
+            {% if donation.donor_phone %}
+              <div class="flex items-center gap-1.5 text-gray-600">
+                <span aria-hidden="true">📞</span>
+                <a href="tel:{{ donation.donor_phone }}" class="hover:text-mapnavy">
+                  {{ donation.donor_phone }}
+                </a>
+              </div>
+            {% endif %}
+            {% if donation.donor %}
+              <div class="text-[11.5px] text-gray-400 mt-1">
+                Account: <span class="font-mono">{{ donation.donor.get_username }}</span>
+              </div>
+            {% endif %}
+          </div>
+
+          {% if donation.message %}
+            <div class="mt-3 rounded-lg bg-mapbg border border-mapborder p-3 text-[12.5px] text-gray-700 italic">
+              "{{ donation.message }}"
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+
+    <!-- Allocation -->
+    <section class="card p-6">
+      <h2 class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-4">
+        Allocation
+      </h2>
+      <dl class="grid sm:grid-cols-2 gap-x-8 gap-y-4 text-[13.5px]">
+        <div>
+          <dt class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-1">
+            Campaign
+          </dt>
+          <dd class="text-[14px]">
+            {% if donation.campaign %}
+              <a href="/management/campaigns/{{ donation.campaign.pk }}/edit/"
+                 class="text-mapgreen hover:underline">
+                {{ donation.campaign.name }}
+              </a>
+            {% else %}
+              <span class="text-gray-400">Not allocated</span>
+            {% endif %}
+          </dd>
+        </div>
+        <div>
+          <dt class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-1">
+            Project
+          </dt>
+          <dd class="text-[14px]">
+            {% if donation.project %}
+              <a href="/management/projects/{{ donation.project.pk }}/edit/"
+                 class="text-mapgreen hover:underline">
+                {{ donation.project.name }}
+              </a>
+            {% else %}
+              <span class="text-gray-400">Not allocated</span>
+            {% endif %}
+          </dd>
+        </div>
+      </dl>
+    </section>
+
+    <!-- Proof of payment -->
+    {% if donation.proof_of_payment or donation.proof_notes or donation.proof_submitted_at %}
+      <section class="card p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold">
+            Proof of payment
+          </h2>
+          {% if donation.proof_verified_at %}
+            <span class="badge badge-success">Verified</span>
+          {% elif donation.proof_rejected %}
+            <span class="badge badge-danger">Rejected</span>
+          {% elif donation.proof_submitted_at %}
+            <span class="badge badge-warning">Awaiting review</span>
+          {% endif %}
+        </div>
+
+        {% if donation.proof_submitted_at %}
+          <p class="text-[12px] text-gray-500 mb-3">
+            Submitted
+            <time datetime="{{ donation.proof_submitted_at|date:'c' }}" class="text-mapnavy font-medium">
+              {{ donation.proof_submitted_at|date:"M j, Y · H:i" }}
+            </time>
+            {% if donation.proof_verified_at %}
+              <span class="text-gray-300 mx-1.5">·</span>
+              Verified
+              <time datetime="{{ donation.proof_verified_at|date:'c' }}">
+                {{ donation.proof_verified_at|date:"M j, Y" }}
+              </time>
+            {% endif %}
+          </p>
+        {% endif %}
+
+        {% if donation.proof_of_payment %}
+          <div class="mb-3">
+            {% with ext=donation.proof_of_payment.name|lower|slice:"-4:" %}
+              {% if ext == ".jpg" or ext == "jpeg" or ext == ".png" or ext == "webp" %}
+                <a href="{{ donation.proof_of_payment.url }}"
+                   target="_blank" rel="noopener noreferrer"
+                   class="inline-block">
+                  <img src="{{ donation.proof_of_payment.url }}"
+                       alt="Proof of payment"
+                       class="max-h-64 rounded-lg border border-mapborder
+                              hover:opacity-90 transition">
+                </a>
+              {% else %}
+                <a href="{{ donation.proof_of_payment.url }}"
+                   target="_blank" rel="noopener noreferrer"
+                   class="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg
+                          border border-mapborder bg-white text-[12.5px] font-medium text-mapnavy
+                          hover:bg-gray-50 transition">
+                  <span aria-hidden="true">📎</span>
+                  Download proof ({{ donation.proof_of_payment.name }})
+                </a>
+              {% endif %}
+            {% endwith %}
+          </div>
+        {% endif %}
+
+        {% if donation.proof_notes %}
+          <div class="rounded-lg bg-mapbg border border-mapborder p-3 text-[12.5px] text-gray-700">
+            <div class="text-[10.5px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-1">
+              Donor notes
+            </div>
+            {{ donation.proof_notes }}
+          </div>
+        {% endif %}
+
+        {% if donation.proof_rejection_reason %}
+          <div class="mt-3 rounded-lg bg-red-50 border border-red-200 p-3 text-[12.5px] text-red-700">
+            <div class="text-[10.5px] uppercase tracking-[0.12em] text-red-600 font-semibold mb-1">
+              Rejection reason
+            </div>
+            {{ donation.proof_rejection_reason }}
+          </div>
+        {% endif %}
+
+        {% if donation.proof_submitted_at and not donation.proof_verified_at and not donation.proof_rejected %}
+          <div class="mt-4 pt-4 border-t border-mapborder flex flex-wrap gap-2">
+            <form method="post" class="inline">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="approve_proof">
+              <button type="submit"
+                      class="inline-flex items-center h-9 px-3.5 rounded-lg
+                             bg-mapgreen text-white text-[12.5px] font-semibold
+                             hover:bg-mapgreen-600 transition shadow-sm
+                             focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/50">
+                ✓ Approve proof
+              </button>
+            </form>
+            <form method="post" class="inline" id="reject-proof-form">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="reject_proof">
+              <input type="hidden" name="reason" value="">
+              <button type="button"
+                      onclick="
+                        const r = prompt('Reason for rejecting this proof?');
+                        if (r) {
+                          this.previousElementSibling.value = r;
+                          this.form.submit();
+                        }
+                      "
+                      class="inline-flex items-center h-9 px-3.5 rounded-lg
+                             border border-red-200 bg-white text-[12.5px] font-semibold text-red-600
+                             hover:bg-red-50 transition">
+                ✕ Reject
+              </button>
+            </form>
+          </div>
+        {% endif %}
+      </section>
+    {% endif %}
+  </div>
+
+  <!-- ==========================================
+       RIGHT: Side panel (1/3)
+       ========================================== -->
+  <aside class="space-y-5 print:hidden">
+
+    <!-- Pending state action -->
+    {% if donation.status == 'pending' %}
+      <div class="card p-5 border-amber-200 bg-amber-50">
+        <div class="flex items-start gap-2.5 mb-3">
+          <span class="text-amber-600 shrink-0 mt-0.5" aria-hidden="true">⚠</span>
+          <div>
+            <h3 class="font-semibold text-mapnavy text-[14px]">Awaiting confirmation</h3>
+            <p class="text-[12px] text-gray-600 mt-1 leading-relaxed">
+              Verify the payment (bank transfer, mobile money) before marking
+              this donation as received.
+            </p>
+          </div>
+        </div>
+        <button type="button" id="open-mark-received"
+                class="btn-primary inline-flex items-center justify-center w-full h-10 text-[13px]">
+          ✓ Mark as received
+        </button>
+      </div>
+    {% elif donation.status == 'received' %}
+      <div class="card p-5 border-green-200 bg-green-50">
+        <div class="flex items-start gap-2.5">
+          <span class="text-green-600 shrink-0 mt-0.5" aria-hidden="true">✓</span>
+          <div>
+            <h3 class="font-semibold text-mapnavy text-[14px]">Confirmed</h3>
+            <p class="text-[12px] text-gray-600 mt-1 leading-relaxed">
+              This donation has been verified and recorded.
+            </p>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- ✅ Receipt card (auto-generated on mark as received) -->
+    {% if receipt %}
+      <div class="card p-5 bg-mapgreen-50 border-mapgreen-50">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="inline-flex h-7 w-7 items-center justify-center rounded-full
+                       bg-white text-mapgreen shrink-0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                 stroke-linejoin="round" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="9" y1="15" x2="15" y2="15"/>
+            </svg>
+          </span>
+          <h3 class="font-semibold text-mapnavy text-[13.5px]">Receipt issued</h3>
+        </div>
+
+        <div class="rounded-lg bg-white border border-mapborder px-3 py-2.5 text-[12px]">
+          <div class="flex justify-between items-center gap-2">
+            <span class="text-gray-500">Number</span>
+            <div class="flex items-center gap-1.5">
+              <span class="font-mono font-semibold text-mapnavy">{{ receipt.number }}</span>
+              <button type="button"
+                      data-copy="{{ receipt.number }}"
+                      class="copy-btn text-[10px] text-gray-400 hover:text-mapgreen transition"
+                      aria-label="Copy receipt number">
+                copy
+              </button>
+            </div>
+          </div>
+          <div class="flex justify-between items-center gap-2 mt-1.5">
+            <span class="text-gray-500">Issued</span>
+            <span class="text-mapnavy tabular-nums">
+              <time datetime="{{ receipt.issued_at|date:'c' }}">
+                {{ receipt.issued_at|date:"M j, Y · H:i" }}
+              </time>
+            </span>
+          </div>
+        </div>
+
+        <a href="{% url 'donor_portal:receipt' donation.reference %}"
+           class="mt-3 inline-flex items-center justify-center w-full h-9 rounded-lg
+                  bg-mapgreen text-white text-[12.5px] font-semibold
+                  hover:bg-mapgreen-600 transition shadow-sm
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/50">
+          <span class="mr-1.5" aria-hidden="true">📄</span>
+          {% if receipt.pdf_file %}Download PDF receipt{% else %}Download receipt{% endif %}
+        </a>
+      </div>
+    {% endif %}
+
+    <!-- Transactions -->
+    <div class="card p-5">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold">
+          Transactions
+        </h2>
+        <span class="text-[11px] text-gray-400">
+          {{ donation.transactions.count }} total
+        </span>
+      </div>
+
+      {% if donation.transactions.exists %}
+        <div class="space-y-2">
+          {% for t in donation.transactions.all %}
+            <div class="border border-mapborder rounded-lg p-3
+                        hover:border-gray-300 transition-colors">
+              <div class="flex items-center justify-between gap-2 mb-1">
+                <span class="font-semibold text-mapnavy text-[12.5px] capitalize">
+                  {{ t.provider }}
+                </span>
+                {% if t.status == 'success' %}
+                  <span class="badge badge-success">{{ t.get_status_display }}</span>
+                {% elif t.status == 'pending' %}
+                  <span class="badge badge-warning">{{ t.get_status_display }}</span>
+                {% elif t.status == 'failed' %}
+                  <span class="badge badge-danger">{{ t.get_status_display }}</span>
+                {% else %}
+                  <span class="badge badge-muted">{{ t.get_status_display }}</span>
+                {% endif %}
+              </div>
+              <div class="text-[11px] text-gray-500 font-mono break-all">
+                {{ t.provider_reference|default:"No reference" }}
+              </div>
+              {% if t.verified_at %}
+                <div class="text-[10.5px] text-gray-400 mt-1">
+                  Verified
+                  <time datetime="{{ t.verified_at|date:'c' }}">
+                    {{ t.verified_at|date:"M j, H:i" }}
+                  </time>
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center py-6 rounded-lg border border-dashed border-mapborder">
+          <div class="mx-auto h-9 w-9 rounded-full bg-gray-100 text-gray-500
+                      flex items-center justify-center mb-2 text-base">
+            💳
+          </div>
+          <p class="text-[12px] text-gray-500 leading-relaxed">
+            No transactions yet.<br>
+            <span class="text-[11.5px] text-gray-400">
+              They appear once processed.
+            </span>
+          </p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Metadata -->
+    <div class="card p-5">
+      <h2 class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-3">
+        Metadata
+      </h2>
+      <dl class="space-y-2.5 text-[12.5px]">
+
+        <div class="flex items-center justify-between gap-3">
+          <dt class="text-gray-500">Reference</dt>
+          <dd class="flex items-center gap-1.5">
+            <span class="font-mono text-mapnavy">{{ donation.reference }}</span>
+            <button type="button"
+                    data-copy="{{ donation.reference }}"
+                    class="copy-btn text-[10px] text-gray-400 hover:text-mapgreen transition"
+                    aria-label="Copy reference">
+              copy
+            </button>
+          </dd>
+        </div>
+
+        {% if donation.bank_reference %}
+          <div class="flex items-center justify-between gap-3">
+            <dt class="text-gray-500">Bank ref</dt>
+            <dd class="flex items-center gap-1.5">
+              <span class="font-mono text-mapnavy">{{ donation.bank_reference }}</span>
+              <button type="button"
+                      data-copy="{{ donation.bank_reference }}"
+                      class="copy-btn text-[10px] text-gray-400 hover:text-mapgreen transition"
+                      aria-label="Copy bank reference">
+                copy
+              </button>
+            </dd>
+          </div>
+        {% endif %}
+
+        <div class="flex justify-between gap-3">
+          <dt class="text-gray-500">Created</dt>
+          <dd class="text-mapnavy tabular-nums">
+            <time datetime="{{ donation.created_at|date:'c' }}">
+              {{ donation.created_at|date:"Y-m-d H:i" }}
+            </time>
+          </dd>
+        </div>
+
+        {% if donation.updated_at %}
+          <div class="flex justify-between gap-3">
+            <dt class="text-gray-500">Updated</dt>
+            <dd class="text-mapnavy tabular-nums">
+              <time datetime="{{ donation.updated_at|date:'c' }}">
+                {{ donation.updated_at|date:"Y-m-d H:i" }}
+              </time>
+            </dd>
+          </div>
+        {% endif %}
+      </dl>
+    </div>
+
+  </aside>
+</div>
+
+<!-- ============================================================
+     MODAL: Mark as received
+     ============================================================ -->
+{% if donation.status == 'pending' %}
+  <div id="mark-received-modal"
+       class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+       role="dialog" aria-modal="true" aria-labelledby="mark-received-title">
+
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" data-modal-close></div>
+
+    <div class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+      <div class="mx-auto h-11 w-11 rounded-full bg-mapgreen-50 text-mapgreen
+                  flex items-center justify-center mb-4">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <path d="M20 6L9 17l-5-5"/>
+        </svg>
+      </div>
+
+      <h2 id="mark-received-title"
+          class="text-center text-[17px] font-semibold text-mapnavy">
+        Mark donation as received?
+      </h2>
+
+      <p class="mt-2 text-center text-[13px] text-gray-600 leading-relaxed">
+        This will permanently change the status of
+        <span class="font-mono text-[12.5px] text-mapnavy">{{ donation.reference }}</span>
+        to <strong>Received</strong>, issue a receipt to the donor, and log an audit entry.
+        This action cannot be undone.
+      </p>
+
+      <div class="mt-5 rounded-lg bg-mapbg border border-mapborder px-3 py-2.5
+                  flex items-center justify-between text-[12.5px]">
+        <span class="text-gray-500">Amount</span>
+        <span class="font-semibold text-mapnavy tabular-nums">
+          K {{ donation.amount|floatformat:2|intcomma }} {{ donation.currency }}
+        </span>
+      </div>
+
+      <form method="post" class="mt-5 flex gap-2 justify-end">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="mark_received">
+        <button type="button" data-modal-close
+                class="inline-flex items-center h-9 px-3.5 rounded-lg
+                       border border-mapborder bg-white text-[12.5px] font-medium text-gray-700
+                       hover:bg-gray-50 transition">
+          Cancel
+        </button>
+        <button type="submit"
+                class="inline-flex items-center h-9 px-3.5 rounded-lg
+                       bg-mapgreen text-white text-[12.5px] font-semibold
+                       hover:bg-mapgreen-600 transition shadow-sm
+                       focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/50">
+          Yes, mark as received
+        </button>
+      </form>
+    </div>
+  </div>
+{% endif %}
+
+<script>
+(function () {
+  /* ---------- Copy to clipboard ---------- */
+  document.querySelectorAll('.copy-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const value = btn.dataset.copy || '';
+      if (!value) return;
+
+      navigator.clipboard.writeText(value).then(() => {
+        const label = btn.querySelector('.copy-label') || btn;
+        const original = label.textContent;
+        label.textContent = 'Copied';
+        setTimeout(() => { label.textContent = original; }, 1200);
+      });
+    });
+  });
+
+  /* ---------- Mark-received modal ---------- */
+  const modal   = document.getElementById('mark-received-modal');
+  const openBtn = document.getElementById('open-mark-received');
+  if (!modal || !openBtn) return;
+
+  let lastFocused = null;
+
+  const open = () => {
+    lastFocused = document.activeElement;
+    modal.classList.remove('hidden');
+    const focusable = modal.querySelector('button, [href], input, [tabindex]:not([tabindex="-1"])');
+    focusable?.focus();
+    document.body.style.overflow = 'hidden';
+  };
+
+  const close = () => {
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+    lastFocused?.focus();
+  };
+
+  openBtn.addEventListener('click', open);
+  modal.querySelectorAll('[data-modal-close]').forEach((el) => {
+    el.addEventListener('click', close);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (modal.classList.contains('hidden')) return;
+    if (e.key === 'Escape') { close(); return; }
+    if (e.key === 'Tab') {
+      const list = Array.from(
+        modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
+      ).filter((el) => !el.disabled && el.offsetParent !== null);
+      if (!list.length) return;
+      const first = list[0];
+      const last = list[list.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault(); first.focus();
+      }
+    }
+  });
+})();
+</script>
+
+{% endblock %}

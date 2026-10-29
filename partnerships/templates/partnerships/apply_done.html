@@ -1,0 +1,13 @@
+{% extends "public_base.html" %}
+{% block title %}Thank you — {{ ORG_NAME }}{% endblock %}
+{% block content %}
+<section class="max-w-xl mx-auto px-5 lg:px-8 py-16 text-center">
+  <div class="mx-auto h-16 w-16 rounded-full bg-mapgreen-50 text-mapgreen flex items-center justify-center text-3xl">✓</div>
+  <h1 class="text-2xl font-bold text-mapnavy mt-6">Application received</h1>
+  <p class="text-gray-600 mt-3">Thank you for your interest in partnering with us. Our team will review your proposal and get back to you shortly.</p>
+  <div class="mt-8 flex justify-center gap-3">
+    <a href="/" class="btn-secondary">Back to home</a>
+    <a href="{% url 'projects:list' %}" class="btn-primary">Browse our projects</a>
+  </div>
+</section>
+{% endblock %}

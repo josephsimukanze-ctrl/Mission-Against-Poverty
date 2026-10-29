@@ -1,0 +1,838 @@
+{% extends "management_base.html" %}
+{% block title %}{% if mode == "create" %}New {{ singular|capfirst }}{% else %}Edit {{ singular|capfirst }}{% endif %} — {{ ORG_NAME }}{% endblock %}
+{% block breadcrumb %}{{ singular|capfirst }} / {% if mode == "create" %}New{% else %}Edit{% endif %}{% endblock %}
+
+{% block content %}
+
+<div class="max-w-6xl mx-auto">
+
+  <!-- HEADER -->
+  <div class="mb-6">
+    <a href="{{ cancel_url }}"
+       class="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-gray-500
+              hover:text-mapnavy transition">
+      <span aria-hidden="true">←</span> Back to {{ plural|default:"list" }}
+    </a>
+
+    <div class="mt-3 flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <h1 class="text-2xl font-bold text-mapnavy tracking-tight">
+          {% if mode == "create" %}
+            New {{ singular|capfirst }}
+          {% else %}
+            Edit {{ object|default:singular|capfirst }}
+          {% endif %}
+        </h1>
+        <p class="text-[13px] text-gray-500 mt-1">
+          {% if mode == "create" %}
+            Fill in the details below to create a new {{ singular }}.
+          {% else %}
+            Update the fields below to edit this {{ singular }}.
+          {% endif %}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ERROR SUMMARY -->
+  {% if form.errors or form.non_field_errors %}
+    <div role="alert"
+         class="error-summary mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-700 flex items-start gap-2.5"
+         tabindex="-1">
+      <span class="mt-0.5 shrink-0" aria-hidden="true">⚠</span>
+      <div class="flex-1 min-w-0">
+        <div class="font-semibold">
+          {% with error_count=form.errors|length %}
+            Please fix the following{% if error_count > 1 %} ({{ error_count }} issues){% endif %}:
+          {% endwith %}
+        </div>
+        <ul class="mt-1.5 space-y-1 list-disc list-inside">
+          {% for e in form.non_field_errors %}
+            <li>{{ e }}</li>
+          {% endfor %}
+          {% for field in form %}
+            {% if field.errors %}
+              <li>
+                <a href="#{{ field.id_for_label }}"
+                   class="font-medium underline-offset-2 hover:underline">
+                  {{ field.label }}
+                </a>:
+                {{ field.errors|join:" " }}
+              </li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" id="generic-form"
+        class="grid lg:grid-cols-3 gap-5 items-start" novalidate>
+
+    {% csrf_token %}
+
+    <!-- ==========================================
+         MAIN FORM COLUMN (2/3)
+         ========================================== -->
+    <div class="lg:col-span-2 space-y-5">
+
+      {# ---- Section: Content ---- #}
+      {% if "title" in form.fields or "name" in form.fields or "slug" in form.fields or "subtitle" in form.fields or "headline" in form.fields or "subheadline" in form.fields %}
+        <section class="card p-6">
+          <header class="flex items-center gap-2.5 mb-5">
+            <span class="inline-flex h-7 w-7 items-center justify-center rounded-md
+                         bg-mapgreen-50 text-mapgreen text-[12px] font-bold shrink-0">1</span>
+            <div>
+              <h2 class="text-[14px] font-semibold text-mapnavy">Content</h2>
+              <p class="text-[11.5px] text-gray-500 mt-0.5">
+                The headline and URL of your {{ singular }}.
+              </p>
+            </div>
+          </header>
+
+          <div class="space-y-4">
+            {% if "title" in form.fields %}
+              <div>
+                <label for="{{ form.title.id_for_label }}"
+                       class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                  {{ form.title.label }}
+                  {% if form.title.field.required %}<span class="text-red-500 ml-0.5">*</span>{% endif %}
+                </label>
+                {{ form.title }}
+                {% if form.title.help_text %}
+                  <p class="text-[11.5px] text-gray-500 mt-1.5">{{ form.title.help_text }}</p>
+                {% endif %}
+                {% if form.title.errors %}
+                  <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.title.errors|join:" " }}</p>
+                {% endif %}
+              </div>
+            {% endif %}
+
+            {% if "name" in form.fields %}
+              <div>
+                <label for="{{ form.name.id_for_label }}"
+                       class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                  {{ form.name.label }}
+                  {% if form.name.field.required %}<span class="text-red-500 ml-0.5">*</span>{% endif %}
+                </label>
+                {{ form.name }}
+                {% if form.name.help_text %}
+                  <p class="text-[11.5px] text-gray-500 mt-1.5">{{ form.name.help_text }}</p>
+                {% endif %}
+                {% if form.name.errors %}
+                  <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.name.errors|join:" " }}</p>
+                {% endif %}
+              </div>
+            {% endif %}
+
+            {% if "headline" in form.fields %}
+              <div>
+                <label for="{{ form.headline.id_for_label }}"
+                       class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                  {{ form.headline.label }}
+                  <span class="text-gray-400 font-normal ml-1">(optional)</span>
+                </label>
+                {{ form.headline }}
+                {% if form.headline.help_text %}
+                  <p class="text-[11.5px] text-gray-500 mt-1.5">{{ form.headline.help_text }}</p>
+                {% endif %}
+                {% if form.headline.errors %}
+                  <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.headline.errors|join:" " }}</p>
+                {% endif %}
+              </div>
+            {% endif %}
+
+            {% if "subheadline" in form.fields %}
+              <div>
+                <label for="{{ form.subheadline.id_for_label }}"
+                       class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                  {{ form.subheadline.label }}
+                  <span class="text-gray-400 font-normal ml-1">(optional)</span>
+                </label>
+                {{ form.subheadline }}
+                {% if form.subheadline.errors %}
+                  <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.subheadline.errors|join:" " }}</p>
+                {% endif %}
+              </div>
+            {% endif %}
+
+            <div class="grid sm:grid-cols-2 gap-4">
+              {% if "slug" in form.fields %}
+                <div>
+                  <label for="{{ form.slug.id_for_label }}"
+                         class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                    {{ form.slug.label }}
+                    <span class="text-gray-400 font-normal ml-1">(URL)</span>
+                  </label>
+                  {{ form.slug }}
+                  {% if form.slug.help_text %}
+                    <p class="text-[11.5px] text-gray-500 mt-1.5">{{ form.slug.help_text }}</p>
+                  {% endif %}
+                  {% if form.slug.errors %}
+                    <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.slug.errors|join:" " }}</p>
+                  {% endif %}
+                </div>
+              {% endif %}
+
+              {% if "subtitle" in form.fields %}
+                <div>
+                  <label for="{{ form.subtitle.id_for_label }}"
+                         class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                    {{ form.subtitle.label }}
+                    <span class="text-gray-400 font-normal ml-1">(optional)</span>
+                  </label>
+                  {{ form.subtitle }}
+                  {% if form.subtitle.errors %}
+                    <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.subtitle.errors|join:" " }}</p>
+                  {% endif %}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </section>
+      {% endif %}
+
+      {# ---- Section: Body ---- #}
+      {% if "body" in form.fields or "description" in form.fields or "summary" in form.fields %}
+        <section class="card p-6">
+          <header class="flex items-center gap-2.5 mb-5">
+            <span class="inline-flex h-7 w-7 items-center justify-center rounded-md
+                         bg-mapgreen-50 text-mapgreen text-[12px] font-bold shrink-0">2</span>
+            <div>
+              <h2 class="text-[14px] font-semibold text-mapnavy">Body</h2>
+              <p class="text-[11.5px] text-gray-500 mt-0.5">
+                The main content your audience will read.
+              </p>
+            </div>
+          </header>
+
+          <div class="space-y-4">
+            {% if "body" in form.fields %}
+              <div>
+                <label for="{{ form.body.id_for_label }}"
+                       class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                  {{ form.body.label }}
+                  {% if form.body.field.required %}<span class="text-red-500 ml-0.5">*</span>{% endif %}
+                </label>
+                {{ form.body }}
+                {% if form.body.help_text %}
+                  <p class="text-[11.5px] text-gray-500 mt-1.5 leading-relaxed">{{ form.body.help_text }}</p>
+                {% endif %}
+                {% if form.body.errors %}
+                  <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.body.errors|join:" " }}</p>
+                {% endif %}
+              </div>
+            {% endif %}
+
+            {% if "summary" in form.fields %}
+              <div>
+                <label for="{{ form.summary.id_for_label }}"
+                       class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                  {{ form.summary.label }}
+                </label>
+                {{ form.summary }}
+                {% if form.summary.help_text %}
+                  <p class="text-[11.5px] text-gray-500 mt-1.5">{{ form.summary.help_text }}</p>
+                {% endif %}
+                {% if form.summary.errors %}
+                  <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.summary.errors|join:" " }}</p>
+                {% endif %}
+              </div>
+            {% endif %}
+
+            {% if "description" in form.fields %}
+              <div>
+                <label for="{{ form.description.id_for_label }}"
+                       class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                  {{ form.description.label }}
+                </label>
+                {{ form.description }}
+                {% if form.description.help_text %}
+                  <p class="text-[11.5px] text-gray-500 mt-1.5">{{ form.description.help_text }}</p>
+                {% endif %}
+                {% if form.description.errors %}
+                  <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.description.errors|join:" " }}</p>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
+        </section>
+      {% endif %}
+
+      {# ---- Section: Media ---- #}
+      {% if "hero_image" in form.fields or "cover_image" in form.fields or "image" in form.fields or "thumbnail" in form.fields or "alt_text" in form.fields %}
+        <section class="card p-6">
+          <header class="flex items-center gap-2.5 mb-5">
+            <span class="inline-flex h-7 w-7 items-center justify-center rounded-md
+                         bg-mapgreen-50 text-mapgreen text-[12px] font-bold shrink-0">3</span>
+            <div>
+              <h2 class="text-[14px] font-semibold text-mapnavy">Media</h2>
+              <p class="text-[11.5px] text-gray-500 mt-0.5">
+                Image for this {{ singular }}. Upload now or add later from the list.
+              </p>
+            </div>
+          </header>
+
+          <div class="space-y-4">
+            {% if "hero_image" in form.fields %}
+              <div>
+                <label for="{{ form.hero_image.id_for_label }}"
+                       class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                  {{ form.hero_image.label }}
+                  {% if form.hero_image.field.required %}<span class="text-red-500 ml-0.5">*</span>{% else %}<span class="text-gray-400 font-normal ml-1">(optional)</span>{% endif %}
+                </label>
+
+                {% if object and form.hero_image.value %}
+                  <div class="mb-2.5 rounded-lg border border-mapborder bg-mapbg p-3 flex items-center gap-3">
+                    <div class="h-14 w-14 rounded-md bg-white border border-mapborder flex items-center justify-center overflow-hidden shrink-0">
+                      <img src="{{ form.hero_image.value.url }}" alt="Current hero image" class="w-full h-full object-cover">
+                    </div>
+                    <div class="min-w-0 flex-1">
+                      <div class="text-[10.5px] text-gray-500 uppercase tracking-wider font-semibold">Currently</div>
+                      <div class="text-[12.5px] text-mapnavy truncate">{{ form.hero_image.value.name|default:"—" }}</div>
+                      <label class="inline-flex items-center gap-1 mt-1 text-[11.5px] text-red-600 cursor-pointer">
+                        <input type="checkbox" name="hero_image-clear" id="hero_image-clear" class="h-3 w-3">
+                        Remove image
+                      </label>
+                    </div>
+                  </div>
+                {% endif %}
+
+                <div class="preview-new-img" data-for="hero_image" style="display:none;">
+                  <div class="mb-2 rounded-lg border border-mapgreen-50 bg-mapgreen-50 p-2 flex items-center gap-2">
+                    <img class="h-12 w-16 object-cover rounded" alt="New preview" data-preview-target="hero_image">
+                    <div class="text-[11px] text-mapgreen font-semibold">New image selected</div>
+                  </div>
+                </div>
+
+                {{ form.hero_image }}
+                {% if form.hero_image.help_text %}
+                  <p class="text-[11.5px] text-gray-500 mt-1.5">{{ form.hero_image.help_text }}</p>
+                {% endif %}
+                <p class="text-[10.5px] text-gray-400 mt-1">PNG, JPG, or WebP — max 5 MB.</p>
+                {% if form.hero_image.errors %}
+                  <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.hero_image.errors|join:" " }}</p>
+                {% endif %}
+              </div>
+            {% endif %}
+
+            {% if "cover_image" in form.fields %}
+              <div>
+                <label for="{{ form.cover_image.id_for_label }}"
+                       class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                  {{ form.cover_image.label }}
+                  {% if form.cover_image.field.required %}<span class="text-red-500 ml-0.5">*</span>{% else %}<span class="text-gray-400 font-normal ml-1">(optional)</span>{% endif %}
+                </label>
+
+                {% if object and form.cover_image.value %}
+                  <div class="mb-2.5 rounded-lg border border-mapborder bg-mapbg p-3 flex items-center gap-3">
+                    <div class="h-14 w-14 rounded-md bg-white border border-mapborder flex items-center justify-center overflow-hidden shrink-0">
+                      <img src="{{ form.cover_image.value.url }}" alt="Current cover" class="w-full h-full object-cover">
+                    </div>
+                    <div class="min-w-0 flex-1">
+                      <div class="text-[10.5px] text-gray-500 uppercase tracking-wider font-semibold">Currently</div>
+                      <div class="text-[12.5px] text-mapnavy truncate">{{ form.cover_image.value.name|default:"—" }}</div>
+                      <label class="inline-flex items-center gap-1 mt-1 text-[11.5px] text-red-600 cursor-pointer">
+                        <input type="checkbox" name="cover_image-clear" id="cover_image-clear" class="h-3 w-3">
+                        Remove image
+                      </label>
+                    </div>
+                  </div>
+                {% endif %}
+
+                <div class="preview-new-img" data-for="cover_image" style="display:none;">
+                  <div class="mb-2 rounded-lg border border-mapgreen-50 bg-mapgreen-50 p-2 flex items-center gap-2">
+                    <img class="h-12 w-16 object-cover rounded" alt="New preview" data-preview-target="cover_image">
+                    <div class="text-[11px] text-mapgreen font-semibold">New image selected</div>
+                  </div>
+                </div>
+
+                {{ form.cover_image }}
+                {% if form.cover_image.help_text %}
+                  <p class="text-[11.5px] text-gray-500 mt-1.5">{{ form.cover_image.help_text }}</p>
+                {% endif %}
+                <p class="text-[10.5px] text-gray-400 mt-1">PNG, JPG, or WebP — max 5 MB.</p>
+                {% if form.cover_image.errors %}
+                  <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.cover_image.errors|join:" " }}</p>
+                {% endif %}
+              </div>
+            {% endif %}
+
+            {% if "image" in form.fields %}
+              <div>
+                <label for="{{ form.image.id_for_label }}"
+                       class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                  {{ form.image.label }}
+                  {% if form.image.field.required %}<span class="text-red-500 ml-0.5">*</span>{% else %}<span class="text-gray-400 font-normal ml-1">(optional)</span>{% endif %}
+                </label>
+
+                {% if object and form.image.value %}
+                  <div class="mb-2.5 rounded-lg border border-mapborder bg-mapbg p-3 flex items-center gap-3">
+                    <div class="h-14 w-14 rounded-md bg-white border border-mapborder flex items-center justify-center overflow-hidden shrink-0">
+                      <img src="{{ form.image.value.url }}" alt="Current image" class="w-full h-full object-cover">
+                    </div>
+                    <div class="min-w-0 flex-1">
+                      <div class="text-[10.5px] text-gray-500 uppercase tracking-wider font-semibold">Currently</div>
+                      <div class="text-[12.5px] text-mapnavy truncate">{{ form.image.value.name|default:"—" }}</div>
+                      <label class="inline-flex items-center gap-1 mt-1 text-[11.5px] text-red-600 cursor-pointer">
+                        <input type="checkbox" name="image-clear" id="image-clear" class="h-3 w-3">
+                        Remove image
+                      </label>
+                    </div>
+                  </div>
+                {% endif %}
+
+                <div class="preview-new-img" data-for="image" style="display:none;">
+                  <div class="mb-2 rounded-lg border border-mapgreen-50 bg-mapgreen-50 p-2 flex items-center gap-2">
+                    <img class="h-12 w-16 object-cover rounded" alt="New preview" data-preview-target="image">
+                    <div class="text-[11px] text-mapgreen font-semibold">New image selected</div>
+                  </div>
+                </div>
+
+                {{ form.image }}
+                {% if form.image.help_text %}
+                  <p class="text-[11.5px] text-gray-500 mt-1.5">{{ form.image.help_text }}</p>
+                {% endif %}
+                <p class="text-[10.5px] text-gray-400 mt-1">PNG, JPG, or WebP — max 5 MB.</p>
+                {% if form.image.errors %}
+                  <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.image.errors|join:" " }}</p>
+                {% endif %}
+              </div>
+            {% endif %}
+
+            {% if "thumbnail" in form.fields %}
+              <div>
+                <label for="{{ form.thumbnail.id_for_label }}"
+                       class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                  {{ form.thumbnail.label }}
+                  {% if form.thumbnail.field.required %}<span class="text-red-500 ml-0.5">*</span>{% else %}<span class="text-gray-400 font-normal ml-1">(optional)</span>{% endif %}
+                </label>
+
+                {% if object and form.thumbnail.value %}
+                  <div class="mb-2.5 rounded-lg border border-mapborder bg-mapbg p-3 flex items-center gap-3">
+                    <div class="h-14 w-14 rounded-md bg-white border border-mapborder flex items-center justify-center overflow-hidden shrink-0">
+                      <img src="{{ form.thumbnail.value.url }}" alt="Current thumbnail" class="w-full h-full object-cover">
+                    </div>
+                    <div class="min-w-0 flex-1">
+                      <div class="text-[10.5px] text-gray-500 uppercase tracking-wider font-semibold">Currently</div>
+                      <div class="text-[12.5px] text-mapnavy truncate">{{ form.thumbnail.value.name|default:"—" }}</div>
+                      <label class="inline-flex items-center gap-1 mt-1 text-[11.5px] text-red-600 cursor-pointer">
+                        <input type="checkbox" name="thumbnail-clear" id="thumbnail-clear" class="h-3 w-3">
+                        Remove image
+                      </label>
+                    </div>
+                  </div>
+                {% endif %}
+
+                <div class="preview-new-img" data-for="thumbnail" style="display:none;">
+                  <div class="mb-2 rounded-lg border border-mapgreen-50 bg-mapgreen-50 p-2 flex items-center gap-2">
+                    <img class="h-12 w-16 object-cover rounded" alt="New preview" data-preview-target="thumbnail">
+                    <div class="text-[11px] text-mapgreen font-semibold">New image selected</div>
+                  </div>
+                </div>
+
+                {{ form.thumbnail }}
+                {% if form.thumbnail.help_text %}
+                  <p class="text-[11.5px] text-gray-500 mt-1.5">{{ form.thumbnail.help_text }}</p>
+                {% endif %}
+                <p class="text-[10.5px] text-gray-400 mt-1">PNG, JPG, or WebP — max 5 MB.</p>
+                {% if form.thumbnail.errors %}
+                  <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.thumbnail.errors|join:" " }}</p>
+                {% endif %}
+              </div>
+            {% endif %}
+
+            {% if "alt_text" in form.fields %}
+              <div>
+                <label for="{{ form.alt_text.id_for_label }}"
+                       class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                  {{ form.alt_text.label }}
+                </label>
+                {{ form.alt_text }}
+                {% if form.alt_text.help_text %}
+                  <p class="text-[11.5px] text-gray-500 mt-1.5">{{ form.alt_text.help_text }}</p>
+                {% endif %}
+                {% if form.alt_text.errors %}
+                  <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.alt_text.errors|join:" " }}</p>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
+        </section>
+      {% endif %}
+
+      {# ---- Section: Visibility ---- #}
+      {% if "published" in form.fields or "archived" in form.fields or "registration_open" in form.fields or "is_active" in form.fields or "active" in form.fields %}
+        <section class="card p-6">
+          <header class="flex items-center gap-2.5 mb-5">
+            <span class="inline-flex h-7 w-7 items-center justify-center rounded-md
+                         bg-mapgreen-50 text-mapgreen text-[12px] font-bold shrink-0">4</span>
+            <div>
+              <h2 class="text-[14px] font-semibold text-mapnavy">Visibility</h2>
+              <p class="text-[11.5px] text-gray-500 mt-0.5">
+                Control where and how this {{ singular }} appears.
+              </p>
+            </div>
+          </header>
+
+          <div class="space-y-2.5">
+            {% if "published" in form.fields %}
+              <label for="{{ form.published.id_for_label }}"
+                     class="flex items-start gap-3 p-3 rounded-lg border border-mapborder bg-mapbg
+                            hover:border-gray-300 transition cursor-pointer">
+                <span class="pt-0.5">{{ form.published }}</span>
+                <span class="text-[13px] text-gray-700 flex-1">
+                  <span class="block font-semibold text-mapnavy">{{ form.published.label }}</span>
+                  <span class="block text-[11.5px] text-gray-500 mt-0.5">Visible on the public website when checked.</span>
+                </span>
+              </label>
+            {% endif %}
+
+            {% if "is_active" in form.fields %}
+              <label for="{{ form.is_active.id_for_label }}"
+                     class="flex items-start gap-3 p-3 rounded-lg border border-mapborder bg-mapbg
+                            hover:border-gray-300 transition cursor-pointer">
+                <span class="pt-0.5">{{ form.is_active }}</span>
+                <span class="text-[13px] text-gray-700 flex-1">
+                  <span class="block font-semibold text-mapnavy">{{ form.is_active.label }}</span>
+                  <span class="block text-[11.5px] text-gray-500 mt-0.5">Show this on the site when checked.</span>
+                </span>
+              </label>
+            {% endif %}
+
+            {% if "active" in form.fields %}
+              <label for="{{ form.active.id_for_label }}"
+                     class="flex items-start gap-3 p-3 rounded-lg border border-mapborder bg-mapbg
+                            hover:border-gray-300 transition cursor-pointer">
+                <span class="pt-0.5">{{ form.active }}</span>
+                <span class="text-[13px] text-gray-700 flex-1">
+                  <span class="block font-semibold text-mapnavy">{{ form.active.label }}</span>
+                  <span class="block text-[11.5px] text-gray-500 mt-0.5">Show this on the site when checked.</span>
+                </span>
+              </label>
+            {% endif %}
+
+            {% if "archived" in form.fields %}
+              <label for="{{ form.archived.id_for_label }}"
+                     class="flex items-start gap-3 p-3 rounded-lg border border-mapborder bg-mapbg
+                            hover:border-gray-300 transition cursor-pointer">
+                <span class="pt-0.5">{{ form.archived }}</span>
+                <span class="text-[13px] text-gray-700 flex-1">
+                  <span class="block font-semibold text-mapnavy">{{ form.archived.label }}</span>
+                  <span class="block text-[11.5px] text-gray-500 mt-0.5">Hides from listings but keeps the record.</span>
+                </span>
+              </label>
+            {% endif %}
+
+            {% if "registration_open" in form.fields %}
+              <label for="{{ form.registration_open.id_for_label }}"
+                     class="flex items-start gap-3 p-3 rounded-lg border border-mapborder bg-mapbg
+                            hover:border-gray-300 transition cursor-pointer">
+                <span class="pt-0.5">{{ form.registration_open }}</span>
+                <span class="text-[13px] text-gray-700 flex-1">
+                  <span class="block font-semibold text-mapnavy">{{ form.registration_open.label }}</span>
+                  <span class="block text-[11.5px] text-gray-500 mt-0.5">Allow people to register for this event.</span>
+                </span>
+              </label>
+            {% endif %}
+          </div>
+        </section>
+      {% endif %}
+
+      {# ---- Remaining fields ---- #}
+      {% for field in form %}
+        {% if field.name not in "title name slug subtitle headline subheadline body summary description hero_image cover_image image thumbnail alt_text published archived registration_open is_active active" %}
+          <section class="card p-6">
+            <div>
+              <label for="{{ field.id_for_label }}"
+                     class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                {{ field.label }}
+                {% if field.field.required %}<span class="text-red-500 ml-0.5">*</span>{% else %}<span class="text-gray-400 font-normal ml-1">(optional)</span>{% endif %}
+              </label>
+              {{ field }}
+              {% if field.help_text %}
+                <p class="text-[11.5px] text-gray-500 mt-1.5">{{ field.help_text }}</p>
+              {% endif %}
+              {% if field.errors %}
+                <p class="mt-1.5 text-[12.5px] text-red-600">{{ field.errors|join:" " }}</p>
+              {% endif %}
+            </div>
+          </section>
+        {% endif %}
+      {% endfor %}
+
+    </div>
+
+    <!-- ==========================================
+         SIDEBAR (1/3)
+         ========================================== -->
+    <aside class="lg:sticky lg:top-24 space-y-5">
+
+      <!-- Preview card -->
+      <div class="card p-5">
+        <h2 class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-3">
+          Preview
+        </h2>
+
+        <div class="rounded-lg border border-mapborder bg-mapbg overflow-hidden">
+
+          <div class="aspect-video bg-gray-100 flex items-center justify-center overflow-hidden"
+               id="preview-image-container">
+            {% if object and object.hero_image %}
+              <img src="{{ object.hero_image.url }}" alt="" class="w-full h-full object-cover" id="preview-image">
+            {% elif object and object.cover_image %}
+              <img src="{{ object.cover_image.url }}" alt="" class="w-full h-full object-cover" id="preview-image">
+            {% elif object and object.image %}
+              <img src="{{ object.image.url }}" alt="" class="w-full h-full object-cover" id="preview-image">
+            {% else %}
+              <span class="text-3xl text-gray-300" aria-hidden="true" id="preview-image-placeholder">📄</span>
+            {% endif %}
+          </div>
+
+          <div class="p-3">
+            <div id="preview-title" class="text-[13px] font-semibold text-mapnavy truncate">
+              {% if object %}{{ object }}{% else %}Untitled {{ singular|capfirst }}{% endif %}
+            </div>
+            <div id="preview-slug" class="text-[11px] text-gray-500 font-mono truncate mt-0.5">
+              {% if object and object.slug %}/{{ object.slug }}/{% else %}—{% endif %}
+            </div>
+          </div>
+        </div>
+
+        <p class="text-[11px] text-gray-500 mt-3 leading-relaxed">
+          This is a rough preview. The final layout on the public site may differ.
+        </p>
+      </div>
+
+      <!-- Tips -->
+      <div class="card p-5 border-mapgreen-50 bg-mapgreen-50">
+        <div class="flex items-start gap-2.5">
+          <span class="text-mapgreen shrink-0 mt-0.5" aria-hidden="true">💡</span>
+          <div>
+            <h3 class="text-[12.5px] font-semibold text-mapnavy">Tips</h3>
+            <ul class="mt-2 space-y-1.5 text-[11.5px] text-gray-700 leading-relaxed">
+              {% if mode == "create" %}
+                <li>• Leave the slug blank to auto-generate it from the title.</li>
+                <li>• Images are optional — you can upload later from the list.</li>
+              {% else %}
+                <li>• Changes go live immediately if published.</li>
+                <li>• Unsaved changes are guarded if you try to leave.</li>
+              {% endif %}
+              <li>• Use <strong>Save &amp; continue</strong> to keep editing after saving.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- ACTION BAR -->
+    <div class="lg:col-span-3 flex flex-wrap items-center justify-between gap-3 pt-4">
+      <a href="{{ cancel_url }}"
+         id="cancel-link"
+         class="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-gray-500
+                hover:text-mapnavy transition">
+        ← Cancel
+      </a>
+
+      <div class="flex items-center gap-2">
+        {% if mode == "create" %}
+          <button type="submit" name="save_and_add" value="1"
+                  class="inline-flex items-center h-10 px-3.5 rounded-lg
+                         border border-mapborder bg-white text-[13px] font-medium text-gray-700
+                         hover:bg-gray-50 transition">
+            Save &amp; add another
+          </button>
+        {% else %}
+          <button type="submit" name="save_and_continue" value="1"
+                  class="inline-flex items-center h-10 px-3.5 rounded-lg
+                         border border-mapborder bg-white text-[13px] font-medium text-gray-700
+                         hover:bg-gray-50 transition">
+            Save &amp; continue
+          </button>
+        {% endif %}
+
+        <button type="submit" id="generic-submit"
+                class="btn-primary inline-flex items-center gap-2 h-10 text-[13px] !px-5
+                       disabled:opacity-60 disabled:cursor-not-allowed">
+          <svg id="submit-spinner" class="hidden animate-spin" width="14" height="14"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+          </svg>
+          <span id="submit-label">
+            {% if mode == "create" %}Create {{ singular|capfirst }}{% else %}Save changes{% endif %}
+          </span>
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<style>
+  #generic-form input[type="text"],
+  #generic-form input[type="email"],
+  #generic-form input[type="password"],
+  #generic-form input[type="tel"],
+  #generic-form input[type="url"],
+  #generic-form input[type="number"],
+  #generic-form input[type="date"],
+  #generic-form input[type="datetime-local"],
+  #generic-form input[type="time"],
+  #generic-form input[type="search"],
+  #generic-form select,
+  #generic-form textarea {
+    @apply block w-full rounded-lg border border-mapborder bg-white px-3 py-2.5
+           text-[14px] text-mapnavy placeholder-gray-400 transition
+           hover:border-gray-300
+           focus:outline-none focus:border-mapgreen focus:ring-2 focus:ring-mapgreen/20;
+  }
+
+  #generic-form input[type="number"] { font-variant-numeric: tabular-nums; }
+  #generic-form textarea { min-height: 200px; resize: vertical; line-height: 1.6; }
+
+  #generic-form input[type="checkbox"] {
+    @apply h-4 w-4 rounded border-gray-300 text-mapgreen
+           focus:outline-none focus:ring-2 focus:ring-mapgreen/40;
+  }
+
+  #generic-form input[type="file"] {
+    @apply block w-full text-[13px] text-gray-600
+           file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border-0
+           file:text-[12.5px] file:font-semibold
+           file:bg-mapgreen-50 file:text-mapgreen
+           hover:file:bg-mapgreen/15 file:cursor-pointer cursor-pointer;
+  }
+
+  #generic-form input[aria-invalid="true"],
+  #generic-form select[aria-invalid="true"],
+  #generic-form textarea[aria-invalid="true"] {
+    border-color: #fca5a5;
+    background-color: #fef2f2;
+  }
+</style>
+
+<script>
+(function () {
+  const form    = document.getElementById('generic-form');
+  const submit  = document.getElementById('generic-submit');
+  const label   = document.getElementById('submit-label');
+  const spinner = document.getElementById('submit-spinner');
+  const cancel  = document.getElementById('cancel-link');
+
+  if (!form) return;
+
+  /* Live preview */
+  const previewTitle = document.getElementById('preview-title');
+  const previewSlug  = document.getElementById('preview-slug');
+  const previewImage = document.getElementById('preview-image');
+  const previewPlaceholder = document.getElementById('preview-image-placeholder');
+
+  const titleInput =
+    form.querySelector('input[name="title"]') ||
+    form.querySelector('input[name="name"]')  ||
+    form.querySelector('textarea[name="title"]');
+
+  const slugInput =
+    form.querySelector('input[name="slug"]') ||
+    form.querySelector('input[name="permalink"]');
+
+  const singularRaw  = "{{ singular|default:'item' }}";
+  const untitledText = "Untitled " + singularRaw.charAt(0).toUpperCase() + singularRaw.slice(1);
+
+  const updatePreview = () => {
+    if (previewTitle) {
+      const value = titleInput?.value?.trim();
+      previewTitle.textContent = value || untitledText;
+    }
+    if (previewSlug) {
+      const value = slugInput?.value?.trim();
+      previewSlug.textContent = value ? `/${value}/` : '—';
+    }
+  };
+
+  titleInput?.addEventListener('input', updatePreview);
+  slugInput?.addEventListener('input', updatePreview);
+  updatePreview();
+
+  /* Auto-slug */
+  let slugTouched = !!(slugInput?.value?.trim());
+  slugInput?.addEventListener('input', () => { slugTouched = true; });
+  titleInput?.addEventListener('input', () => {
+    if (slugTouched || !slugInput) return;
+    const slug = titleInput.value
+      .toLowerCase().trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 200);
+    slugInput.value = slug;
+    updatePreview();
+  });
+
+  /* Image preview on file-select */
+  form.querySelectorAll('input[type="file"]').forEach((input) => {
+    input.addEventListener('change', () => {
+      const file = input.files && input.files[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file.');
+        input.value = '';
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image is too large. Maximum 5 MB.');
+        input.value = '';
+        return;
+      }
+
+      const url = URL.createObjectURL(file);
+      const fieldName = input.name;
+
+      if (previewImage && input === form.querySelector('input[type="file"]')) {
+        previewImage.src = url;
+        previewImage.classList.remove('hidden');
+        previewPlaceholder?.classList.add('hidden');
+      }
+
+      const wrapper = form.querySelector(`.preview-new-img[data-for="${fieldName}"]`);
+      if (wrapper) {
+        const img = wrapper.querySelector('[data-preview-target]');
+        if (img) img.src = url;
+        wrapper.style.display = 'block';
+      }
+    });
+  });
+
+  /* Unsaved changes guard */
+  let dirty = false;
+  form.addEventListener('input',  () => { dirty = true; });
+  form.addEventListener('change', () => { dirty = true; });
+  form.addEventListener('submit', () => { dirty = false; });
+
+  window.addEventListener('beforeunload', (e) => {
+    if (!dirty) return;
+    e.preventDefault();
+    e.returnValue = '';
+  });
+
+  cancel?.addEventListener('click', (e) => {
+    if (!dirty) return;
+    if (!confirm('You have unsaved changes. Leave anyway?')) {
+      e.preventDefault();
+    }
+  });
+
+  /* Submit guard */
+  form.addEventListener('submit', () => {
+    if (submit) submit.disabled = true;
+    if (label)  label.textContent = 'Saving…';
+    spinner?.classList.remove('hidden');
+  });
+
+  /* Focus first error */
+  const firstError = form.querySelector('[aria-invalid="true"]');
+  if (firstError) setTimeout(() => firstError.focus(), 100);
+})();
+</script>
+
+{% endblock %}

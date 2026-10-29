@@ -1,0 +1,144 @@
+{% load static %}<!DOCTYPE html>
+<html lang="{% block html_lang %}en{% endblock %}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!-- ============ Title & Description ============ -->
+  <title>{% block title %}{{ ORG_NAME }}{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}Mission Against Poverty is a community-driven organization working to reduce poverty through education, healthcare, skills development and sustainable community support in Zambia.{% endblock %}">
+  <meta name="author" content="{{ ORG_NAME }}">
+  <meta name="robots" content="index, follow">
+  <meta name="format-detection" content="telephone=no">
+
+  <!-- ============ Theme ============ -->
+  <meta name="theme-color" content="#16253d" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0f1e33" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="light">
+
+  <!-- ============ Open Graph ============ -->
+  <meta property="og:site_name" content="{{ ORG_NAME }}">
+  <meta property="og:title" content="{% block og_title %}{{ ORG_NAME }}{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}Together we can end poverty.{% endblock %}">
+  <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+  <meta property="og:url" content="{{ request.build_absolute_uri }}">
+  <meta property="og:image" content="{% block og_image %}{% if site.og_image %}{{ site.og_image.url }}{% else %}{% static 'img/og-default.png' %}{% endif %}{% endblock %}">
+  <meta property="og:image:alt" content="{{ ORG_NAME }}">
+
+  <!-- ============ Twitter ============ -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{% block tw_title %}{{ ORG_NAME }}{% endblock %}">
+  <meta name="twitter:description" content="{% block tw_description %}Together we can end poverty.{% endblock %}">
+  <meta name="twitter:image" content="{% block tw_image %}{% if site.og_image %}{{ site.og_image.url }}{% else %}{% static 'img/og-default.png' %}{% endif %}{% endblock %}">
+
+  <!-- ============ Canonical ============ -->
+  {% block canonical %}<link rel="canonical" href="{{ request.build_absolute_uri }}">{% endblock %}
+
+  <!-- ============ Fonts ============ -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+
+  <!-- ============ Tailwind (CDN) ============ -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          colors: {
+            mapnavy: '#16253d',
+            'mapnavy-700': '#1f3350',
+            'mapnavy-900': '#0f1e33',
+            mapgreen: '#1e9e5f',
+            'mapgreen-600': '#188a52',
+            'mapgreen-50': '#e8f7ef',
+            mapbg: '#f5f7fa',
+            mapborder: '#e5e9f0',
+          },
+          boxShadow: {
+            card: '0 1px 2px rgba(16,24,40,.05), 0 1px 3px rgba(16,24,40,.06)',
+            'card-hover': '0 4px 12px rgba(16,24,40,.08), 0 2px 6px rgba(16,24,40,.06)',
+          },
+          borderRadius: {
+            xl2: '0.875rem',
+          },
+        },
+      },
+      plugins: [
+        function ({ addComponents }) {
+          addComponents({
+            '.form-input': {
+              display: 'block', width: '100%', borderRadius: '0.5rem',
+              borderWidth: '1px', borderStyle: 'solid', borderColor: '#e5e9f0',
+              backgroundColor: '#fff', padding: '0.5rem 0.75rem',
+              fontSize: '0.875rem', color: '#16253d',
+              transition: 'border-color 150ms, box-shadow 150ms',
+            },
+            '.form-input:focus': {
+              outline: 'none', borderColor: '#1e9e5f',
+              boxShadow: '0 0 0 3px rgba(30,158,95,0.2)',
+            },
+            '.card': {
+              borderRadius: '0.75rem', borderWidth: '1px', borderStyle: 'solid',
+              borderColor: '#e5e9f0', backgroundColor: '#fff',
+              boxShadow: '0 1px 2px rgba(16,24,40,.05)',
+            },
+            '.btn-primary': {
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              borderRadius: '0.5rem', backgroundColor: '#1e9e5f',
+              padding: '0.5rem 1rem', fontSize: '0.875rem', fontWeight: '600',
+              color: '#fff', border: 'none', cursor: 'pointer',
+            },
+            '.btn-secondary': {
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              borderRadius: '0.5rem', borderWidth: '1px', borderStyle: 'solid',
+              borderColor: '#e5e9f0', backgroundColor: '#fff',
+              padding: '0.5rem 1rem', fontSize: '0.875rem', fontWeight: '600',
+              color: '#16253d', cursor: 'pointer',
+            },
+          });
+        },
+      ],
+    }
+  </script>
+
+  <!-- ============ Favicon (uses uploaded favicon, falls back to brand mark) ============ -->
+  {% if site.favicon %}
+    <link rel="icon" href="{{ site.favicon.url }}">
+  {% else %}
+    <link rel="icon" type="image/svg+xml"
+          href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%231e9e5f'/%3E%3Ctext x='16' y='22' font-size='16' text-anchor='middle' fill='white' font-family='system-ui'%3E%E2%99%A5%3C/text%3E%3C/svg%3E">
+  {% endif %}
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'img/apple-touch-icon.png' %}">
+  <link rel="mask-icon" href="{% static 'img/mask-icon.svg' %}" color="#1e9e5f">
+
+  <!-- ============ App CSS ============ -->
+  <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+
+  {% block head %}{% endblock %}
+
+  <!-- Chart.js is only needed on report/chart pages; load conditionally to avoid
+       dragging a ~200KB library into the login and settings pages -->
+  {% block chart_scripts %}{% endblock %}
+</head>
+
+<body class="antialiased bg-mapbg text-mapnavy min-h-screen flex flex-col">
+
+  <!-- Skip link -->
+  <a href="#main"
+     class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100]
+            focus:px-4 focus:py-2.5 focus:rounded-lg focus:bg-mapnavy focus:text-white
+            focus:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen">
+    Skip to main content
+  </a>
+
+  {% block body %}{% endblock %}
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

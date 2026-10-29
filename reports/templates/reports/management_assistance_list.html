@@ -1,0 +1,114 @@
+{% extends "management_base.html" %}
+{% block title %}Assistance Requests — {{ ORG_NAME }}{% endblock %}
+{% block breadcrumb %}Assistance Requests{% endblock %}
+
+{% block content %}
+
+<div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+  <div>
+    <h1 class="text-2xl font-bold text-mapnavy">Assistance Requests</h1>
+    <p class="text-sm text-gray-500 mt-1">Beneficiary requests for food, education, healthcare and other support.</p>
+  </div>
+</div>
+
+<!-- Stat cards -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+  <div class="stat-card">
+    <div class="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Total Requests</div>
+    <div class="stat-value mt-1">{{ stats.total }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Submitted</div>
+    <div class="stat-value mt-1 text-amber-600">{{ stats.submitted }}</div>
+    <div class="text-[11.5px] text-gray-500 mt-1">Awaiting first review</div>
+  </div>
+  <div class="stat-card">
+    <div class="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Under Review</div>
+    <div class="stat-value mt-1 text-blue-600">{{ stats.under_review }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Approved / Delivered</div>
+    <div class="stat-value mt-1 text-mapgreen">{{ stats.approved }} / {{ stats.delivered }}</div>
+  </div>
+</div>
+
+<!-- Filters + search -->
+<div class="card p-4 flex flex-wrap gap-3 items-center mb-5">
+  <form method="get" class="flex flex-wrap gap-3 items-center">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search reference, name, email…"
+           class="form-input max-w-xs">
+    <select name="status" class="form-input max-w-[180px]" onchange="this.form.submit()">
+      {% for value, label in statuses %}
+        <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn-secondary text-[13px]">Search</button>
+    {% if q or status_filter %}
+      <a href="/management/beneficiaries/" class="text-[12.5px] text-gray-500 hover:text-mapnavy underline">Clear</a>
+    {% endif %}
+  </form>
+  <div class="ml-auto text-[12.5px] text-gray-500">
+    Showing <strong>{{ total }}</strong> request{{ total|pluralize }}
+  </div>
+</div>
+
+<!-- Table -->
+<div class="table-wrapper">
+  <table class="table-base w-full">
+    <thead>
+      <tr>
+        {% for col in columns %}
+          <th class="{% if col.align == 'right' %}text-right{% elif col.align == 'center' %}text-center{% endif %}">{{ col.label }}</th>
+        {% endfor %}
+        <th class="text-right" style="width: 120px;">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row_data in rows %}
+        <tr>
+          {% for cell in row_data.cells %}
+            <td class="{% if cell.align == 'right' %}text-right{% elif cell.align == 'center' %}text-center{% endif %} {% if cell.muted %}text-gray-500 text-[12.5px]{% endif %} align-middle">
+              {% if cell.is_status %}
+                {% if cell.status == 'submitted' %}<span class="badge badge-warning">{{ cell.value }}</span>
+                {% elif cell.status == 'under_review' %}<span class="badge badge-muted text-blue-700 bg-blue-50">{{ cell.value }}</span>
+                {% elif cell.status == 'approved' %}<span class="badge badge-success">{{ cell.value }}</span>
+                {% elif cell.status == 'declined' %}<span class="badge badge-danger">{{ cell.value }}</span>
+                {% elif cell.status == 'delivered' %}<span class="badge badge-success">{{ cell.value }}</span>
+                {% elif cell.status == 'closed' %}<span class="badge badge-muted">{{ cell.value }}</span>
+                {% else %}<span class="badge badge-muted">{{ cell.value }}</span>{% endif %}
+              {% else %}
+                {{ cell.value }}
+              {% endif %}
+            </td>
+          {% endfor %}
+          <td class="text-right align-middle">
+            {% if row_data.view_url %}
+              <a href="{{ row_data.view_url }}" class="text-mapgreen text-[12.5px] font-medium hover:underline">Review →</a>
+            {% else %}
+              <a href="/management/beneficiaries/{{ row_data.pk }}/" class="text-mapgreen text-[12.5px] font-medium hover:underline">Review →</a>
+            {% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="{{ columns|length|add:1 }}" class="text-center py-10">
+          <div class="text-3xl mb-2 text-gray-300">🙏</div>
+          <div class="text-[14px] font-medium text-mapnavy">No requests found</div>
+          <p class="text-[12.5px] text-gray-500 mt-1">Requests submitted via the public form will appear here.</p>
+          {% if q or status_filter %}
+            <a href="/management/beneficiaries/" class="text-mapgreen text-[12.5px] mt-3 inline-block hover:underline">Clear filters</a>
+          {% endif %}
+        </td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if is_paginated %}
+  <div class="flex justify-center gap-2 mt-6 text-sm">
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn-secondary text-[13px]">← Previous</a>{% endif %}
+    <span class="px-3 py-2 text-gray-500 text-[13px]">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn-secondary text-[13px]">Next →</a>{% endif %}
+  </div>
+{% endif %}
+
+{% endblock %}

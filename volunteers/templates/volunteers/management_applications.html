@@ -1,0 +1,388 @@
+{% extends "management_base.html" %}
+{% block title %}Volunteer Applications — {{ ORG_NAME }}{% endblock %}
+{% block breadcrumb %}Volunteers / Applications{% endblock %}
+
+{% block content %}
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<div class="mb-6">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-bold text-mapnavy tracking-tight">
+        Volunteer Applications
+      </h1>
+      <p class="text-[13px] text-gray-500 mt-1">
+        {% if status_filter %}
+          <span class="font-semibold text-mapnavy">{{ paginator.count }}</span>
+          match{{ paginator.count|pluralize:"es" }}
+          <span class="text-gray-300 mx-1.5">·</span>
+          <a href="?" class="text-mapgreen hover:underline">Clear filter</a>
+        {% else %}
+          {{ paginator.count }} application{{ paginator.count|pluralize }} total
+        {% endif %}
+      </p>
+    </div>
+
+    <a href="/management/volunteers/"
+       class="btn-secondary inline-flex items-center h-9 text-[12.5px] !px-3.5">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.5" class="mr-1.5" aria-hidden="true">
+        <path d="M19 12H5M11 18l-6-6 6-6"/>
+      </svg>
+      All volunteers
+    </a>
+  </div>
+
+  <!-- Filter toolbar -->
+  <form method="get"
+        class="mt-4 flex flex-wrap items-center gap-2">
+
+    <label class="text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+      Filter
+    </label>
+
+    <select name="status"
+            aria-label="Filter by status"
+            onchange="this.form.submit()"
+            class="form-input min-w-[160px] max-w-[200px] text-[13px]">
+      <option value="">All statuses</option>
+      {% for value, label in statuses %}
+        <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>
+          {{ label }}
+        </option>
+      {% endfor %}
+    </select>
+
+    {% if status_filter %}
+      <a href="?"
+         class="text-[12.5px] text-gray-500 hover:text-mapnavy underline-offset-2 hover:underline">
+        Clear
+      </a>
+    {% endif %}
+  </form>
+
+  <!-- Active filter chip -->
+  {% if status_filter %}
+    <div class="flex flex-wrap items-center gap-2 mt-3">
+      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md
+                   bg-mapbg border border-mapborder text-[11.5px] text-gray-700">
+        <span class="text-gray-400 text-[10px] uppercase tracking-wider font-semibold">
+          Status
+        </span>
+        <span class="font-medium text-mapnavy">{{ status_filter|title }}</span>
+        <a href="?"
+           aria-label="Remove status filter"
+           class="text-gray-400 hover:text-mapnavy transition">✕</a>
+      </span>
+    </div>
+  {% endif %}
+</div>
+
+<!-- ============================================================
+     BODY
+     ============================================================ -->
+{% if applications %}
+
+  <!-- Desktop table -->
+  <div class="hidden md:block card overflow-hidden p-0">
+    <div class="overflow-x-auto">
+      <table class="table-base w-full table-fixed">
+        <caption class="sr-only">
+          Volunteer applications — {{ paginator.count }} total
+          {% if status_filter %}with status filter{% endif %}
+        </caption>
+
+        <colgroup>
+          <col style="width: auto;">
+          <col style="width: 240px;">
+          <col style="width: 140px;">
+          <col style="width: 240px;">
+          <col style="width: 130px;">
+          <col style="width: 130px;">
+          <col style="width: 130px;">
+        </colgroup>
+
+        <thead class="bg-mapbg border-b border-mapborder">
+          <tr>
+            <th scope="col"
+                class="text-left text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+              Applicant
+            </th>
+            <th scope="col"
+                class="text-left text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+              Email
+            </th>
+            <th scope="col"
+                class="text-left text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+              Location
+            </th>
+            <th scope="col"
+                class="text-left text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+              Skills
+            </th>
+            <th scope="col"
+                class="text-left text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+              Status
+            </th>
+            <th scope="col"
+                class="text-left text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+              Submitted
+            </th>
+            <th scope="col"
+                class="text-right text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+              Actions
+            </th>
+          </tr>
+        </thead>
+
+        <tbody class="divide-y divide-mapborder">
+          {% for a in applications %}
+            <tr class="hover:bg-mapbg/60 transition-colors group">
+
+              <!-- Applicant -->
+              <td class="py-3 pr-3 align-middle">
+                <a href="/management/volunteers/applications/{{ a.pk }}/"
+                   class="block hover:text-mapgreen transition">
+                  <div class="font-semibold text-mapnavy text-[13.5px] truncate">
+                    {{ a.full_name|default:"—" }}
+                  </div>
+                  {% if a.phone %}
+                    <div class="text-[11px] text-gray-500 truncate">{{ a.phone }}</div>
+                  {% endif %}
+                </a>
+              </td>
+
+              <!-- Email -->
+              <td class="py-3 pr-3 align-middle">
+                <a href="mailto:{{ a.email }}"
+                   class="text-[13px] text-mapgreen hover:underline truncate block">
+                  {{ a.email|default:"—" }}
+                </a>
+              </td>
+
+              <!-- Location -->
+              <td class="py-3 pr-3 align-middle text-[13px] text-gray-600 truncate">
+                {{ a.location|default:"—" }}
+              </td>
+
+              <!-- Skills (truncated) -->
+              <td class="py-3 pr-3 align-middle">
+                <div class="text-[12.5px] text-gray-600 truncate" title="{{ a.skills|default:'' }}">
+                  {{ a.skills|default:"—"|truncatechars:60 }}
+                </div>
+              </td>
+
+              <!-- Status -->
+              <td class="py-3 pr-3 align-middle">
+                {% if a.status == 'approved' %}
+                  <span class="badge badge-success">{{ a.get_status_display }}</span>
+                {% elif a.status == 'submitted' %}
+                  <span class="badge badge-warning">{{ a.get_status_display }}</span>
+                {% elif a.status == 'rejected' %}
+                  <span class="badge badge-danger">{{ a.get_status_display }}</span>
+                {% else %}
+                  <span class="badge badge-muted">{{ a.get_status_display }}</span>
+                {% endif %}
+              </td>
+
+              <!-- Submitted -->
+              <td class="py-3 align-middle text-[12.5px] text-gray-500 tabular-nums">
+                <time datetime="{{ a.created_at|date:'c' }}">
+                  {{ a.created_at|date:"M d, Y" }}
+                </time>
+              </td>
+
+              <!-- Actions -->
+              <td class="py-3 align-middle text-right whitespace-nowrap">
+                <div class="inline-flex items-center gap-1 justify-end
+                            md:opacity-60 md:group-hover:opacity-100 transition-opacity">
+                  <a href="/management/volunteers/applications/{{ a.pk }}/"
+                     class="inline-flex items-center h-7 px-2.5 rounded-md
+                            text-[12px] font-medium text-mapgreen
+                            hover:bg-mapgreen-50 transition">
+                    Review
+                  </a>
+                  {% if a.email %}
+                    <a href="mailto:{{ a.email }}"
+                       class="inline-flex items-center h-7 px-2.5 rounded-md
+                              text-[12px] font-medium text-gray-600
+                              hover:bg-gray-100 transition">
+                      Email
+                    </a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Mobile cards -->
+  <div class="md:hidden space-y-3">
+    {% for a in applications %}
+      <div class="card p-4">
+
+        <!-- Name + status -->
+        <div class="flex items-start justify-between gap-3 mb-2">
+          <div class="min-w-0 flex-1">
+            <div class="font-semibold text-mapnavy text-[14px] truncate">
+              {{ a.full_name|default:"—" }}
+            </div>
+            <div class="text-[11.5px] text-gray-500 truncate">
+              {{ a.email|default:"—" }}
+            </div>
+          </div>
+          {% if a.status == 'approved' %}
+            <span class="badge badge-success shrink-0">{{ a.get_status_display }}</span>
+          {% elif a.status == 'submitted' %}
+            <span class="badge badge-warning shrink-0">{{ a.get_status_display }}</span>
+          {% elif a.status == 'rejected' %}
+            <span class="badge badge-danger shrink-0">{{ a.get_status_display }}</span>
+          {% else %}
+            <span class="badge badge-muted shrink-0">{{ a.get_status_display }}</span>
+          {% endif %}
+        </div>
+
+        <!-- Details -->
+        <dl class="space-y-1.5 text-[12.5px]">
+          <div class="flex justify-between gap-3">
+            <dt class="text-gray-500">Location</dt>
+            <dd class="text-mapnavy text-right truncate">{{ a.location|default:"—" }}</dd>
+          </div>
+          <div class="flex justify-between gap-3">
+            <dt class="text-gray-500">Submitted</dt>
+            <dd class="text-mapnavy text-right tabular-nums">
+              {{ a.created_at|date:"M d, Y" }}
+            </dd>
+          </div>
+          {% if a.skills %}
+            <div class="flex flex-col gap-1">
+              <dt class="text-gray-500">Skills</dt>
+              <dd class="text-mapnavy text-[12px] leading-relaxed">
+                {{ a.skills|truncatechars:100 }}
+              </dd>
+            </div>
+          {% endif %}
+        </dl>
+
+        <!-- Actions -->
+        <div class="mt-3 pt-3 border-t border-mapborder flex items-center justify-end gap-1">
+          <a href="/management/volunteers/applications/{{ a.pk }}/"
+             class="inline-flex items-center h-8 px-3 rounded-md
+                    text-[12px] font-medium text-mapgreen hover:bg-mapgreen-50 transition">
+            Review
+          </a>
+          {% if a.email %}
+            <a href="mailto:{{ a.email }}"
+               class="inline-flex items-center h-8 px-3 rounded-md
+                      text-[12px] font-medium text-gray-600 hover:bg-gray-100 transition">
+              Email
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Pagination -->
+  {% if is_paginated %}
+    <nav class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6"
+         aria-label="Pagination">
+      <p class="text-[12.5px] text-gray-500 order-2 sm:order-1">
+        Showing
+        <span class="font-semibold text-mapnavy">{{ page_obj.start_index }}</span>–<span class="font-semibold text-mapnavy">{{ page_obj.end_index }}</span>
+        of <span class="font-semibold text-mapnavy">{{ paginator.count }}</span>
+      </p>
+
+      <div class="flex items-center gap-1 order-1 sm:order-2">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}"
+             class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-white
+                    text-[12.5px] font-medium text-gray-700 hover:bg-gray-50 transition">
+            ← Prev
+          </a>
+        {% else %}
+          <span class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-gray-50
+                       text-[12.5px] font-medium text-gray-400 cursor-not-allowed">
+            ← Prev
+          </span>
+        {% endif %}
+
+        {% for num in paginator.page_range %}
+          {% if num == page_obj.number %}
+            <span aria-current="page"
+                  class="inline-flex items-center justify-center h-9 w-9 rounded-lg
+                         bg-mapgreen text-white text-[12.5px] font-semibold">
+              {{ num }}
+            </span>
+          {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+            <a href="?page={{ num }}{% if status_filter %}&status={{ status_filter }}{% endif %}"
+               class="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-mapborder
+                      bg-white text-[12.5px] font-medium text-gray-700 hover:bg-gray-50 transition">
+              {{ num }}
+            </a>
+          {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}"
+             class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-white
+                    text-[12.5px] font-medium text-gray-700 hover:bg-gray-50 transition">
+            Next →
+          </a>
+        {% else %}
+          <span class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-gray-50
+                       text-[12.5px] font-medium text-gray-400 cursor-not-allowed">
+            Next →
+          </span>
+        {% endif %}
+      </div>
+    </nav>
+  {% endif %}
+
+{% else %}
+  <!-- Empty state -->
+  <div class="card p-10 sm:p-14 text-center max-w-lg mx-auto">
+    <div class="mx-auto h-14 w-14 rounded-full bg-mapgreen-50 text-mapgreen
+                flex items-center justify-center mb-4 text-2xl">
+      📝
+    </div>
+    <h2 class="text-[16px] font-semibold text-mapnavy">
+      {% if status_filter %}
+        No {{ status_filter }} applications
+      {% else %}
+        No applications yet
+      {% endif %}
+    </h2>
+    <p class="text-[13px] text-gray-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
+      {% if status_filter %}
+        Try a different status filter, or clear it to see all applications.
+      {% else %}
+        When someone applies through the volunteer page, their application will appear here for review.
+      {% endif %}
+    </p>
+    <div class="mt-5 flex flex-wrap items-center justify-center gap-2">
+      {% if status_filter %}
+        <a href="?" class="btn-primary inline-flex items-center h-10 px-5 text-[13px]">
+          Clear filter
+        </a>
+      {% else %}
+        <a href="/volunteer/"
+           target="_blank" rel="noopener"
+           class="btn-secondary inline-flex items-center h-10 px-4 text-[13px]">
+          View public apply page
+        </a>
+      {% endif %}
+      <a href="/management/volunteers/"
+         class="btn-secondary inline-flex items-center h-10 px-4 text-[13px]">
+        All volunteers
+      </a>
+    </div>
+  </div>
+{% endif %}
+
+{% endblock %}

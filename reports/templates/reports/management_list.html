@@ -1,0 +1,626 @@
+{% extends "management_base.html" %}
+{% block title %}{{ title }} — {{ ORG_NAME }}{% endblock %}
+{% block breadcrumb %}{{ title }}{% endblock %}
+
+{% block content %}
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<div class="mb-6">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-bold text-mapnavy tracking-tight">{{ title }}</h1>
+      <p class="text-[13px] text-gray-500 mt-1">
+        {% if q or status_filter %}
+          <span class="font-semibold text-mapnavy">{{ total }}</span>
+          match{{ total|pluralize:"es" }}
+          <span class="text-gray-300 mx-1.5">·</span>
+          <a href="?" class="text-mapgreen hover:underline">Clear filters</a>
+        {% else %}
+          {{ total }} record{{ total|pluralize }} total
+        {% endif %}
+      </p>
+    </div>
+
+    {% if add_url %}
+      <a href="{{ add_url }}"
+         class="btn-primary inline-flex items-center h-9 text-[12.5px] !px-3.5">
+        + New {{ singular|default:"record" }}
+      </a>
+    {% endif %}
+  </div>
+
+  <!-- Search + filter toolbar -->
+  <form method="get" role="search"
+        class="mt-4 flex flex-wrap items-center gap-2">
+    <div class="relative flex-1 min-w-[200px] max-w-md">
+      <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400"
+            aria-hidden="true">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="M21 21l-4.35-4.35"/>
+        </svg>
+      </span>
+      <input type="text"
+             name="q"
+             value="{{ q }}"
+             placeholder="Search {{ title|lower }}…"
+             aria-label="Search {{ title }}"
+             class="form-input w-full pl-9 pr-9 text-[13px]">
+      {% if q %}
+        <a href="?{% if status_filter %}status={{ status_filter }}{% endif %}"
+           aria-label="Clear search"
+           class="absolute inset-y-0 right-2 flex items-center px-1 text-gray-400
+                  hover:text-gray-600 transition">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </a>
+      {% endif %}
+    </div>
+
+    {% if statuses %}
+      <select name="status"
+              aria-label="Filter by status"
+              onchange="this.form.submit()"
+              class="form-input min-w-[150px] max-w-[200px] text-[13px]">
+        {% for value, label in statuses %}
+          <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>
+            {{ label }}
+          </option>
+        {% endfor %}
+      </select>
+    {% endif %}
+
+    <button class="btn-secondary inline-flex items-center h-9 text-[12.5px] !px-3.5">
+      Search
+    </button>
+
+    {% if q or status_filter %}
+      <a href="?"
+         class="text-[12.5px] text-gray-500 hover:text-mapnavy underline-offset-2 hover:underline">
+        Clear all
+      </a>
+    {% endif %}
+  </form>
+
+  <!-- Active filter chips -->
+  {% if q or status_filter %}
+    <div class="flex flex-wrap items-center gap-2 mt-3">
+      {% if q %}
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md
+                     bg-mapbg border border-mapborder text-[11.5px] text-gray-700">
+          <span class="text-gray-400 text-[10px] uppercase tracking-wider font-semibold">Search</span>
+          <span class="font-medium text-mapnavy">"{{ q }}"</span>
+          <a href="?{% if status_filter %}status={{ status_filter }}{% endif %}"
+             aria-label="Remove search filter"
+             class="text-gray-400 hover:text-mapnavy transition">✕</a>
+        </span>
+      {% endif %}
+      {% if status_filter %}
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md
+                     bg-mapbg border border-mapborder text-[11.5px] text-gray-700">
+          <span class="text-gray-400 text-[10px] uppercase tracking-wider font-semibold">Status</span>
+          <span class="font-medium text-mapnavy">{{ status_filter|title }}</span>
+          <a href="?{% if q %}q={{ q }}{% endif %}"
+             aria-label="Remove status filter"
+             class="text-gray-400 hover:text-mapnavy transition">✕</a>
+        </span>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+
+<!-- ============================================================
+     BULK ACTIONS BAR
+     ============================================================ -->
+{% if enable_bulk %}
+  <div id="bulk-bar"
+       class="hidden mb-3 rounded-lg bg-mapnavy text-white px-4 py-2.5
+              flex items-center justify-between gap-3">
+    <div class="text-[13px]">
+      <span id="bulk-count" class="font-semibold">0</span> selected
+    </div>
+    <div class="flex items-center gap-2">
+      <button type="button" onclick="bulkAction('export')"
+              class="inline-flex items-center h-8 px-3 rounded-md
+                     bg-white/10 hover:bg-white/20 text-[12px] font-medium transition">
+        Export
+      </button>
+      <button type="button" onclick="bulkAction('activate')"
+              class="inline-flex items-center h-8 px-3 rounded-md
+                     bg-white/10 hover:bg-white/20 text-[12px] font-medium transition">
+        Activate
+      </button>
+      <button type="button" onclick="bulkAction('delete')"
+              class="inline-flex items-center h-8 px-3 rounded-md
+                     bg-red-500/20 hover:bg-red-500/30 text-[12px] font-medium transition">
+        Delete
+      </button>
+      <button type="button" onclick="clearSelection()"
+              class="inline-flex items-center h-8 px-3 rounded-md
+                     text-white/60 hover:text-white text-[12px] font-medium transition">
+        Cancel
+      </button>
+    </div>
+  </div>
+{% endif %}
+
+<!-- ============================================================
+     DESKTOP TABLE
+     ============================================================ -->
+<div class="hidden md:block card overflow-hidden p-0">
+  <div class="overflow-x-auto">
+    <table class="table-base w-full table-fixed" id="list-table">
+      <caption class="sr-only">
+        {{ title }} — {{ total }} record{{ total|pluralize }}
+        {% if q %} matching "{{ q }}"{% endif %}
+        {% if status_filter %} with status filter{% endif %}
+      </caption>
+
+      <colgroup>
+        {% if enable_bulk %}
+          <col style="width: 44px;">
+        {% endif %}
+        {% if rows.0.cells.0.is_image %}
+          <col style="width: 56px;">
+        {% endif %}
+        {% for col in columns %}
+          <col style="width: {{ col.width|default:'auto' }};">
+        {% endfor %}
+        <col style="width: 180px;">
+      </colgroup>
+
+      <thead class="bg-mapbg border-b border-mapborder">
+        <tr>
+          {% if enable_bulk %}
+            <th scope="col" class="pr-0">
+              <input type="checkbox"
+                     id="select-all"
+                     aria-label="Select all rows"
+                     class="h-4 w-4 rounded border-gray-300 text-mapgreen
+                            focus:outline-none focus:ring-2 focus:ring-mapgreen/40">
+            </th>
+          {% endif %}
+
+          {% if rows.0.cells.0.is_image %}
+            <th scope="col" aria-hidden="true"></th>
+          {% endif %}
+
+          {% for col in columns %}
+            <th scope="col"
+                {% if col.sortable %}
+                  aria-sort="{% if sort == col.field %}{% if dir == 'asc' %}ascending{% else %}descending{% endif %}{% else %}none{% endif %}"
+                {% endif %}
+                class="{% if col.align == 'right' %}text-right{% elif col.align == 'center' %}text-center{% endif %}
+                       {% if col.sortable %}cursor-pointer select-none hover:text-mapnavy{% endif %}">
+              {% if col.sortable %}
+                <a href="?{% if q %}q={{ q }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}sort={{ col.field }}&dir={% if sort == col.field and dir == 'asc' %}desc{% else %}asc{% endif %}"
+                   class="inline-flex items-center gap-1 hover:text-mapnavy">
+                  {{ col.label }}
+                  {% if sort == col.field %}
+                    <span class="text-mapgreen" aria-hidden="true">
+                      {% if dir == 'asc' %}↑{% else %}↓{% endif %}
+                    </span>
+                  {% endif %}
+                </a>
+              {% else %}
+                {{ col.label }}
+              {% endif %}
+            </th>
+          {% endfor %}
+
+          <th scope="col" class="text-right whitespace-nowrap">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody class="divide-y divide-mapborder">
+        {% for row_data in rows %}
+          <tr class="hover:bg-mapbg/60 transition-colors group"
+              {% if row_data.view_url and not enable_bulk %}data-row-href="{{ row_data.view_url }}" style="cursor: pointer;"{% endif %}>
+
+            {% if enable_bulk %}
+              <td class="pr-0">
+                <input type="checkbox"
+                       name="selected"
+                       value="{{ row_data.pk }}"
+                       class="row-checkbox h-4 w-4 rounded border-gray-300 text-mapgreen
+                              focus:outline-none focus:ring-2 focus:ring-mapgreen/40">
+              </td>
+            {% endif %}
+
+            {% for cell in row_data.cells %}
+              <td class="{% if cell.align == 'right' %}text-right tabular-nums{% elif cell.align == 'center' %}text-center{% endif %}
+                         {% if cell.muted %}text-gray-500 text-[12.5px]{% endif %}
+                         align-middle
+                         {% if cell.is_image %}pr-0{% endif %}">
+                {% if cell.is_image %}
+                  {% if cell.image_url %}
+                    <div class="h-10 w-10 rounded-md overflow-hidden bg-mapbg border border-mapborder">
+                      <img src="{{ cell.image_url }}"
+                           alt="{{ cell.alt|default:'Preview' }}"
+                           loading="lazy"
+                           decoding="async"
+                           class="w-full h-full object-cover">
+                    </div>
+                  {% else %}
+                    <div class="h-10 w-10 rounded-md bg-mapbg border border-mapborder
+                                flex items-center justify-center text-gray-300">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                           stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <circle cx="9" cy="9" r="2"/>
+                        <path d="M21 15l-5-5L5 21"/>
+                      </svg>
+                    </div>
+                  {% endif %}
+                {% elif cell.is_status %}
+                  {% if cell.status == 'received' %}
+                    <span class="badge badge-success">{{ cell.value }}</span>
+                  {% elif cell.status == 'pending' %}
+                    <span class="badge badge-warning">{{ cell.value }}</span>
+                  {% elif cell.status == 'failed' %}
+                    <span class="badge badge-danger">{{ cell.value }}</span>
+                  {% else %}
+                    <span class="badge badge-muted">{{ cell.value }}</span>
+                  {% endif %}
+                {% else %}
+                  <div class="truncate" title="{{ cell.value }}">
+                    {{ cell.value }}
+                  </div>
+                {% endif %}
+              </td>
+            {% endfor %}
+
+            <td class="text-right align-middle whitespace-nowrap" onclick="event.stopPropagation()">
+              <div class="inline-flex items-center gap-1 justify-end
+                          md:opacity-60 md:group-hover:opacity-100 transition-opacity">
+                {% if row_data.view_url %}
+                  <a href="{{ row_data.view_url }}"
+                     class="inline-flex items-center h-7 px-2.5 rounded-md
+                            text-[12px] font-medium text-mapgreen
+                            hover:bg-mapgreen-50 transition">
+                    View
+                  </a>
+                {% endif %}
+                {% if row_data.edit_url %}
+                  <a href="{{ row_data.edit_url }}"
+                     class="inline-flex items-center h-7 px-2.5 rounded-md
+                            text-[12px] font-medium text-gray-600
+                            hover:bg-gray-100 transition">
+                    Edit
+                  </a>
+                {% endif %}
+                {% if row_data.delete_url %}
+                  <a href="{{ row_data.delete_url }}"
+                     class="inline-flex items-center h-7 px-2.5 rounded-md
+                            text-[12px] font-medium text-red-600
+                            hover:bg-red-50 transition">
+                    Delete
+                  </a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="99" class="py-12 text-center">
+              {% if q or status_filter %}
+                <div class="mx-auto h-11 w-11 rounded-full bg-gray-100 text-gray-500
+                            flex items-center justify-center mb-3">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                       stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="M21 21l-4.35-4.35"/>
+                  </svg>
+                </div>
+                <p class="text-[13.5px] font-semibold text-mapnavy">No matches</p>
+                <p class="text-[12.5px] text-gray-500 mt-1 max-w-sm mx-auto leading-relaxed">
+                  Nothing matches
+                  {% if q %}<span class="font-medium text-mapnavy">"{{ q }}"</span>{% endif %}
+                  {% if q and status_filter %}with{% endif %}
+                  {% if status_filter %}the selected filter{% endif %}.
+                </p>
+                <a href="?"
+                   class="inline-flex mt-3 text-[12.5px] font-semibold text-mapgreen hover:underline">
+                  Clear filters
+                </a>
+              {% else %}
+                <div class="mx-auto h-12 w-12 rounded-full bg-mapgreen-50 text-mapgreen
+                            flex items-center justify-center mb-3 text-xl">
+                  📋
+                </div>
+                <p class="text-[13.5px] font-semibold text-mapnavy">No records yet</p>
+                {% if add_url %}
+                  <a href="{{ add_url }}"
+                     class="inline-flex mt-2 text-[12.5px] font-semibold text-mapgreen hover:underline">
+                    Create the first one →
+                  </a>
+                {% else %}
+                  <p class="text-[12.5px] text-gray-500 mt-1">
+                    Records will appear here once added.
+                  </p>
+                {% endif %}
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ============================================================
+     MOBILE CARDS
+     ============================================================ -->
+<div class="md:hidden space-y-3">
+  {% for row_data in rows %}
+    <div class="card p-4 {% if row_data.view_url %}cursor-pointer hover:border-mapgreen/40 transition{% endif %}"
+         {% if row_data.view_url %}data-row-href="{{ row_data.view_url }}"{% endif %}>
+
+      <!-- Title row + thumbnail + status pill -->
+      <div class="flex items-start gap-3 mb-3">
+        {% if row_data.cells.0.is_image %}
+          {% if row_data.cells.0.image_url %}
+            <div class="h-12 w-12 rounded-md overflow-hidden bg-mapbg border border-mapborder shrink-0">
+              <img src="{{ row_data.cells.0.image_url }}"
+                   alt="{{ row_data.cells.0.alt|default:'' }}"
+                   loading="lazy"
+                   class="w-full h-full object-cover">
+            </div>
+          {% else %}
+            <div class="h-12 w-12 rounded-md bg-mapbg border border-mapborder
+                        flex items-center justify-center text-gray-300 shrink-0">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <circle cx="9" cy="9" r="2"/>
+                <path d="M21 15l-5-5L5 21"/>
+              </svg>
+            </div>
+          {% endif %}
+        {% endif %}
+
+        <div class="font-semibold text-mapnavy text-[14px] truncate flex-1 min-w-0">
+          {% if row_data.cells.0.is_image %}
+            {{ row_data.cells.1.value }}
+          {% else %}
+            {{ row_data.cells.0.value }}
+          {% endif %}
+        </div>
+
+        {% for cell in row_data.cells %}
+          {% if cell.is_status %}
+            {% if cell.status == 'received' %}
+              <span class="badge badge-success shrink-0">{{ cell.value }}</span>
+            {% elif cell.status == 'pending' %}
+              <span class="badge badge-warning shrink-0">{{ cell.value }}</span>
+            {% elif cell.status == 'failed' %}
+              <span class="badge badge-danger shrink-0">{{ cell.value }}</span>
+            {% else %}
+              <span class="badge badge-muted shrink-0">{{ cell.value }}</span>
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <!-- Remaining cells as labeled rows -->
+      <dl class="space-y-1.5 text-[12.5px]">
+        {% for col in columns %}
+          {% if not forloop.first %}
+            {# Match column label to cell index #}
+            {% with idx=forloop.counter0 %}
+              {% with actual=row_data.cells|slice:idx|last %}
+                {% if actual and not actual.is_status and not actual.is_image and actual.value %}
+                  <div class="flex justify-between gap-3">
+                    <dt class="text-gray-500 shrink-0">{{ col.label }}</dt>
+                    <dd class="text-mapnavy text-right truncate">{{ actual.value }}</dd>
+                  </div>
+                {% endif %}
+              {% endwith %}
+            {% endwith %}
+          {% endif %}
+        {% endfor %}
+      </dl>
+
+      <!-- Mobile actions -->
+      <div class="mt-3 pt-3 border-t border-mapborder flex items-center justify-end gap-1"
+           onclick="event.stopPropagation()">
+        {% if row_data.view_url %}
+          <a href="{{ row_data.view_url }}"
+             class="inline-flex items-center h-8 px-3 rounded-md
+                    text-[12px] font-medium text-mapgreen hover:bg-mapgreen-50 transition">
+            View
+          </a>
+        {% endif %}
+        {% if row_data.edit_url %}
+          <a href="{{ row_data.edit_url }}"
+             class="inline-flex items-center h-8 px-3 rounded-md
+                    text-[12px] font-medium text-gray-600 hover:bg-gray-100 transition">
+            Edit
+          </a>
+        {% endif %}
+        {% if row_data.delete_url %}
+          <a href="{{ row_data.delete_url }}"
+             class="inline-flex items-center h-8 px-3 rounded-md
+                    text-[12px] font-medium text-red-600 hover:bg-red-50 transition">
+            Delete
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  {% empty %}
+    <div class="card p-8 text-center">
+      {% if q or status_filter %}
+        <div class="mx-auto h-11 w-11 rounded-full bg-gray-100 text-gray-500
+                    flex items-center justify-center mb-3">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="M21 21l-4.35-4.35"/>
+          </svg>
+        </div>
+        <p class="text-[13.5px] font-semibold text-mapnavy">No matches</p>
+        <a href="?"
+           class="inline-flex mt-2 text-[12.5px] font-semibold text-mapgreen hover:underline">
+          Clear filters
+        </a>
+      {% else %}
+        <div class="mx-auto h-12 w-12 rounded-full bg-mapgreen-50 text-mapgreen
+                    flex items-center justify-center mb-3 text-xl">
+          📋
+        </div>
+        <p class="text-[13.5px] font-semibold text-mapnavy">No records yet</p>
+        {% if add_url %}
+          <a href="{{ add_url }}"
+             class="inline-flex mt-2 text-[12.5px] font-semibold text-mapgreen hover:underline">
+            Create the first one →
+          </a>
+        {% endif %}
+      {% endif %}
+    </div>
+  {% endfor %}
+</div>
+
+<!-- ============================================================
+     PAGINATION
+     ============================================================ -->
+{% if is_paginated %}
+  <nav class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6"
+       aria-label="Pagination">
+    <p class="text-[12.5px] text-gray-500 order-2 sm:order-1">
+      Showing
+      <span class="font-semibold text-mapnavy">{{ page_obj.start_index }}</span>–<span class="font-semibold text-mapnavy">{{ page_obj.end_index }}</span>
+      of <span class="font-semibold text-mapnavy">{{ page_obj.paginator.count }}</span>
+    </p>
+
+    <div class="flex items-center gap-1 order-1 sm:order-2">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}"
+           class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-white
+                  text-[12.5px] font-medium text-gray-700 hover:bg-gray-50 transition">
+          ← Prev
+        </a>
+      {% else %}
+        <span class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-gray-50
+                     text-[12.5px] font-medium text-gray-400 cursor-not-allowed">
+          ← Prev
+        </span>
+      {% endif %}
+
+      {% for num in page_obj.paginator.page_range %}
+        {% if num == page_obj.number %}
+          <span aria-current="page"
+                class="inline-flex items-center justify-center h-9 w-9 rounded-lg
+                       bg-mapgreen text-white text-[12.5px] font-semibold">
+            {{ num }}
+          </span>
+        {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+          <a href="?page={{ num }}{% if q %}&q={{ q }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}"
+             class="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-mapborder
+                    bg-white text-[12.5px] font-medium text-gray-700 hover:bg-gray-50 transition">
+            {{ num }}
+          </a>
+        {% endif %}
+      {% endfor %}
+
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}"
+           class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-white
+                  text-[12.5px] font-medium text-gray-700 hover:bg-gray-50 transition">
+          Next →
+        </a>
+      {% else %}
+        <span class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-gray-50
+                     text-[12.5px] font-medium text-gray-400 cursor-not-allowed">
+          Next →
+        </span>
+      {% endif %}
+    </div>
+  </nav>
+{% endif %}
+
+<script>
+(function () {
+  /* ---------- Row click navigation ---------- */
+  document.querySelectorAll('[data-row-href]').forEach((row) => {
+    row.addEventListener('click', (e) => {
+      if (e.target.closest('a, button, input, select, textarea')) return;
+      window.location.href = row.dataset.rowHref;
+    });
+  });
+
+  /* ---------- Bulk selection ---------- */
+  const selectAll  = document.getElementById('select-all');
+  const checkboxes = document.querySelectorAll('.row-checkbox');
+  const bulkBar    = document.getElementById('bulk-bar');
+  const bulkCount  = document.getElementById('bulk-count');
+
+  const updateBulkBar = () => {
+    const checked = document.querySelectorAll('.row-checkbox:checked');
+    if (bulkBar && bulkCount) {
+      bulkBar.classList.toggle('hidden', checked.length === 0);
+      bulkCount.textContent = checked.length;
+    }
+  };
+
+  selectAll?.addEventListener('change', () => {
+    checkboxes.forEach((cb) => { cb.checked = selectAll.checked; });
+    updateBulkBar();
+  });
+
+  checkboxes.forEach((cb) => {
+    cb.addEventListener('change', updateBulkBar);
+  });
+
+  window.bulkAction = (action) => {
+    const selected = Array.from(document.querySelectorAll('.row-checkbox:checked'))
+      .map((cb) => cb.value);
+
+    if (!selected.length) return;
+
+    if (action === 'delete') {
+      if (!confirm(`Delete ${selected.length} item${selected.length === 1 ? '' : 's'}? This cannot be undone.`)) return;
+    }
+
+    const form = document.createElement('form');
+    form.method = 'post';
+    form.action = window.location.pathname;
+
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrfmiddlewaretoken';
+    csrfInput.value = document.cookie.split('; ')
+      .find((c) => c.startsWith('csrftoken='))?.split('=')[1] || '';
+    form.appendChild(csrfInput);
+
+    const actionInput = document.createElement('input');
+    actionInput.type = 'hidden';
+    actionInput.name = 'bulk_action';
+    actionInput.value = action;
+    form.appendChild(actionInput);
+
+    selected.forEach((id) => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'selected';
+      input.value = id;
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+  };
+
+  window.clearSelection = () => {
+    checkboxes.forEach((cb) => { cb.checked = false; });
+    if (selectAll) selectAll.checked = false;
+    updateBulkBar();
+  };
+})();
+</script>
+
+{% endblock %}

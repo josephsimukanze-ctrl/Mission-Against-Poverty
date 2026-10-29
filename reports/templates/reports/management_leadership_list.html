@@ -1,0 +1,205 @@
+{% extends "management_base.html" %}
+{% block title %}Leadership & Founders — {{ ORG_NAME }}{% endblock %}
+{% block breadcrumb %}Leadership & Founders{% endblock %}
+
+{% block content %}
+
+<div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+  <div>
+    <h1 class="text-2xl font-bold text-mapnavy">Leadership & Founders</h1>
+    <p class="text-sm text-gray-500 mt-1">Manage the people shown on your About page. Click the photo area to upload a picture.</p>
+  </div>
+  <div class="flex gap-2">
+    <a href="/about/" target="_blank" rel="noopener" class="btn-secondary text-[13px]">
+      Preview About page ↗
+    </a>
+    <a href="/management/leadership/new/" class="btn-primary text-[13px]">+ New member</a>
+  </div>
+</div>
+
+{% if messages %}
+  <div class="space-y-2 mb-5">
+    {% for m in messages %}
+      <div role="alert"
+           class="rounded-xl px-4 py-3 text-[13px] border flex items-start gap-2.5
+                  {% if m.tags == 'error' %}bg-red-50 text-red-700 border-red-200{% else %}bg-green-50 text-green-700 border-green-200{% endif %}">
+        <span class="mt-0.5 shrink-0" aria-hidden="true">{% if m.tags == 'error' %}⚠{% else %}✓{% endif %}</span>
+        <span class="flex-1">{{ m }}</span>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<!-- Stat cards -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+  <div class="stat-card">
+    <div class="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Total</div>
+    <div class="stat-value mt-1">{{ stats.total }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Founders</div>
+    <div class="stat-value mt-1 text-mapgreen">{{ stats.founders }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Leaders</div>
+    <div class="stat-value mt-1 text-blue-600">{{ stats.leaders }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Active</div>
+    <div class="stat-value mt-1">{{ stats.active }}</div>
+    {% if stats.inactive %}
+      <div class="text-[11.5px] text-gray-500 mt-1">{{ stats.inactive }} inactive</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Search -->
+<div class="card p-4 flex flex-wrap gap-3 items-center mb-5">
+  <form method="get" class="flex flex-wrap gap-3 items-center">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search by name or position…"
+           class="form-input max-w-xs">
+    <button class="btn-secondary text-[13px]">Search</button>
+    {% if q %}
+      <a href="/management/leadership/" class="text-[12.5px] text-gray-500 hover:text-mapnavy underline">Clear</a>
+    {% endif %}
+  </form>
+  <div class="ml-auto text-[12.5px] text-gray-500">
+    Showing <strong>{{ total }}</strong> member{{ total|pluralize }}
+  </div>
+</div>
+
+<!-- Table -->
+<div class="table-wrapper">
+  <table class="table-base w-full">
+    <thead>
+      <tr>
+        <th style="width: 120px;">Photo</th>
+        <th>Member</th>
+        <th>Position</th>
+        <th>Role</th>
+        <th class="text-center">Order</th>
+        <th>Status</th>
+        <th class="text-right" style="width: 140px;">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for member in object_list %}
+        <tr>
+          <!-- Photo upload cell -->
+          <td class="align-middle">
+            <form method="post"
+                  action="/management/leadership/{{ member.pk }}/photo/"
+                  enctype="multipart/form-data"
+                  id="photo-form-{{ member.pk }}"
+                  class="photo-form">
+              {% csrf_token %}
+              <label for="photo-input-{{ member.pk }}"
+                     class="photo-upload-target group relative block cursor-pointer rounded-full
+                            transition hover:opacity-90"
+                     title="{% if member.photo %}Change photo{% else %}Upload photo{% endif %}">
+                {% if member.photo %}
+                  <img src="{{ member.photo.url }}" alt="{{ member.name }}"
+                       class="h-14 w-14 rounded-full object-cover border-2 border-white
+                              shadow-sm ring-2 ring-mapgreen/20">
+                {% else %}
+                  <div class="h-14 w-14 rounded-full bg-mapgreen-50 text-mapgreen
+                              flex items-center justify-center text-lg font-bold
+                              border-2 border-white shadow-sm ring-2 ring-mapgreen/20">
+                    {{ member.name|first|upper }}
+                  </div>
+                {% endif %}
+                <div class="absolute inset-0 rounded-full flex items-center justify-center
+                            bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                       stroke="white" stroke-width="2" aria-hidden="true">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                    <circle cx="12" cy="13" r="4"/>
+                  </svg>
+                </div>
+              </label>
+              <input type="file"
+                     id="photo-input-{{ member.pk }}"
+                     name="photo"
+                     accept="image/png,image/jpeg,image/webp"
+                     class="hidden"
+                     onchange="this.form.submit()">
+            </form>
+          </td>
+
+          <td class="align-middle">
+            <div class="font-medium text-mapnavy text-[13.5px]">{{ member.name }}</div>
+            {% if member.email %}
+              <div class="text-[11.5px] text-gray-500">{{ member.email }}</div>
+            {% endif %}
+          </td>
+          <td class="text-[12.5px] text-gray-600 align-middle">{{ member.position }}</td>
+          <td class="align-middle">
+            {% if member.is_founder %}
+              <span class="badge badge-success">Founder</span>
+            {% else %}
+              <span class="badge badge-muted">Leader</span>
+            {% endif %}
+          </td>
+          <td class="text-center text-[12.5px] text-gray-500 align-middle">{{ member.order }}</td>
+          <td class="align-middle">
+            {% if member.is_active %}
+              <span class="badge badge-success">Active</span>
+            {% else %}
+              <span class="badge badge-muted">Inactive</span>
+            {% endif %}
+          </td>
+          <td class="text-right align-middle">
+            <div class="flex gap-2 justify-end">
+              <a href="/management/leadership/{{ member.pk }}/edit/"
+                 class="text-mapgreen text-[12.5px] font-medium hover:underline">Edit</a>
+              <a href="/management/leadership/{{ member.pk }}/delete/"
+                 class="text-red-600 text-[12.5px] hover:underline">Delete</a>
+            </div>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="7" class="text-center py-10">
+          <div class="text-3xl mb-2 text-gray-300">👥</div>
+          <div class="text-[14px] font-medium text-mapnavy">No members yet</div>
+          <p class="text-[12.5px] text-gray-500 mt-1">Add your first founder or leader to show them on the About page.</p>
+          <a href="/management/leadership/new/" class="btn-primary text-[13px] mt-4 inline-flex">+ Add first member</a>
+        </td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if is_paginated %}
+  <div class="flex justify-center gap-2 mt-6 text-sm">
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}" class="btn-secondary text-[13px]">← Previous</a>{% endif %}
+    <span class="px-3 py-2 text-gray-500 text-[13px]">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}" class="btn-secondary text-[13px]">Next →</a>{% endif %}
+  </div>
+{% endif %}
+
+<!-- Photo upload loading indicator -->
+<div id="upload-overlay"
+     class="hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm
+            items-center justify-center">
+  <div class="bg-white rounded-xl px-6 py-4 shadow-xl text-center">
+    <div class="inline-block h-8 w-8 rounded-full border-2 border-mapgreen border-t-transparent animate-spin"></div>
+    <div class="text-[13px] text-mapnavy font-medium mt-3">Uploading photo…</div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // Show loading overlay when any photo form is submitted
+  document.querySelectorAll(".photo-form").forEach(form => {
+    form.addEventListener("submit", () => {
+      const overlay = document.getElementById("upload-overlay");
+      if (overlay) {
+        overlay.classList.remove("hidden");
+        overlay.classList.add("flex");
+      }
+    });
+  });
+})();
+</script>
+
+{% endblock %}

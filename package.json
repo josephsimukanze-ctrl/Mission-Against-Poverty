@@ -1,0 +1,17 @@
+{
+  "name": "mission-against-poverty",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "tailwind:dev": "tailwindcss -i ./static/css/tailwind.input.css -o ./static/css/tailwind.css --watch",
+    "tailwind:build": "tailwindcss -i ./static/css/tailwind.input.css -o ./static/css/tailwind.css --minify"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "tailwindcss": "^3.4.0"
+  }
+}

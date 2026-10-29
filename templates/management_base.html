@@ -1,0 +1,498 @@
+{% extends "base.html" %}
+{% load static %}
+{% block body %}
+
+<div class="min-h-screen flex bg-mapbg">
+{% with path=request.path %}
+
+  <!-- ============================================================
+       SIDEBAR (desktop)
+       ============================================================ -->
+  <aside class="w-64 shrink-0 hidden md:flex flex-col bg-mapnavy text-white border-r border-white/5">
+
+    <!-- Brand (from settings) -->
+    <a href="/management/"
+       class="px-4 h-16 flex items-center gap-3 border-b border-white/10 hover:bg-white/5 transition-colors
+              focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/50">
+      <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-mapgreen text-white
+                   text-base shrink-0 ring-1 ring-white/10 overflow-hidden">
+        {% if site.logo_light %}
+          <img src="{{ site.logo_light.url }}" alt="{{ site.site_name|default:ORG_NAME }} logo"
+               class="w-full h-full object-contain p-1">
+        {% elif site.logo %}
+          <img src="{{ site.logo.url }}" alt="{{ site.site_name|default:ORG_NAME }} logo"
+               class="w-full h-full object-contain p-1">
+        {% else %}
+          <span aria-hidden="true">♥</span>
+        {% endif %}
+      </span>
+      <div class="leading-tight min-w-0">
+        <div class="text-[11px] font-extrabold text-white uppercase tracking-[0.08em] truncate">
+          {{ site.site_name|default:"Mission Against Poverty" }}
+        </div>
+        <div class="text-[10px] text-gray-400 tracking-[0.14em] uppercase mt-0.5">Management</div>
+      </div>
+    </a>
+
+    <!-- Nav -->
+    <nav class="flex-1 px-2.5 py-3 space-y-0.5 overflow-y-auto text-[13px] scrollbar-thin">
+
+      <a href="/management/"
+         class="sidebar-link {% if path == '/management/' %}active{% endif %}"
+         {% if path == '/management/' %}aria-current="page"{% endif %}>
+        <span class="w-5 text-center opacity-80" aria-hidden="true">◧</span> Dashboard
+      </a>
+
+      <a href="/management/reports/"
+         class="sidebar-link {% if '/management/reports/' in path %}active{% endif %}"
+         {% if '/management/reports/' in path %}aria-current="page"{% endif %}>
+        <span class="w-5 text-center opacity-80" aria-hidden="true">📈</span> Reports &amp; Analytics
+      </a>
+
+      <div class="sidebar-section">Website</div>
+
+      <a href="/management/pages/"
+         class="sidebar-link {% if '/management/pages/' in path %}active{% endif %}"
+         {% if '/management/pages/' in path %}aria-current="page"{% endif %}>
+        <span class="w-5 text-center opacity-80" aria-hidden="true">📄</span> Pages
+      </a>
+
+      <a href="/management/hero-slides/"
+         class="sidebar-link {% if '/management/hero-slides/' in path %}active{% endif %}"
+         {% if '/management/hero-slides/' in path %}aria-current="page"{% endif %}>
+        <span class="w-5 text-center opacity-80" aria-hidden="true">🖼</span> Hero Slides
+      </a>
+
+      <a href="/management/programs/"
+         class="sidebar-link {% if '/management/programs/' in path %}active{% endif %}"
+         {% if '/management/programs/' in path %}aria-current="page"{% endif %}>
+        <span class="w-5 text-center opacity-80" aria-hidden="true">🎯</span> Programs
+      </a>
+
+      <a href="/management/projects/"
+         class="sidebar-link {% if path == '/management/projects/' or '/management/projects/' in path and 'categories' not in path %}active{% endif %}"
+         {% if path == '/management/projects/' or '/management/projects/' in path and 'categories' not in path %}aria-current="page"{% endif %}>
+        <span class="w-5 text-center opacity-80" aria-hidden="true">📁</span> Projects
+      </a>
+
+      <a href="/management/project-categories/"
+         class="sidebar-link {% if '/management/project-categories/' in path %}active{% endif %}"
+         {% if '/management/project-categories/' in path %}aria-current="page"{% endif %}>
+        <span class="w-5 text-center opacity-80" aria-hidden="true">🏷</span> Project Categories
+      </a>
+
+      <a href="/management/news/"
+         class="sidebar-link {% if path == '/management/news/' or '/management/news/' in path and 'categories' not in path %}active{% endif %}"
+         {% if path == '/management/news/' or '/management/news/' in path and 'categories' not in path %}aria-current="page"{% endif %}>
+        <span class="w-5 text-center opacity-80" aria-hidden="true">📰</span> News
+      </a>
+
+      <a href="/management/news-categories/"
+         class="sidebar-link {% if '/management/news-categories/' in path %}active{% endif %}"
+         {% if '/management/news-categories/' in path %}aria-current="page"{% endif %}>
+        <span class="w-5 text-center opacity-80" aria-hidden="true">🏷</span> News Categories
+      </a>
+
+      <a href="/management/events/"
+         class="sidebar-link {% if '/management/events/' in path %}active{% endif %}"
+         {% if '/management/events/' in path %}aria-current="page"{% endif %}>
+        <span class="w-5 text-center opacity-80" aria-hidden="true">📅</span> Events
+      </a>
+
+      <a href="/management/leadership/"
+         class="sidebar-link {% if '/management/leadership/' in path or '/management/founders/' in path %}active{% endif %}"
+         {% if '/management/leadership/' in path or '/management/founders/' in path %}aria-current="page"{% endif %}>
+        <span class="w-5 text-center opacity-80" aria-hidden="true">⭐</span> Leadership &amp; Founders
+      </a>
+
+      <div class="sidebar-section">People</div>
+
+      <a href="/management/users/"
+         class="sidebar-link {% if '/management/users/' in path %}active{% endif %}"
+         {% if '/management/users/' in path %}aria-current="page"{% endif %}>
+        <span class="w-5 text-center opacity-80" aria-hidden="true">👥</span> Users &amp; Roles
+      </a>
+
+      <a href="/management/volunteers/"
+         class="sidebar-link {% if path == '/management/volunteers/' or '/management/volunteers/applications' in path %}active{% endif %}"
+         {% if path == '/management/volunteers/' or '/management/volunteers/applications' in path %}aria-current="page"{% endif %}>
+        <span class="w-5 text-center opacity-80" aria-hidden="true">🤝</span> Volunteers
+      </a>
+
+      <a href="/management/partnerships/applications/"
+         class="sidebar-link {% if '/management/partnerships' in path %}active{% endif %}"
+         {% if '/management/partnerships' in path %}aria-current="page"{% endif %}>
+        <span class="w-5 text-center opacity-80" aria-hidden="true">🏢</span> Partnerships
+      </a>
+
+      <a href="/management/beneficiaries/"
+         class="sidebar-link {% if '/management/beneficiaries' in path %}active{% endif %}"
+         {% if '/management/beneficiaries' in path %}aria-current="page"{% endif %}>
+        <span class="w-5 text-center opacity-80" aria-hidden="true">💚</span> Assistance Requests
+      </a>
+
+      <div class="sidebar-section">Communication</div>
+
+      <a href="/management/newsletter/"
+         class="sidebar-link {% if path == '/management/newsletter/' or '/management/newsletter/' in path and 'campaigns' not in path and 'delete' not in path %}active{% endif %}"
+         {% if path == '/management/newsletter/' or '/management/newsletter/' in path and 'campaigns' not in path and 'delete' not in path %}aria-current="page"{% endif %}>
+        <span class="w-5 text-center opacity-80" aria-hidden="true">✉</span> Subscribers
+      </a>
+
+      <a href="/management/newsletter/campaigns/"
+         class="sidebar-link {% if '/management/newsletter/campaigns/' in path %}active{% endif %}"
+         {% if '/management/newsletter/campaigns/' in path %}aria-current="page"{% endif %}>
+        <span class="w-5 text-center opacity-80" aria-hidden="true">📧</span> Newsletters
+      </a>
+
+      <a href="/management/contacts/"
+         class="sidebar-link {% if '/management/contacts/' in path %}active{% endif %}"
+         {% if '/management/contacts/' in path %}aria-current="page"{% endif %}>
+        <span class="w-5 text-center opacity-80" aria-hidden="true">💬</span> Contact Messages
+      </a>
+
+      <div class="sidebar-section">Finance</div>
+
+      <a href="/management/donations/"
+         class="sidebar-link {% if '/management/donations/' in path %}active{% endif %}"
+         {% if '/management/donations/' in path %}aria-current="page"{% endif %}>
+        <span class="w-5 text-center opacity-80" aria-hidden="true">💚</span> Donations
+      </a>
+
+      <a href="/management/campaigns/"
+         class="sidebar-link {% if '/management/campaigns/' in path %}active{% endif %}"
+         {% if '/management/campaigns/' in path %}aria-current="page"{% endif %}>
+        <span class="w-5 text-center opacity-80" aria-hidden="true">🎗</span> Campaigns
+      </a>
+
+      <div class="sidebar-section">System</div>
+
+      <a href="/management/audit/"
+         class="sidebar-link {% if '/management/audit/' in path %}active{% endif %}"
+         {% if '/management/audit/' in path %}aria-current="page"{% endif %}>
+        <span class="w-5 text-center opacity-80" aria-hidden="true">📊</span> Audit Logs
+      </a>
+
+      <a href="/management/settings/"
+         class="sidebar-link {% if '/management/settings/' in path %}active{% endif %}"
+         {% if '/management/settings/' in path %}aria-current="page"{% endif %}>
+        <span class="w-5 text-center opacity-80" aria-hidden="true">⚙</span> Site Settings
+      </a>
+
+      <a href="/" class="sidebar-link">
+        <span class="w-5 text-center opacity-80" aria-hidden="true">🏠</span> Back to Website
+      </a>
+    </nav>
+
+    <!-- Logout -->
+    <div class="px-2.5 py-3 border-t border-white/10">
+      <form method="post" action="{% url 'accounts:logout' %}">
+        {% csrf_token %}
+        <button class="sidebar-link w-full text-left text-red-300/90 hover:text-red-200 hover:bg-red-500/10">
+          <span class="w-5 text-center opacity-80" aria-hidden="true">⏻</span> Logout
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- ============================================================
+       MOBILE DRAWER
+       ============================================================ -->
+  <div id="mgmt-backdrop"
+       class="md:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none
+              transition-opacity duration-200"></div>
+
+  <aside id="mgmt-drawer"
+         class="md:hidden fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-mapnavy text-white
+                -translate-x-full transition-transform duration-200 ease-out flex flex-col shadow-2xl"
+         aria-hidden="true">
+    <div class="h-16 flex items-center gap-3 px-4 border-b border-white/10 shrink-0">
+      <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-mapgreen text-white text-base shrink-0 ring-1 ring-white/10 overflow-hidden">
+        {% if site.logo_light %}
+          <img src="{{ site.logo_light.url }}" alt="{{ site.site_name|default:ORG_NAME }} logo"
+               class="w-full h-full object-contain p-1">
+        {% elif site.logo %}
+          <img src="{{ site.logo.url }}" alt="{{ site.site_name|default:ORG_NAME }} logo"
+               class="w-full h-full object-contain p-1">
+        {% else %}
+          <span aria-hidden="true">♥</span>
+        {% endif %}
+      </span>
+      <div class="leading-tight min-w-0 flex-1">
+        <div class="text-[11px] font-extrabold uppercase tracking-[0.08em] truncate">{{ site.site_name|default:"Mission Against Poverty" }}</div>
+        <div class="text-[10px] text-gray-400 tracking-[0.14em] uppercase mt-0.5">Management</div>
+      </div>
+      <button type="button" id="mgmt-drawer-close"
+              class="h-9 w-9 inline-flex items-center justify-center rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition
+                     focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/50"
+              aria-label="Close menu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <nav class="flex-1 px-2.5 py-3 space-y-0.5 overflow-y-auto text-[13px]">
+
+      <a href="/management/" class="sidebar-link {% if path == '/management/' %}active{% endif %}"><span class="w-5 text-center opacity-80">◧</span> Dashboard</a>
+      <a href="/management/reports/" class="sidebar-link {% if '/management/reports/' in path %}active{% endif %}"><span class="w-5 text-center opacity-80">📈</span> Reports &amp; Analytics</a>
+
+      <div class="sidebar-section">Website</div>
+      <a href="/management/pages/"              class="sidebar-link {% if '/management/pages/' in path %}active{% endif %}"><span class="w-5 text-center opacity-80">📄</span> Pages</a>
+      <a href="/management/hero-slides/"        class="sidebar-link {% if '/management/hero-slides/' in path %}active{% endif %}"><span class="w-5 text-center opacity-80">🖼</span> Hero Slides</a>
+      <a href="/management/programs/"           class="sidebar-link {% if '/management/programs/' in path %}active{% endif %}"><span class="w-5 text-center opacity-80">🎯</span> Programs</a>
+      <a href="/management/projects/"           class="sidebar-link {% if path == '/management/projects/' or '/management/projects/' in path and 'categories' not in path %}active{% endif %}"><span class="w-5 text-center opacity-80">📁</span> Projects</a>
+      <a href="/management/project-categories/" class="sidebar-link {% if '/management/project-categories/' in path %}active{% endif %}"><span class="w-5 text-center opacity-80">🏷</span> Project Categories</a>
+      <a href="/management/news/"               class="sidebar-link {% if path == '/management/news/' or '/management/news/' in path and 'categories' not in path %}active{% endif %}"><span class="w-5 text-center opacity-80">📰</span> News</a>
+      <a href="/management/news-categories/"    class="sidebar-link {% if '/management/news-categories/' in path %}active{% endif %}"><span class="w-5 text-center opacity-80">🏷</span> News Categories</a>
+      <a href="/management/events/"             class="sidebar-link {% if '/management/events/' in path %}active{% endif %}"><span class="w-5 text-center opacity-80">📅</span> Events</a>
+      <a href="/management/leadership/"         class="sidebar-link {% if '/management/leadership/' in path or '/management/founders/' in path %}active{% endif %}"><span class="w-5 text-center opacity-80">⭐</span> Leadership &amp; Founders</a>
+
+      <div class="sidebar-section">People</div>
+      <a href="/management/users/"                       class="sidebar-link {% if '/management/users/' in path %}active{% endif %}"><span class="w-5 text-center opacity-80">👥</span> Users &amp; Roles</a>
+      <a href="/management/volunteers/"                  class="sidebar-link {% if path == '/management/volunteers/' or '/management/volunteers/applications' in path %}active{% endif %}"><span class="w-5 text-center opacity-80">🤝</span> Volunteers</a>
+      <a href="/management/partnerships/applications/"   class="sidebar-link {% if '/management/partnerships' in path %}active{% endif %}"><span class="w-5 text-center opacity-80">🏢</span> Partnerships</a>
+      <a href="/management/beneficiaries/"               class="sidebar-link {% if '/management/beneficiaries' in path %}active{% endif %}"><span class="w-5 text-center opacity-80">💚</span> Assistance Requests</a>
+
+      <div class="sidebar-section">Communication</div>
+      <a href="/management/newsletter/"                  class="sidebar-link {% if path == '/management/newsletter/' or '/management/newsletter/' in path and 'campaigns' not in path and 'delete' not in path %}active{% endif %}"><span class="w-5 text-center opacity-80">✉</span> Subscribers</a>
+      <a href="/management/newsletter/campaigns/"        class="sidebar-link {% if '/management/newsletter/campaigns/' in path %}active{% endif %}"><span class="w-5 text-center opacity-80">📧</span> Newsletters</a>
+      <a href="/management/contacts/"                    class="sidebar-link {% if '/management/contacts/' in path %}active{% endif %}"><span class="w-5 text-center opacity-80">💬</span> Contact Messages</a>
+
+      <div class="sidebar-section">Finance</div>
+      <a href="/management/donations/" class="sidebar-link {% if '/management/donations/' in path %}active{% endif %}"><span class="w-5 text-center opacity-80">💚</span> Donations</a>
+      <a href="/management/campaigns/" class="sidebar-link {% if '/management/campaigns/' in path %}active{% endif %}"><span class="w-5 text-center opacity-80">🎗</span> Campaigns</a>
+
+      <div class="sidebar-section">System</div>
+      <a href="/management/audit/"     class="sidebar-link {% if '/management/audit/' in path %}active{% endif %}"><span class="w-5 text-center opacity-80">📊</span> Audit Logs</a>
+      <a href="/management/settings/"  class="sidebar-link {% if '/management/settings/' in path %}active{% endif %}"><span class="w-5 text-center opacity-80">⚙</span> Site Settings</a>
+      <a href="/"                      class="sidebar-link"><span class="w-5 text-center opacity-80">🏠</span> Back to Website</a>
+
+      <form method="post" action="{% url 'accounts:logout' %}" class="pt-2">
+        {% csrf_token %}
+        <button class="sidebar-link w-full text-left text-red-300/90 hover:text-red-200 hover:bg-red-500/10">
+          <span class="w-5 text-center opacity-80">⏻</span> Logout
+        </button>
+      </form>
+    </nav>
+  </aside>
+
+  <!-- ============================================================
+       MAIN COLUMN
+       ============================================================ -->
+  <div class="flex-1 min-w-0 flex flex-col">
+
+    <!-- Topbar -->
+    <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-mapborder h-16 flex items-center px-4 lg:px-6 gap-3 shrink-0">
+
+      <button type="button" id="mgmt-mobile-toggle"
+              class="md:hidden inline-flex items-center justify-center h-9 w-9 rounded-lg border border-mapborder
+                     text-gray-700 hover:bg-gray-50 transition
+                     focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40"
+              aria-label="Open menu" aria-expanded="false" aria-controls="mgmt-drawer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+
+      <a href="/"
+         class="hidden md:inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-mapgreen transition-colors">
+        <span aria-hidden="true">←</span> Back to Home
+      </a>
+
+      <div class="hidden md:block h-5 w-px bg-mapborder" aria-hidden="true"></div>
+
+      <nav aria-label="Breadcrumb" class="text-[13px] text-gray-500 truncate">
+        <ol class="flex items-center gap-1.5">
+          <li><a href="/management/" class="hover:text-mapnavy transition-colors">Management</a></li>
+          <li aria-hidden="true" class="text-gray-300">/</li>
+          <li class="text-mapnavy font-medium">{% block breadcrumb %}Overview{% endblock %}</li>
+        </ol>
+      </nav>
+
+      <div class="ml-auto flex items-center gap-2">
+        <a href="/" class="hidden sm:inline-flex items-center h-9 px-3 rounded-lg
+                             border border-mapborder bg-white text-[12.5px] font-semibold text-mapnavy
+                             hover:bg-gray-50 transition
+                             focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40">
+          View Public Site
+        </a>
+        <a href="/management/donations/new/"
+           class="hidden sm:inline-flex btn-primary items-center h-9 text-[12.5px] !px-3.5">
+          + Record Donation
+        </a>
+
+        <div class="relative" id="mgmt-dropdown-root">
+          <button type="button" id="mgmt-dropdown-toggle"
+                  class="inline-flex items-center gap-2 h-9 pl-1 pr-2 rounded-lg
+                         border border-transparent hover:border-mapborder hover:bg-gray-50 transition
+                         focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40"
+                  aria-haspopup="menu" aria-expanded="false" aria-controls="mgmt-dropdown">
+            <span class="h-7 w-7 rounded-full bg-mapgreen-50 text-mapgreen flex items-center justify-center
+                         font-semibold text-[12px] ring-1 ring-mapgreen/15 overflow-hidden">
+              {% if user.userprofile.photo %}
+                <img src="{{ user.userprofile.photo.url }}" alt=""
+                     class="w-full h-full object-cover rounded-full">
+              {% else %}
+                {{ user.first_name|default:user.username|first|upper }}
+              {% endif %}
+            </span>
+            <span class="hidden sm:block text-[13px] text-gray-700 max-w-[8rem] truncate">
+              {{ user.first_name|default:user.username }}
+            </span>
+            <svg id="mgmt-dropdown-caret" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.5"
+                 class="text-gray-400 transition-transform duration-200">
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+          </button>
+
+          <div id="mgmt-dropdown" role="menu"
+               class="hidden absolute right-0 mt-2 w-60 origin-top-right rounded-xl
+                      border border-mapborder bg-white shadow-xl shadow-gray-900/5
+                      py-1.5 text-[13px] z-50
+                      transition ease-out duration-150
+                      opacity-0 scale-95">
+            <div class="px-3 py-2.5 border-b border-mapborder">
+              <div class="font-semibold text-mapnavy truncate">
+                {{ user.get_full_name|default:user.username }}
+              </div>
+              <div class="text-[11.5px] text-gray-500 truncate">{{ user.email }}</div>
+              <div class="inline-block text-[10px] uppercase tracking-wider text-mapgreen font-semibold
+                          mt-1.5 px-1.5 py-0.5 rounded bg-mapgreen-50">
+                {{ user.get_role_display }}
+              </div>
+            </div>
+
+            <a href="/management/" role="menuitem"
+               class="flex items-center gap-2.5 px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors">
+              <span class="text-gray-400" aria-hidden="true">◧</span> Dashboard
+            </a>
+            <a href="/management/settings/" role="menuitem"
+               class="flex items-center gap-2.5 px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors">
+              <span class="text-gray-400" aria-hidden="true">⚙</span> Site Settings
+            </a>
+            <a href="{% url 'accounts:profile' %}" role="menuitem"
+               class="flex items-center gap-2.5 px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors">
+              <span class="text-gray-400" aria-hidden="true">👤</span> My Profile
+            </a>
+            <a href="/" role="menuitem"
+               class="flex items-center gap-2.5 px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors">
+              <span class="text-gray-400" aria-hidden="true">🏠</span> Public Website
+            </a>
+
+            <div class="border-t border-mapborder my-1.5"></div>
+
+            <form method="post" action="{% url 'accounts:logout' %}">
+              {% csrf_token %}
+              <button type="submit" role="menuitem"
+                      class="w-full text-left flex items-center gap-2.5 px-3 py-2 text-red-600
+                             hover:bg-red-50 transition-colors">
+                <span aria-hidden="true">⏻</span> Sign out
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-1 p-5 lg:p-8">
+      <div class="max-w-[1400px] mx-auto">
+
+        {% if messages %}
+          <div class="space-y-2 mb-4">
+            {% for m in messages %}
+              <div role="alert"
+                   class="rounded-xl px-4 py-3 text-[13.5px] border flex items-start gap-3
+                          {% if m.tags == 'error' %}bg-red-50 text-red-700 border-red-200{% else %}bg-green-50 text-green-700 border-green-200{% endif %}">
+                <span class="mt-0.5 shrink-0" aria-hidden="true">
+                  {% if m.tags == 'error' %}⚠{% else %}✓{% endif %}
+                </span>
+                <span class="flex-1">{{ m }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+  </div>
+</div>
+
+{% endwith %}
+</div>
+
+<script>
+(function () {
+  const drawer   = document.getElementById('mgmt-drawer');
+  const backdrop = document.getElementById('mgmt-backdrop');
+  const trigger  = document.getElementById('mgmt-mobile-toggle');
+  const closeBtn = document.getElementById('mgmt-drawer-close');
+
+  const openDrawer = () => {
+    drawer.classList.remove('-translate-x-full');
+    drawer.setAttribute('aria-hidden', 'false');
+    backdrop.classList.remove('opacity-0', 'pointer-events-none');
+    trigger?.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+    closeBtn?.focus();
+  };
+  const closeDrawer = () => {
+    drawer.classList.add('-translate-x-full');
+    drawer.setAttribute('aria-hidden', 'true');
+    backdrop.classList.add('opacity-0', 'pointer-events-none');
+    trigger?.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+    trigger?.focus();
+  };
+
+  trigger?.addEventListener('click', () => {
+    const isOpen = trigger.getAttribute('aria-expanded') === 'true';
+    isOpen ? closeDrawer() : openDrawer();
+  });
+  backdrop?.addEventListener('click', closeDrawer);
+  closeBtn?.addEventListener('click', closeDrawer);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && drawer?.getAttribute('aria-hidden') === 'false') closeDrawer();
+  });
+
+  const dt    = document.getElementById('mgmt-dropdown-toggle');
+  const dm    = document.getElementById('mgmt-dropdown');
+  const caret = document.getElementById('mgmt-dropdown-caret');
+
+  const setDropdown = (open) => {
+    if (!dm || !dt) return;
+    dt.setAttribute('aria-expanded', String(open));
+    if (open) {
+      dm.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        dm.classList.remove('opacity-0', 'scale-95');
+        dm.classList.add('opacity-100', 'scale-100');
+        caret?.classList.add('rotate-180');
+      });
+    } else {
+      dm.classList.add('opacity-0', 'scale-95');
+      dm.classList.remove('opacity-100', 'scale-100');
+      caret?.classList.remove('rotate-180');
+      setTimeout(() => {
+        if (dt.getAttribute('aria-expanded') === 'false') dm.classList.add('hidden');
+      }, 150);
+    }
+  };
+
+  dt?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setDropdown(dt.getAttribute('aria-expanded') !== 'true');
+  });
+  document.addEventListener('click', (e) => {
+    if (dt?.getAttribute('aria-expanded') !== 'true') return;
+    if (!dm.contains(e.target) && !dt.contains(e.target)) setDropdown(false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && dt?.getAttribute('aria-expanded') === 'true') {
+      setDropdown(false);
+      dt.focus();
+    }
+  });
+})();
+</script>
+{% endblock %}

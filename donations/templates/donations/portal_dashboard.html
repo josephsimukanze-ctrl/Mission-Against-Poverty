@@ -1,0 +1,203 @@
+{% extends "portal_base.html" %}
+{% load humanize %}
+{% block title %}Donor Dashboard — {{ ORG_NAME }}{% endblock %}
+
+{% block nav %}
+  <a href="{% url 'donor_portal:history' %}" class="sidebar-link {% if '/portal/donor/history/' in request.path %}active{% endif %}">My Donations</a>
+  <a href="/donate/" class="sidebar-link">Make a Donation</a>
+  <a href="{% url 'accounts:profile' %}" class="sidebar-link">Profile</a>
+{% endblock %}
+
+{% block breadcrumb %}Donor Dashboard{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+  <div>
+    <h1 class="text-2xl font-bold text-mapnavy">Welcome back, {{ user.first_name|default:user.username }}</h1>
+    <p class="text-sm text-gray-500 mt-1">Thank you for supporting our mission.</p>
+  </div>
+  <a href="/donate/" class="btn-primary text-[13px]">+ Make a Donation</a>
+</div>
+
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+  <div class="stat-card">
+    <div class="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Total Donated</div>
+    <div class="stat-value mt-1">K {{ total_received|default:0|floatformat:0|intcomma }}</div>
+    <div class="text-[11.5px] text-mapgreen mt-1">All time</div>
+  </div>
+  <div class="stat-card">
+    <div class="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Completed</div>
+    <div class="stat-value mt-1">{{ count_received }}</div>
+    <div class="text-[11.5px] text-gray-500 mt-1">Received donations</div>
+  </div>
+  <div class="stat-card">
+    <div class="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Pending</div>
+    <div class="stat-value mt-1">{{ count_pending }}</div>
+    <div class="text-[11.5px] text-gray-500 mt-1">Awaiting confirmation</div>
+  </div>
+  <div class="stat-card">
+    <div class="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">First Gift</div>
+    {% if donations %}
+      <div class="stat-value mt-1">{{ donations|first|date:"M Y"|default:"—" }}</div>
+      <div class="text-[11.5px] text-gray-500 mt-1">Your journey started here</div>
+    {% else %}
+      <div class="text-[13px] text-mapgreen font-medium mt-2">Start today</div>
+      <div class="text-[11.5px] text-gray-500 mt-1">Make your first gift</div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="grid lg:grid-cols-2 gap-4 mt-6">
+  <div class="card p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-semibold text-mapnavy">Your Donations</h2>
+      <span class="text-[11px] text-gray-500">Last 6 months</span>
+    </div>
+    <div style="height: 220px; position: relative;">
+      <canvas id="donationsChart"></canvas>
+      <div id="donations-empty" class="hidden absolute inset-0 flex items-center justify-center text-center px-4">
+        <div>
+          <div class="text-2xl mb-1">📊</div>
+          <p class="text-[13px] text-gray-500">No donations in the last 6 months</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card p-5">
+    <h2 class="font-semibold text-mapnavy mb-4">By Campaign</h2>
+    <div style="height: 220px; position: relative;">
+      <canvas id="campaignChart"></canvas>
+      <div id="campaign-empty" class="hidden absolute inset-0 flex items-center justify-center text-center px-4">
+        <div>
+          <div class="text-2xl mb-1">🎯</div>
+          <p class="text-[13px] text-gray-500">No campaign-specific donations yet</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mt-6">
+  <div class="flex items-center justify-between p-5 border-b border-[#e5e9f0]">
+    <h2 class="font-semibold text-mapnavy">Recent Donations</h2>
+    <a href="{% url 'donor_portal:history' %}" class="text-[12px] text-mapgreen hover:underline">View all →</a>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="table-base">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Reference</th>
+          <th>Amount</th>
+          <th>Campaign / Project</th>
+          <th>Status</th>
+          <th class="text-right">Receipt</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in donations %}
+        <tr>
+          <td class="text-[12.5px] align-middle">{{ d.created_at|date:"M d, Y" }}</td>
+          <td class="font-mono text-[11.5px] align-middle">{{ d.reference }}</td>
+          <td class="font-semibold align-middle">K {{ d.amount }}</td>
+          <td class="text-[12.5px] text-gray-600 align-middle">
+            {% if d.campaign %}{{ d.campaign.name }}{% elif d.project %}{{ d.project.name }}{% else %}General fund{% endif %}
+          </td>
+          <td class="align-middle">
+            {% if d.status == 'received' %}<span class="badge badge-success">Received</span>
+            {% elif d.status == 'pending' %}<span class="badge badge-warning">Pending</span>
+            {% elif d.status == 'failed' %}<span class="badge badge-danger">Failed</span>
+            {% elif d.status == 'refunded' %}<span class="badge badge-muted">Refunded</span>
+            {% else %}<span class="badge badge-muted">{{ d.get_status_display }}</span>{% endif %}
+          </td>
+          <td class="text-right align-middle">
+            {% if d.status == 'received' %}
+              <a href="{% url 'donor_portal:receipt' d.reference %}" class="text-mapgreen text-[12px] font-medium hover:underline">Download</a>
+            {% else %}
+              <span class="text-gray-300 text-[12px]">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="text-center text-gray-500 py-10">
+            <div class="text-3xl mb-2">💚</div>
+            <div class="font-medium text-mapnavy text-[14px]">No donations yet</div>
+            <div class="text-[12.5px] mt-1">Your first gift will make a real difference.</div>
+            <a href="/donate/" class="btn-primary mt-4 inline-flex text-[13px]">Make your first donation →</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+{{ chart_donation_data|json_script:"chart-donation-data" }}
+{{ chart_campaign_data|json_script:"chart-campaign-data" }}
+<script>
+  (function () {
+    const raw = document.getElementById("chart-donation-data");
+    const campaign = document.getElementById("chart-campaign-data");
+    if (!raw || !campaign || typeof Chart === "undefined") return;
+
+    const donationData = JSON.parse(raw.textContent);
+    const campaignData = JSON.parse(campaign.textContent);
+
+    // Show empty states if no data
+    const hasDonations = donationData.some(d => d.value > 0);
+    const hasCampaigns = campaignData.length > 0 && campaignData.some(d => d.value > 0);
+
+    if (!hasDonations) {
+      const empty = document.getElementById("donations-empty");
+      if (empty) empty.classList.remove("hidden");
+    }
+    if (!hasCampaigns) {
+      const empty = document.getElementById("campaign-empty");
+      if (empty) empty.classList.remove("hidden");
+    }
+
+    new Chart(document.getElementById("donationsChart"), {
+      type: "bar",
+      data: {
+        labels: donationData.map(d => d.label),
+        datasets: [{
+          label: "Donations (K)",
+          data: donationData.map(d => d.value),
+          backgroundColor: "#1e9e5f",
+          borderRadius: 6,
+          maxBarThickness: 34,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { callback: v => "K " + v.toLocaleString() }, grid: { color: "#f1f5f9" } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+
+    new Chart(document.getElementById("campaignChart"), {
+      type: "doughnut",
+      data: {
+        labels: campaignData.map(d => d.label),
+        datasets: [{
+          data: campaignData.map(d => d.value),
+          backgroundColor: ["#1e9e5f", "#16a34a", "#0ea5e9", "#6366f1", "#f59e0b", "#9ca3af"],
+          borderWidth: 0,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        cutout: "65%",
+        plugins: { legend: { position: "bottom", labels: { boxWidth: 12, font: { size: 11 } } } }
+      }
+    });
+  })();
+</script>
+{% endblock %}

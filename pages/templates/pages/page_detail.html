@@ -1,0 +1,97 @@
+{% extends "public_base.html" %}
+{% load humanize %}
+{% block title %}{{ page.title }} — {{ ORG_NAME }}{% endblock %}
+{% block meta_description %}{{ page.subtitle|default:page.title }}{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="relative overflow-hidden bg-mapnavy">
+  <div class="absolute inset-0 pointer-events-none opacity-10">
+    <div class="absolute -right-16 -top-20 h-72 w-72 rounded-full border-[35px] border-white"></div>
+    <div class="absolute -right-5 -bottom-32 h-64 w-64 rounded-full border-[25px] border-white"></div>
+  </div>
+  <div class="relative max-w-5xl mx-auto px-5 lg:px-8 py-14 md:py-20">
+    <nav class="text-[12.5px] text-gray-300 mb-4">
+      <a href="{% url 'pages:home' %}" class="hover:text-white">Home</a>
+      <span class="mx-1.5">/</span>
+      <span class="text-white">{{ page.title }}</span>
+    </nav>
+
+    <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight">
+      {{ page.title }}
+    </h1>
+    {% if page.subtitle %}
+      <p class="mt-4 max-w-2xl text-[15px] md:text-base text-gray-300 leading-relaxed">
+        {{ page.subtitle }}
+      </p>
+    {% endif %}
+    <div class="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-[12.5px] text-gray-400">
+      <span class="inline-flex items-center gap-1.5">
+        <span>📅</span>
+        <span>Last updated {{ page.updated_at|date:"F j, Y" }}</span>
+      </span>
+      {% if page.created_by %}
+        <span class="inline-flex items-center gap-1.5">
+          <span>✍</span>
+          <span>{{ page.created_by.get_full_name|default:page.created_by.get_username }}</span>
+        </span>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<!-- Body -->
+<section class="bg-white">
+  <div class="max-w-4xl mx-auto px-5 lg:px-8 py-12 md:py-16">
+
+    {% if page.hero_image %}
+      <div class="-mt-20 md:-mt-24 mb-10 relative">
+        <img src="{{ page.hero_image.url }}" alt="{{ page.title }}"
+             class="w-full rounded-2xl shadow-xl object-cover border border-[#e5e9f0]"
+             style="max-height: 460px;">
+      </div>
+    {% endif %}
+
+    <article class="prose prose-slate max-w-none text-[15.5px] leading-relaxed text-gray-700">
+      {% if page.body %}
+        {{ page.body|linebreaks }}
+      {% else %}
+        <p class="text-gray-500 italic">This page has no content yet.</p>
+      {% endif %}
+    </article>
+
+    <!-- Share / metadata footer -->
+    <div class="mt-12 pt-6 border-t border-[#e5e9f0] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div class="text-[12.5px] text-gray-500">
+        Published on {{ page.created_at|date:"F j, Y" }}
+        {% if page.updated_at|date:"YmdHis" != page.created_at|date:"YmdHis" %}
+          · last updated {{ page.updated_at|date:"M j, Y" }}
+        {% endif %}
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-[12.5px] text-gray-500 mr-1">Share:</span>
+        <a href="https://wa.me/?text={{ page.title|urlencode }}%20{{ request.build_absolute_uri }}"
+           target="_blank" rel="noopener"
+           class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-green-50 text-green-600 hover:bg-green-100 text-sm"
+           aria-label="Share on WhatsApp">💬</a>
+        <a href="https://twitter.com/intent/tweet?text={{ page.title|urlencode }}&url={{ request.build_absolute_uri }}"
+           target="_blank" rel="noopener"
+           class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 text-sm"
+           aria-label="Share on Twitter">𝕏</a>
+        <a href="mailto:?subject={{ page.title|urlencode }}&body={{ request.build_absolute_uri }}"
+           class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 text-sm"
+           aria-label="Share by email">✉</a>
+      </div>
+    </div>
+
+    <!-- Back to home -->
+    <div class="mt-8 flex justify-center">
+      <a href="{% url 'pages:home' %}" class="btn-secondary text-[13px]">
+        ← Back to Home
+      </a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

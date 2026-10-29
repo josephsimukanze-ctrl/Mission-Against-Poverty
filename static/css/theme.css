@@ -1,0 +1,149 @@
+
+:root {
+  --map-navy:      #16253d;
+  --map-navy-700:  #1f3350;
+  --map-navy-900:  #0f1e33;
+  --map-green:     #1e9e5f;
+  --map-green-600: #188a52;
+  --map-green-50:  #e8f7ef;
+  --map-bg:        #f5f7fa;
+  --map-card:      #ffffff;
+  --map-border:    #e5e9f0;
+  --map-text:      #0f172a;
+  --map-muted:     #64748b;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-font-smoothing: antialiased; }
+body {
+  background: var(--map-bg);
+  color: var(--map-text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  margin: 0;
+  line-height: 1.5;
+}
+
+h1, h2, h3, h4 { font-weight: 700; letter-spacing: -0.01em; }
+
+/* Brand button */
+.btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+  border-radius: .5rem; background: var(--map-green); color: #fff;
+  padding: .625rem 1.25rem; font-size: .875rem; font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0,0,0,.06); border: 0; cursor: pointer;
+  text-decoration: none; transition: background .15s, transform .1s;
+}
+.btn-primary:hover { background: var(--map-green-600); }
+.btn-primary:active { transform: translateY(1px); }
+
+.btn-secondary {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+  border-radius: .5rem; border: 1px solid #d1d5db; background: #fff;
+  padding: .625rem 1.25rem; font-size: .875rem; font-weight: 600;
+  color: #374151; cursor: pointer; text-decoration: none;
+  transition: background .15s;
+}
+.btn-secondary:hover { background: #f9fafb; }
+
+.btn-ghost-light {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+  border-radius: .5rem; border: 1px solid rgba(255,255,255,.35);
+  background: transparent; color: #fff;
+  padding: .625rem 1.25rem; font-size: .875rem; font-weight: 600;
+  text-decoration: none; cursor: pointer; transition: background .15s;
+}
+.btn-ghost-light:hover { background: rgba(255,255,255,.1); }
+
+/* Cards */
+.card {
+  background: var(--map-card);
+  border: 1px solid var(--map-border);
+  border-radius: .75rem;
+}
+.card-hover { transition: box-shadow .2s, transform .15s; }
+.card-hover:hover { box-shadow: 0 8px 24px -8px rgba(15, 23, 42, .12); transform: translateY(-1px); }
+
+/* Badges */
+.badge { display: inline-flex; align-items: center; border-radius: 9999px;
+  padding: .1875rem .625rem; font-size: .75rem; font-weight: 500; }
+.badge-success { background: var(--map-green-50); color: var(--map-green); }
+.badge-warning { background: #fef3c7; color: #92400e; }
+.badge-danger  { background: #fee2e2; color: #b91c1c; }
+.badge-muted   { background: #f3f4f6; color: #4b5563; }
+.badge-navy    { background: rgba(22, 37, 61, .1); color: var(--map-navy); }
+
+/* Progress */
+.progress { height: .5rem; background: #e5e7eb; border-radius: 9999px; overflow: hidden; }
+.progress-bar { height: 100%; background: var(--map-green); transition: width .3s; }
+
+/* Forms */
+.form-input, .form-input-text, input[type="text"].form-input,
+input[type="email"].form-input, input[type="password"].form-input,
+input[type="tel"].form-input, input[type="number"].form-input,
+select.form-input, textarea.form-input {
+  width: 100%; border-radius: .5rem; border: 1px solid #d1d5db;
+  padding: .625rem .875rem; font-size: .875rem; outline: none;
+  background: #fff; color: #111827; transition: border-color .15s, box-shadow .15s;
+}
+.form-input:focus, input.form-input:focus, textarea.form-input:focus, select.form-input:focus {
+  border-color: var(--map-green);
+  box-shadow: 0 0 0 3px rgba(30,158,95,.15);
+}
+.form-label { display: block; font-size: .8125rem; font-weight: 500;
+  color: #374151; margin-bottom: .375rem; }
+.form-error { color: #dc2626; font-size: .75rem; margin-top: .25rem; }
+
+/* Sidebar */
+.sidebar-link { display: flex; align-items: center; gap: .75rem;
+  border-radius: .5rem; padding: .5rem .75rem; font-size: .875rem;
+  color: #cbd5e1; transition: background .15s, color .15s; text-decoration: none; }
+.sidebar-link:hover { background: rgba(255,255,255,.06); color: #fff; }
+.sidebar-link.active { background: rgba(255,255,255,.12); color: #fff; font-weight: 600; }
+.sidebar-section { padding: .875rem .75rem .375rem; font-size: .6875rem;
+  text-transform: uppercase; letter-spacing: .06em; color: rgba(255,255,255,.35); font-weight: 600; }
+
+/* Tables */
+.table-wrapper { overflow-x: auto; border-radius: .75rem;
+  border: 1px solid var(--map-border); background: #fff; }
+.table-base { width: 100%; border-collapse: separate; border-spacing: 0; font-size: .875rem; }
+.table-base th { background: #f9fafb; padding: .75rem 1.25rem; text-align: left;
+  font-size: .6875rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .05em; color: #6b7280; border-bottom: 1px solid var(--map-border); }
+.table-base td { padding: .875rem 1.25rem; color: #374151;
+  border-bottom: 1px solid #f3f4f6; }
+.table-base tbody tr:last-child td { border-bottom: 0; }
+.table-base tbody tr:hover td { background: #f9fafb; }
+
+/* Stats */
+.stat-value { font-size: 1.5rem; font-weight: 700; color: var(--map-text); line-height: 1.2; }
+.stat-label { font-size: .8125rem; color: var(--map-muted); margin-top: .25rem; }
+.stat-icon { width: 2.5rem; height: 2.5rem; border-radius: .5rem;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 1.125rem; }
+
+/* Ensure text visibility on dark backgrounds */
+.on-navy h1, .on-navy h2, .on-navy h3, .on-navy p { color: #fff; }
+.on-navy .muted { color: #cbd5e1; }
+
+/* Utility guard: never let classes fall through to invisible */
+.bg-mapnavy { background-color: var(--map-navy) !important; }
+.text-white { color: #ffffff !important; }
+.text-mapnavy { color: var(--map-navy) !important; }
+.text-mapgreen { color: var(--map-green) !important; }
+
+/* Sidebar section headers */
+.sidebar-section {
+  padding: .875rem .75rem .375rem;
+  font-size: .6875rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: rgba(255,255,255,.35);
+  font-weight: 600;
+}
+
+/* Table cell alignment improvements */
+.table-base td {
+  vertical-align: middle;
+}
+.table-base th {
+  vertical-align: middle;
+}

@@ -1,0 +1,32 @@
+{% extends "public_base.html" %}
+{% block title %}Events — {{ ORG_NAME }}{% endblock %}
+{% block content %}
+<section class="bg-mapnavy text-white">
+  <div class="max-w-7xl mx-auto px-6 py-16">
+    <h1 class="text-3xl md:text-4xl font-bold">Events &amp; Activities</h1>
+    <p class="mt-2 text-gray-300">Charity events, fundraisers, volunteer activities and community outreach.</p>
+  </div>
+</section>
+<section class="max-w-7xl mx-auto px-6 py-12">
+  {% if events %}
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for e in events %}
+      <a href="{% url 'events:detail' e.pk %}" class="bg-white rounded-xl border border-[#e5e9f0] overflow-hidden hover:shadow-md transition group">
+        <div class="aspect-video bg-gray-100">
+          {% if e.cover_image %}<img src="{{ e.cover_image.url }}" alt="{{ e.name }}" class="w-full h-full object-cover">
+          {% else %}<div class="w-full h-full flex items-center justify-center text-gray-300 text-5xl">📅</div>{% endif %}
+        </div>
+        <div class="p-5">
+          {% if e.starts_at %}<span class="badge-warning">{{ e.starts_at|date:"M d, Y · H:i" }}</span>{% endif %}
+          <h2 class="font-semibold text-lg text-mapnavy mt-2 group-hover:text-mapgreen">{{ e.name }}</h2>
+          {% if e.location %}<p class="text-sm text-gray-500 mt-1">📍 {{ e.location }}</p>{% endif %}
+          {% if e.description %}<p class="text-sm text-gray-600 mt-2 line-clamp-2">{{ e.description }}</p>{% endif %}
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-center py-16 text-gray-500"><p class="text-lg">No events published yet.</p></div>
+  {% endif %}
+</section>
+{% endblock %}

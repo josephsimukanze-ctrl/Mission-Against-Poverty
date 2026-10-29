@@ -1,0 +1,19 @@
+{% extends "public_base.html" %}
+
+{% block title %}{{ article.title }} — {{ ORG_NAME }}{% endblock %}
+
+{% block content %}
+<article class="max-w-3xl mx-auto px-6 py-12">
+  {% if article.category %}<a href="{% url 'news:list' %}?category={{ article.category.slug }}" class="badge-success">{{ article.category.name }}</a>{% endif %}
+  <h1 class="text-3xl md:text-4xl font-bold text-mapnavy mt-3">{{ article.title }}</h1>
+  <div class="text-sm text-gray-500 mt-2">{{ article.published_at|default:article.created_at|date:"F j, Y" }}</div>
+  {% if article.cover_image %}
+    <img src="{{ article.cover_image.url }}" alt="{{ article.title }}" class="w-full rounded-xl mt-6">
+  {% endif %}
+  {% if article.summary %}<p class="text-lg text-gray-700 mt-6">{{ article.summary }}</p>{% endif %}
+  <div class="prose prose-slate mt-6 max-w-none whitespace-pre-line">{{ article.body }}</div>
+  <div class="mt-10 pt-6 border-t border-[#e5e9f0]">
+    <a href="{% url 'news:list' %}" class="text-sm text-mapgreen hover:underline">← Back to all news</a>
+  </div>
+</article>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "portal_base.html" %}
+{% block title %}My Applications — {{ ORG_NAME }}{% endblock %}
+{% block nav %}<a href="{% url 'partner_portal:applications' %}" class="sidebar-link active">My Applications</a>{% endblock %}
+{% block breadcrumb %}Partnership Applications{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold text-mapnavy mb-6">My Partnership Applications</h1>
+<div class="space-y-3">
+  {% for a in applications %}
+    <div class="card p-5">
+      <div class="flex items-start justify-between">
+        <div>
+          <div class="font-semibold text-mapnavy">{{ a.organization_name }}</div>
+          <div class="text-[12px] text-gray-500 mt-0.5">{{ a.get_partnership_type_display }} · Applied {{ a.created_at|date:"M d, Y" }}</div>
+        </div>
+        {% if a.status == 'approved' or a.status == 'active' %}<span class="badge badge-success">{{ a.get_status_display }}</span>
+        {% elif a.status == 'rejected' %}<span class="badge badge-danger">{{ a.get_status_display }}</span>
+        {% else %}<span class="badge badge-muted">{{ a.get_status_display }}</span>{% endif %}
+      </div>
+    </div>
+  {% empty %}
+    <div class="card p-10 text-center text-gray-500">No applications yet. <a href="/partnerships/" class="text-mapgreen">Submit one →</a></div>
+  {% endfor %}
+</div>
+{% endblock %}

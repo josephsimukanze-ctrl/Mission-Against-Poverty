@@ -1,0 +1,41 @@
+{% extends "portal_base.html" %}
+{% block title %}My Assignments — {{ ORG_NAME }}{% endblock %}
+{% block nav %}
+  <a href="{% url 'volunteer_portal:portal_assignments' %}" class="sidebar-link active">My Assignments</a>
+  <a href="{% url 'volunteer_portal:portal_hours' %}" class="sidebar-link">Volunteer Hours</a>
+  <a href="{% url 'volunteer_portal:portal_certificates' %}" class="sidebar-link">Certificates</a>
+{% endblock %}
+{% block breadcrumb %}My Assignments{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold text-mapnavy mb-6">My Assignments</h1>
+<div class="space-y-3">
+  {% for a in assignments %}
+    <div class="card p-5">
+      <div class="flex items-start justify-between gap-4">
+        <div class="flex-1 min-w-0">
+          <div class="font-semibold text-mapnavy">{{ a.title }}</div>
+          {% if a.description %}<p class="text-[13px] text-gray-600 mt-1">{{ a.description }}</p>{% endif %}
+          {% if a.scheduled_for %}<div class="text-[12px] text-gray-500 mt-2">📅 {{ a.scheduled_for|date:"M d, Y H:i" }}</div>{% endif %}
+        </div>
+        <div class="flex flex-col items-end gap-2">
+          {% if a.status == 'accepted' %}<span class="badge badge-success">Accepted</span>
+          {% elif a.status == 'proposed' %}<span class="badge badge-warning">Proposed</span>
+          {% elif a.status == 'completed' %}<span class="badge badge-muted">Completed</span>
+          {% elif a.status == 'declined' %}<span class="badge badge-danger">Declined</span>
+          {% else %}<span class="badge badge-muted">{{ a.get_status_display }}</span>{% endif %}
+          {% if a.status == 'proposed' %}
+            <div class="flex gap-2">
+              <a href="{% url 'volunteer_portal:respond_assignment' a.pk 'accept' %}" class="btn-primary text-[11px] !py-1.5">Accept</a>
+              <a href="{% url 'volunteer_portal:respond_assignment' a.pk 'decline' %}" class="btn-secondary text-[11px] !py-1.5">Decline</a>
+            </div>
+          {% elif a.status == 'accepted' %}
+            <a href="{% url 'volunteer_portal:respond_assignment' a.pk 'complete' %}" class="btn-secondary text-[11px] !py-1.5">Mark complete</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  {% empty %}
+    <div class="card p-10 text-center text-gray-500">No assignments yet.</div>
+  {% endfor %}
+</div>
+{% endblock %}

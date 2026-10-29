@@ -1,0 +1,315 @@
+{% extends "public_base.html" %}
+{% block title %}About Us — {{ site.site_name|default:ORG_NAME }}{% endblock %}
+{% block meta_description %}Learn about {{ site.site_name|default:ORG_NAME }} — our story, our mission, our vision, and the people leading the fight against poverty.{% endblock %}
+
+{% block content %}
+
+<!-- ============================================================
+     HERO
+     ============================================================ -->
+<section class="relative bg-mapnavy overflow-hidden">
+  {% if site.about_hero_image %}
+    <img src="{{ site.about_hero_image.url }}" alt=""
+         class="absolute inset-0 w-full h-full object-cover opacity-30" aria-hidden="true">
+    <div class="absolute inset-0 bg-gradient-to-r from-mapnavy via-mapnavy/80 to-mapnavy/40 pointer-events-none"></div>
+  {% else %}
+    <div class="absolute inset-0 opacity-25 pointer-events-none"
+         style="background-image:
+           radial-gradient(circle at 20% 20%, #1e9e5f 0, transparent 40%),
+           radial-gradient(circle at 80% 80%, #1f3350 0, transparent 40%);"></div>
+  {% endif %}
+
+  <div class="relative max-w-7xl mx-auto px-5 lg:px-8 py-16 lg:py-20">
+
+    <nav aria-label="Breadcrumb" class="mb-5">
+      <ol class="flex items-center gap-2 text-[12.5px] text-white/50">
+        <li><a href="/" class="hover:text-white transition-colors">Home</a></li>
+        <li aria-hidden="true">/</li>
+        <li class="text-white/80">About</li>
+      </ol>
+    </nav>
+
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full
+                bg-white/10 border border-white/15
+                text-[11px] uppercase tracking-[0.14em] text-white/80 font-semibold mb-4">
+      <span class="h-1.5 w-1.5 rounded-full bg-mapgreen" aria-hidden="true"></span>
+      About {{ site.site_name|default:ORG_NAME }}
+    </div>
+
+    <h1 class="text-3xl md:text-4xl lg:text-[46px] font-extrabold text-white tracking-tight leading-tight max-w-3xl">
+      {% if site.about_hero_heading %}
+        {{ site.about_hero_heading }}
+      {% else %}
+        Our story, our mission, and the people behind the change.
+      {% endif %}
+    </h1>
+
+    <p class="mt-5 text-[15px] leading-relaxed text-gray-300 max-w-2xl">
+      {% if site.about_hero_subheading %}
+        {{ site.about_hero_subheading }}
+      {% elif site.footer_description %}
+        {{ site.footer_description }}
+      {% else %}
+        {{ site.site_name|default:ORG_NAME }} is a community-driven organization committed to reducing poverty through education, healthcare, skills development, and sustainable community support.
+      {% endif %}
+    </p>
+
+    {% if site.tagline %}
+      <div class="mt-6 text-[11px] uppercase tracking-[0.14em] text-white/40">
+        {{ site.tagline }}
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- ============================================================
+     MISSION / VISION / REACH
+     ============================================================ -->
+<section class="max-w-7xl mx-auto px-5 lg:px-8 py-16 lg:py-20">
+
+  <div class="mb-8">
+    <div class="text-[11px] uppercase tracking-[0.14em] font-semibold text-mapgreen mb-1.5">
+      What drives us
+    </div>
+    <h2 class="text-2xl md:text-3xl font-bold text-mapnavy tracking-tight">
+      Our Purpose
+    </h2>
+  </div>
+
+  <div class="grid md:grid-cols-3 gap-6">
+
+    <!-- MISSION -->
+    <article class="card overflow-hidden group hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 flex flex-col">
+      {% if site.mission_image %}
+        <div class="aspect-[4/3] bg-gray-100 overflow-hidden">
+          <img src="{{ site.mission_image.url }}" alt="{{ site.mission_heading|default:'Mission' }}"
+               loading="lazy"
+               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+        </div>
+      {% endif %}
+      <div class="p-6 flex flex-col flex-1">
+        <div class="inline-flex h-12 w-12 items-center justify-center rounded-xl
+                    bg-mapgreen-50 text-mapgreen text-[22px]
+                    ring-1 ring-mapgreen/15 shrink-0 mb-4">
+          {{ site.mission_icon|default:"🎯" }}
+        </div>
+        <h3 class="font-bold text-mapnavy text-[18px] leading-tight">
+          {{ site.mission_heading|default:"Our Mission" }}
+        </h3>
+        <p class="text-[13.5px] text-gray-600 mt-3 leading-relaxed flex-1">
+          {% if site.mission_text %}
+            {{ site.mission_text }}
+          {% else %}
+            To alleviate poverty and create sustainable opportunities for individuals and communities through education, healthcare, skills development and community support.
+          {% endif %}
+        </p>
+      </div>
+    </article>
+
+    <!-- VISION -->
+    <article class="card overflow-hidden group hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 flex flex-col">
+      {% if site.vision_image %}
+        <div class="aspect-[4/3] bg-gray-100 overflow-hidden">
+          <img src="{{ site.vision_image.url }}" alt="{{ site.vision_heading|default:'Vision' }}"
+               loading="lazy"
+               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+        </div>
+      {% endif %}
+      <div class="p-6 flex flex-col flex-1">
+        <div class="inline-flex h-12 w-12 items-center justify-center rounded-xl
+                    bg-mapgreen-50 text-mapgreen text-[22px]
+                    ring-1 ring-mapgreen/15 shrink-0 mb-4">
+          {{ site.vision_icon|default:"🌅" }}
+        </div>
+        <h3 class="font-bold text-mapnavy text-[18px] leading-tight">
+          {{ site.vision_heading|default:"Our Vision" }}
+        </h3>
+        <p class="text-[13.5px] text-gray-600 mt-3 leading-relaxed flex-1">
+          {% if site.vision_text %}
+            {{ site.vision_text }}
+          {% else %}
+            A world where every person has the opportunity to live a dignified life.
+          {% endif %}
+        </p>
+      </div>
+    </article>
+
+    <!-- REACH -->
+    <article class="card overflow-hidden group hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 flex flex-col">
+      {% if site.reach_image %}
+        <div class="aspect-[4/3] bg-gray-100 overflow-hidden">
+          <img src="{{ site.reach_image.url }}" alt="{{ site.reach_heading|default:'Reach' }}"
+               loading="lazy"
+               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+        </div>
+      {% endif %}
+      <div class="p-6 flex flex-col flex-1">
+        <div class="inline-flex h-12 w-12 items-center justify-center rounded-xl
+                    bg-mapgreen-50 text-mapgreen text-[22px]
+                    ring-1 ring-mapgreen/15 shrink-0 mb-4">
+          {{ site.reach_icon|default:"📍" }}
+        </div>
+        <h3 class="font-bold text-mapnavy text-[18px] leading-tight">
+          {{ site.reach_heading|default:"Our Reach" }}
+        </h3>
+        <p class="text-[13.5px] text-gray-600 mt-3 leading-relaxed flex-1">
+          {% if site.reach_text %}
+            {{ site.reach_text }}
+          {% else %}
+            Serving communities across Zambia, with a focus on the most vulnerable.
+          {% endif %}
+        </p>
+      </div>
+    </article>
+
+  </div>
+
+  </section>
+
+<!-- ============================================================
+     FOUNDERS
+     ============================================================ -->
+<section class="bg-white border-y border-mapborder">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8 py-16 lg:py-20">
+
+    <div class="mb-8">
+      <div class="text-[11px] uppercase tracking-[0.14em] font-semibold text-mapgreen mb-1.5">
+        Where it started
+      </div>
+      <h2 class="text-2xl md:text-3xl font-bold text-mapnavy tracking-tight">
+        Our Founders
+      </h2>
+      <p class="text-gray-500 mt-1.5 text-[14px]">
+        The visionaries who turned a shared dream into a movement.
+      </p>
+    </div>
+
+    {% if founders %}
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {% for f in founders %}
+          <article class="group card card-hover overflow-hidden flex flex-col">
+            <div class="aspect-[4/3] bg-gray-100 relative overflow-hidden shrink-0">
+              {% if f.photo %}
+                <img src="{{ f.photo.url }}" alt="{{ f.name }}"
+                     loading="lazy" decoding="async"
+                     class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500">
+              {% else %}
+                <div class="w-full h-full flex items-center justify-center
+                            bg-gradient-to-br from-mapgreen-50 via-mapgreen/10 to-mapnavy/5">
+                  <span class="text-mapgreen text-[56px] font-bold opacity-40" aria-hidden="true">
+                    {{ f.name|first|upper }}
+                  </span>
+                </div>
+              {% endif %}
+              <span class="absolute top-3 left-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md
+                           bg-mapgreen text-white text-[10px] uppercase tracking-wider
+                           font-semibold shadow-sm">
+                Founder
+              </span>
+            </div>
+
+            <div class="p-5 flex flex-col flex-1">
+              <h3 class="font-semibold text-mapnavy text-[16px] leading-snug">{{ f.name }}</h3>
+              <div class="text-[12.5px] text-mapgreen font-medium mt-1">{{ f.position }}</div>
+              {% if f.bio %}
+                <p class="text-[12px] text-gray-500 mt-2.5 leading-relaxed line-clamp-3">{{ f.bio }}</p>
+              {% endif %}
+              {% if f.email or f.linkedin %}
+                <div class="mt-auto pt-3 mt-3 border-t border-mapborder flex items-center gap-3">
+                  {% if f.email %}
+                    <a href="mailto:{{ f.email }}" class="text-[11.5px] text-mapgreen hover:underline">Email</a>
+                  {% endif %}
+                  {% if f.linkedin %}
+                    <a href="{{ f.linkedin }}" target="_blank" rel="noopener noreferrer"
+                       class="text-[11.5px] text-mapgreen hover:underline">LinkedIn</a>
+                  {% endif %}
+                </div>
+              {% endif %}
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="card p-10 sm:p-14 text-center max-w-lg mx-auto">
+        <div class="mx-auto h-14 w-14 rounded-full bg-mapgreen-50 text-mapgreen
+                    flex items-center justify-center mb-4 text-2xl">★</div>
+        <h3 class="text-[15px] font-semibold text-mapnavy">Founders coming soon</h3>
+        <p class="text-[13px] text-gray-500 mt-1.5 leading-relaxed">
+          Profiles of the people who founded {{ site.site_name|default:ORG_NAME }} will appear here.
+        </p>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- ============================================================
+     LEADERSHIP
+     ============================================================ -->
+<section class="max-w-7xl mx-auto px-5 lg:px-8 py-16 lg:py-20">
+
+  <div class="mb-8">
+    <div class="text-[11px] uppercase tracking-[0.14em] font-semibold text-mapgreen mb-1.5">
+      Who we are
+    </div>
+    <h2 class="text-2xl md:text-3xl font-bold text-mapnavy tracking-tight">
+      Our Leadership
+    </h2>
+    <p class="text-gray-500 mt-1.5 text-[14px]">
+      The people guiding our mission on the ground.
+    </p>
+  </div>
+
+  {% if leaders %}
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+      {% for l in leaders %}
+        <article class="card p-6 text-center flex flex-col
+                        hover:border-mapgreen/40 hover:shadow-card-hover transition">
+          {% if l.photo %}
+            <img src="{{ l.photo.url }}" alt="{{ l.name }}"
+                 loading="lazy" decoding="async"
+                 class="h-20 w-20 rounded-full object-cover mx-auto ring-4 ring-mapgreen-50">
+          {% else %}
+            <div class="h-20 w-20 rounded-full mx-auto
+                        bg-gradient-to-br from-mapgreen-50 to-mapgreen/10
+                        text-mapgreen text-[26px] font-bold
+                        flex items-center justify-center ring-4 ring-mapgreen-50/50">
+              {{ l.name|first|upper }}
+            </div>
+          {% endif %}
+          <div class="font-semibold text-mapnavy mt-4 text-[14.5px] leading-tight">{{ l.name }}</div>
+          <div class="text-[12px] text-gray-500 mt-1 leading-snug">{{ l.position }}</div>
+          {% if l.bio %}
+            <p class="text-[11.5px] text-gray-400 mt-3 leading-relaxed line-clamp-3">{{ l.bio }}</p>
+          {% endif %}
+          {% if l.email or l.linkedin %}
+            <div class="mt-3 pt-3 border-t border-mapborder flex items-center justify-center gap-3">
+              {% if l.email %}
+                <a href="mailto:{{ l.email }}" class="text-[11.5px] text-mapgreen hover:underline">Email</a>
+              {% endif %}
+              {% if l.linkedin %}
+                <a href="{{ l.linkedin }}" target="_blank" rel="noopener noreferrer"
+                   class="text-[11.5px] text-mapgreen hover:underline">LinkedIn</a>
+              {% endif %}
+            </div>
+          {% endif %}
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card p-10 sm:p-14 text-center max-w-lg mx-auto">
+      <div class="mx-auto h-14 w-14 rounded-full bg-mapgreen-50 text-mapgreen
+                  flex items-center justify-center mb-4 text-2xl">👥</div>
+      <h3 class="text-[15px] font-semibold text-mapnavy">Leadership profiles coming soon</h3>
+      <p class="text-[13px] text-gray-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
+        Our team directory is being prepared.
+        {% if site.contact_email %}
+          In the meantime, reach us at
+          <a href="mailto:{{ site.contact_email }}" class="text-mapgreen hover:underline">{{ site.contact_email }}</a>.
+        {% endif %}
+      </p>
+    </div>
+  {% endif %}
+
+</section>
+
+{% endblock %}

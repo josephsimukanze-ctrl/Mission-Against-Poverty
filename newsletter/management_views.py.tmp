@@ -1,0 +1,22 @@
+"""Newsletter management views — wrapper around reports.views."""
+from reports.views import (
+    NewsletterSubscriberListView as SubscriberListView,
+    SubscriberCreateView,
+    SubscriberUpdateView,
+    SubscriberDeleteView,
+    NewsletterCampaignListView as CampaignListView,
+    NewsletterCampaignCreateView as CampaignCreateView,
+    NewsletterCampaignUpdateView as CampaignUpdateView,
+    NewsletterCampaignDeleteView as CampaignDeleteView,
+)
+
+__all__ = [
+    "SubscriberListView",
+    "SubscriberCreateView",
+    "SubscriberUpdateView",
+    "SubscriberDeleteView",
+    "CampaignListView",
+    "CampaignCreateView",
+    "CampaignUpdateView",
+    "CampaignDeleteView",
+]

@@ -1,0 +1,579 @@
+{% extends "management_base.html" %}
+{% load humanize %}
+{% block title %}Reports & Analytics — {{ ORG_NAME }}{% endblock %}
+{% block breadcrumb %}Reports & Analytics{% endblock %}
+
+{% block content %}
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<div class="mb-8">
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-mapnavy tracking-tight">
+        Reports &amp; Analytics
+      </h1>
+      <p class="text-[13px] text-gray-500 mt-1">
+        Track performance across donations, projects, and volunteers
+      </p>
+      <div class="flex items-center gap-2 mt-3">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                     bg-white border border-mapborder text-[11.5px] text-gray-600
+                     shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <path d="M16 2v4M8 2v4M3 10h18"/>
+          </svg>
+          <time datetime="{{ start|date:'c' }}">{{ start|date:"M j, Y" }}</time>
+          <span class="text-gray-300">→</span>
+          <time datetime="{{ end|date:'c' }}">{{ end|date:"M j, Y" }}</time>
+        </span>
+      </div>
+    </div>
+
+    <a href="?start={{ start|date:'Y-m-d' }}&end={{ end|date:'Y-m-d' }}&export=csv"
+       class="btn-secondary inline-flex items-center gap-1.5 h-9 text-[12.5px] !px-3.5
+              focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <path d="M7 10l5 5 5-5M12 15V3"/>
+      </svg>
+      Export CSV
+    </a>
+  </div>
+</div>
+
+<!-- ============================================================
+     DATE FILTER
+     ============================================================ -->
+<form method="get"
+      class="card p-4 mb-8 flex flex-wrap items-end gap-3
+             bg-gradient-to-b from-white to-mapbg/40">
+  <div class="flex-1 min-w-[140px] max-w-[200px]">
+    <label for="start"
+           class="block text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500 mb-1.5">
+      Start
+    </label>
+    <input type="date" id="start" name="start"
+           value="{{ start|date:'Y-m-d' }}"
+           class="form-input w-full text-[13px]">
+  </div>
+
+  <div class="flex-1 min-w-[140px] max-w-[200px]">
+    <label for="end"
+           class="block text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500 mb-1.5">
+      End
+    </label>
+    <input type="date" id="end" name="end"
+           value="{{ end|date:'Y-m-d' }}"
+           class="form-input w-full text-[13px]">
+  </div>
+
+  <div class="flex flex-col">
+    <span class="text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500 mb-1.5">
+      Quick range
+    </span>
+    <div class="inline-flex items-center rounded-lg border border-mapborder bg-white p-0.5
+                shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+      <a href="?preset=7d"
+         class="inline-flex items-center h-7 px-3 rounded-md text-[11.5px] font-medium
+                text-gray-600 hover:bg-gray-50 transition
+                focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40
+                {% if request.GET.preset == '7d' %}!bg-mapnavy !text-white shadow-sm{% endif %}">
+        7d
+      </a>
+      <a href="?preset=30d"
+         class="inline-flex items-center h-7 px-3 rounded-md text-[11.5px] font-medium
+                text-gray-600 hover:bg-gray-50 transition
+                focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40
+                {% if request.GET.preset == '30d' %}!bg-mapnavy !text-white shadow-sm{% endif %}">
+        30d
+      </a>
+      <a href="?preset=90d"
+         class="inline-flex items-center h-7 px-3 rounded-md text-[11.5px] font-medium
+                text-gray-600 hover:bg-gray-50 transition
+                focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40
+                {% if request.GET.preset == '90d' %}!bg-mapnavy !text-white shadow-sm{% endif %}">
+        90d
+      </a>
+      <a href="?preset=ytd"
+         class="inline-flex items-center h-7 px-3 rounded-md text-[11.5px] font-medium
+                text-gray-600 hover:bg-gray-50 transition
+                focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40
+                {% if request.GET.preset == 'ytd' %}!bg-mapnavy !text-white shadow-sm{% endif %}">
+        YTD
+      </a>
+    </div>
+  </div>
+
+  <div class="ml-auto">
+    <button class="btn-primary inline-flex items-center h-9 text-[12.5px] !px-4
+                   focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40">
+      Apply
+    </button>
+  </div>
+</form>
+
+<!-- ============================================================
+     DONATIONS — KPIs
+     ============================================================ -->
+<section aria-labelledby="donations-heading">
+  <div class="flex items-end justify-between gap-3 mb-3">
+    <div>
+      <div class="text-[10.5px] uppercase tracking-[0.18em] font-semibold text-mapgreen mb-1">
+        Revenue
+      </div>
+      <h2 id="donations-heading" class="text-[17px] font-semibold text-mapnavy tracking-tight">
+        Donations
+      </h2>
+    </div>
+    <a href="/management/donations/"
+       class="text-[12.5px] font-medium text-mapgreen hover:underline
+              focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40 rounded">
+      View all →
+    </a>
+  </div>
+
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+
+    <div class="card p-5 relative overflow-hidden
+                ring-1 ring-inset ring-mapgreen/15
+                hover:shadow-lg hover:-translate-y-0.5 transition duration-200
+                motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-sm">
+      <div class="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-mapgreen/70 to-mapgreen/0"></div>
+      <div class="flex items-center justify-between mb-3">
+        <div class="text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+          Total received
+        </div>
+        <span class="relative flex h-2 w-2" aria-hidden="true">
+          <span class="absolute inline-flex h-full w-full rounded-full bg-mapgreen opacity-40"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-mapgreen"></span>
+        </span>
+      </div>
+      <div class="text-[24px] font-bold text-mapnavy tabular-nums leading-none">
+        K {{ donations.total|default:0|floatformat:0|intcomma }}
+      </div>
+    </div>
+
+    <div class="card p-5 hover:shadow-lg hover:-translate-y-0.5 transition duration-200
+                motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-sm">
+      <div class="flex items-center justify-between mb-3">
+        <div class="text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+          Donations
+        </div>
+      </div>
+      <div class="text-[24px] font-bold text-mapnavy tabular-nums leading-none">
+        {{ donations.count|default:0|intcomma }}
+      </div>
+    </div>
+
+    <div class="card p-5 hover:shadow-lg hover:-translate-y-0.5 transition duration-200
+                motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-sm">
+      <div class="flex items-center justify-between mb-3">
+        <div class="text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+          Average gift
+        </div>
+      </div>
+      <div class="text-[24px] font-bold text-mapnavy tabular-nums leading-none">
+        K {{ donations.avg|default:0|floatformat:0|intcomma }}
+      </div>
+    </div>
+
+    <div class="card p-5 hover:shadow-lg hover:-translate-y-0.5 transition duration-200
+                motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-sm">
+      <div class="flex items-center justify-between mb-3">
+        <div class="text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+          Pending
+        </div>
+        <span class="relative flex h-2 w-2" aria-hidden="true">
+          <span class="absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-40"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+        </span>
+      </div>
+      <div class="text-[24px] font-bold text-amber-600 tabular-nums leading-none">
+        {{ donations.pending_count|default:0|intcomma }}
+      </div>
+    </div>
+
+    <div class="card p-5 hover:shadow-lg hover:-translate-y-0.5 transition duration-200
+                motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-sm">
+      <div class="flex items-center justify-between mb-3">
+        <div class="text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+          Failed
+        </div>
+        <span class="relative flex h-2 w-2" aria-hidden="true">
+          <span class="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-40"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+        </span>
+      </div>
+      <div class="text-[24px] font-bold text-red-600 tabular-nums leading-none">
+        {{ donations.failed_count|default:0|intcomma }}
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     CHART — daily donations
+     ============================================================ -->
+<section class="card p-5 mt-6">
+  <div class="flex items-start justify-between mb-4">
+    <div>
+      <h2 class="text-[15px] font-semibold text-mapnavy">Donations over time</h2>
+      <p class="text-[11.5px] text-gray-500 mt-1">
+        Daily received totals
+      </p>
+    </div>
+  </div>
+  <div style="height: 280px;">
+    <canvas id="dailyChart"
+            aria-label="Line chart of daily donation totals"
+            role="img"></canvas>
+  </div>
+</section>
+
+<!-- ============================================================
+     BREAKDOWNS
+     ============================================================ -->
+<div class="grid lg:grid-cols-2 gap-4 mt-6">
+
+  <!-- By status -->
+  <div class="card p-5">
+    <div class="flex items-baseline justify-between mb-4">
+      <h2 class="text-[15px] font-semibold text-mapnavy">By status</h2>
+      <span class="text-[10.5px] uppercase tracking-[0.12em] text-gray-400 font-semibold">
+        {{ by_status|length }} state{{ by_status|length|pluralize }}
+      </span>
+    </div>
+
+    <table class="w-full table-fixed">
+      <caption class="sr-only">Donations grouped by status</caption>
+      <colgroup>
+        <col class="w-auto">
+        <col class="w-[90px]">
+        <col class="w-[140px]">
+      </colgroup>
+
+      <thead>
+        <tr class="border-b border-mapborder">
+          <th scope="col" class="text-left pb-2 text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">Status</th>
+          <th scope="col" class="text-right pb-2 text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">Count</th>
+          <th scope="col" class="text-right pb-2 text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">Amount</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for row in by_status %}
+          <tr class="border-b border-mapborder last:border-0
+                     odd:bg-white even:bg-mapbg/40
+                     hover:!bg-mapgreen/[0.04] transition-colors">
+            <td class="py-3 pr-3">
+              {% if row.status == 'received' %}
+                <span class="badge badge-success">{{ row.status|title }}</span>
+              {% elif row.status == 'pending' %}
+                <span class="badge badge-warning">{{ row.status|title }}</span>
+              {% elif row.status == 'failed' %}
+                <span class="badge badge-danger">{{ row.status|title }}</span>
+              {% elif row.status == 'refunded' %}
+                <span class="badge badge-info">{{ row.status|title }}</span>
+              {% else %}
+                <span class="badge badge-muted">{{ row.status|title }}</span>
+              {% endif %}
+            </td>
+            <td class="py-3 text-right tabular-nums text-[13px] text-gray-600">{{ row.count|intcomma }}</td>
+            <td class="py-3 text-right tabular-nums text-[13.5px] font-semibold text-mapnavy">
+              K {{ row.total|default:0|floatformat:0|intcomma }}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="3" class="py-12 text-center">
+              <div class="mx-auto h-10 w-10 rounded-full bg-gray-100 text-gray-500
+                          flex items-center justify-center mb-2 text-base">💰</div>
+              <p class="text-[12.5px] text-gray-500">No donations in this period</p>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- By type -->
+  <div class="card p-5">
+    <div class="flex items-baseline justify-between mb-4">
+      <h2 class="text-[15px] font-semibold text-mapnavy">By type</h2>
+      <span class="text-[10.5px] uppercase tracking-[0.12em] text-gray-400 font-semibold">
+        {{ by_kind|length }} type{{ by_kind|length|pluralize }}
+      </span>
+    </div>
+
+    <table class="w-full table-fixed">
+      <caption class="sr-only">Donations grouped by kind</caption>
+      <colgroup>
+        <col class="w-auto">
+        <col class="w-[90px]">
+        <col class="w-[140px]">
+      </colgroup>
+
+      <thead>
+        <tr class="border-b border-mapborder">
+          <th scope="col" class="text-left pb-2 text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">Type</th>
+          <th scope="col" class="text-right pb-2 text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">Count</th>
+          <th scope="col" class="text-right pb-2 text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">Amount</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for row in by_kind %}
+          <tr class="border-b border-mapborder last:border-0
+                     odd:bg-white even:bg-mapbg/40
+                     hover:!bg-mapgreen/[0.04] transition-colors">
+            <td class="py-3 pr-3 text-[13.5px] text-mapnavy capitalize">{{ row.kind|title }}</td>
+            <td class="py-3 text-right tabular-nums text-[13px] text-gray-600">{{ row.count|intcomma }}</td>
+            <td class="py-3 text-right tabular-nums text-[13.5px] font-semibold text-mapnavy">
+              K {{ row.total|default:0|floatformat:0|intcomma }}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="3" class="py-12 text-center">
+              <div class="mx-auto h-10 w-10 rounded-full bg-gray-100 text-gray-500
+                          flex items-center justify-center mb-2 text-base">💰</div>
+              <p class="text-[12.5px] text-gray-500">No donations in this period</p>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ============================================================
+     PROJECTS
+     ============================================================ -->
+<section aria-labelledby="projects-heading" class="mt-10">
+  <div class="flex items-end justify-between gap-3 mb-3">
+    <div>
+      <div class="text-[10.5px] uppercase tracking-[0.18em] font-semibold text-mapgreen mb-1">Delivery</div>
+      <h2 id="projects-heading" class="text-[17px] font-semibold text-mapnavy tracking-tight">Projects</h2>
+    </div>
+    <a href="/management/projects/"
+       class="text-[12.5px] font-medium text-mapgreen hover:underline
+              focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40 rounded">
+      View all →
+    </a>
+  </div>
+
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+    <div class="card p-5 hover:shadow-lg hover:-translate-y-0.5 transition duration-200
+                motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-sm">
+      <div class="text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500 mb-3">Active</div>
+      <div class="text-[24px] font-bold text-mapnavy tabular-nums leading-none">{{ projects.active|default:0 }}</div>
+    </div>
+    <div class="card p-5 hover:shadow-lg hover:-translate-y-0.5 transition duration-200
+                motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-sm">
+      <div class="text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500 mb-3">Completed</div>
+      <div class="text-[24px] font-bold text-mapnavy tabular-nums leading-none">{{ projects.completed|default:0 }}</div>
+    </div>
+    <div class="card p-5 hover:shadow-lg hover:-translate-y-0.5 transition duration-200
+                motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-sm">
+      <div class="text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500 mb-3">Total budget</div>
+      <div class="text-[24px] font-bold text-mapnavy tabular-nums leading-none">
+        K {{ projects.total_budget|default:0|floatformat:0|intcomma }}
+      </div>
+    </div>
+    <div class="card p-5 hover:shadow-lg hover:-translate-y-0.5 transition duration-200
+                motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-sm">
+      <div class="text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500 mb-3">Fundraising target</div>
+      <div class="text-[24px] font-bold text-mapnavy tabular-nums leading-none">
+        K {{ projects.total_target|default:0|floatformat:0|intcomma }}
+      </div>
+    </div>
+    <div class="card p-5 relative overflow-hidden
+                ring-1 ring-inset ring-mapgreen/15
+                hover:shadow-lg hover:-translate-y-0.5 transition duration-200
+                motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-sm">
+      <div class="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-mapgreen/70 to-mapgreen/0"></div>
+      <div class="flex items-center justify-between mb-3">
+        <div class="text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">Raised (period)</div>
+        <span class="relative flex h-2 w-2" aria-hidden="true">
+          <span class="absolute inline-flex h-full w-full rounded-full bg-mapgreen opacity-40"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-mapgreen"></span>
+        </span>
+      </div>
+      <div class="text-[24px] font-bold text-mapgreen tabular-nums leading-none">
+        K {{ projects.total_raised|default:0|floatformat:0|intcomma }}
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     VOLUNTEERS
+     ============================================================ -->
+<section aria-labelledby="volunteers-heading" class="mt-10">
+  <div class="flex items-end justify-between gap-3 mb-3">
+    <div>
+      <div class="text-[10.5px] uppercase tracking-[0.18em] font-semibold text-mapgreen mb-1">People</div>
+      <h2 id="volunteers-heading" class="text-[17px] font-semibold text-mapnavy tracking-tight">Volunteers</h2>
+    </div>
+    <a href="/management/volunteers/"
+       class="text-[12.5px] font-medium text-mapgreen hover:underline
+              focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40 rounded">
+      View all →
+    </a>
+  </div>
+
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+    <div class="card p-5 hover:shadow-lg hover:-translate-y-0.5 transition duration-200
+                motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-sm">
+      <div class="text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500 mb-3">Assignments</div>
+      <div class="text-[24px] font-bold text-mapnavy tabular-nums leading-none">{{ volunteers.total_assignments|default:0 }}</div>
+    </div>
+    <div class="card p-5 hover:shadow-lg hover:-translate-y-0.5 transition duration-200
+                motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-sm">
+      <div class="text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500 mb-3">Proposed</div>
+      <div class="text-[24px] font-bold text-amber-600 tabular-nums leading-none">{{ volunteers.proposed|default:0 }}</div>
+    </div>
+    <div class="card p-5 hover:shadow-lg hover:-translate-y-0.5 transition duration-200
+                motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-sm">
+      <div class="text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500 mb-3">Accepted</div>
+      <div class="text-[24px] font-bold text-mapgreen tabular-nums leading-none">{{ volunteers.accepted|default:0 }}</div>
+    </div>
+    <div class="card p-5 hover:shadow-lg hover:-translate-y-0.5 transition duration-200
+                motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-sm">
+      <div class="text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500 mb-3">Completed</div>
+      <div class="text-[24px] font-bold text-mapgreen tabular-nums leading-none">{{ volunteers.completed|default:0 }}</div>
+    </div>
+    <div class="card p-5 hover:shadow-lg hover:-translate-y-0.5 transition duration-200
+                motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-sm">
+      <div class="text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500 mb-3">Hours logged</div>
+      <div class="text-[24px] font-bold text-mapnavy tabular-nums leading-none">
+        {{ volunteers.total_hours|default:0|floatformat:0|intcomma }}
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     TOP CAMPAIGNS
+     ============================================================ -->
+{% if by_campaign %}
+<section aria-labelledby="campaigns-heading" class="mt-10">
+  <div class="flex items-end justify-between gap-3 mb-3">
+    <div>
+      <div class="text-[10.5px] uppercase tracking-[0.18em] font-semibold text-mapgreen mb-1">Attribution</div>
+      <h2 id="campaigns-heading" class="text-[17px] font-semibold text-mapnavy tracking-tight">Top campaigns</h2>
+    </div>
+    <a href="/management/campaigns/"
+       class="text-[12.5px] font-medium text-mapgreen hover:underline
+              focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40 rounded">
+      Manage →
+    </a>
+  </div>
+
+  <div class="card p-0 overflow-hidden">
+    <table class="table-base w-full">
+      <caption class="sr-only">Donations grouped by campaign</caption>
+      <thead class="bg-mapbg">
+        <tr>
+          <th scope="col">Campaign</th>
+          <th scope="col" class="text-right">Donations</th>
+          <th scope="col" class="text-right">Amount</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-mapborder">
+        {% for row in by_campaign %}
+          <tr class="hover:bg-mapgreen/[0.04] transition-colors">
+            <td class="text-mapnavy font-medium">
+              {{ row.campaign__name|default:"General fund" }}
+            </td>
+            <td class="text-right tabular-nums">{{ row.count|intcomma }}</td>
+            <td class="text-right font-semibold tabular-nums">
+              K {{ row.total|default:0|floatformat:0|intcomma }}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+{{ chart_daily|json_script:"daily-chart-data" }}
+<script>
+(function () {
+  const raw = document.getElementById("daily-chart-data");
+  if (!raw || typeof Chart === "undefined") return;
+  const data = JSON.parse(raw.textContent);
+
+  new Chart(document.getElementById("dailyChart"), {
+    type: "line",
+    data: {
+      labels: data.map(d => d.label),
+      datasets: [{
+        label: "Donations",
+        data: data.map(d => d.value),
+        borderColor: "#1e9e5f",
+        backgroundColor: (ctx) => {
+          const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 260);
+          g.addColorStop(0, "rgba(30, 158, 95, 0.30)");
+          g.addColorStop(1, "rgba(30, 158, 95, 0)");
+          return g;
+        },
+        tension: 0.35,
+        fill: true,
+        borderWidth: 2.5,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: "#1e9e5f",
+        pointHoverBorderColor: "#fff",
+        pointHoverBorderWidth: 2,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: "#16253d",
+          padding: 12,
+          cornerRadius: 8,
+          titleFont: { size: 12, weight: "600" },
+          bodyFont: { size: 12 },
+          displayColors: false,
+          callbacks: {
+            label: (ctx) => " K " + Number(ctx.parsed.y).toLocaleString(),
+          },
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            color: "#94a3b8",
+            font: { size: 11 },
+            padding: 8,
+            callback: (v) => "K " + Number(v).toLocaleString(),
+          },
+          grid: { color: "#f1f5f9", drawBorder: false },
+        },
+        x: {
+          ticks: { color: "#64748b", font: { size: 11 }, padding: 6 },
+          grid: { display: false },
+        },
+      },
+    },
+  });
+})();
+</script>
+{% endblock %}

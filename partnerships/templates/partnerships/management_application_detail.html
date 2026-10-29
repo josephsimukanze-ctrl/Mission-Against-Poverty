@@ -1,0 +1,42 @@
+{% extends "management_base.html" %}
+{% block title %}{{ app.organization_name }} — {{ ORG_NAME }}{% endblock %}
+{% block breadcrumb %}Partnerships / {{ app.organization_name }}{% endblock %}
+{% block content %}
+<a href="/management/partnerships/applications/" class="text-[13px] text-mapgreen hover:underline">← All applications</a>
+<h1 class="text-2xl font-bold text-mapnavy mt-2">{{ app.organization_name }}</h1>
+<p class="text-sm text-gray-500">{{ app.get_partnership_type_display }} · Submitted {{ app.created_at|date:"M d, Y" }}</p>
+<div class="grid lg:grid-cols-3 gap-5 mt-6">
+  <div class="lg:col-span-2 card p-6">
+    <h2 class="font-semibold text-mapnavy mb-4">Details</h2>
+    <dl class="grid grid-cols-1 md:grid-cols-2 gap-3 text-[13.5px]">
+      <div><dt class="text-gray-500 text-[11.5px] uppercase tracking-wider font-semibold">Contact</dt><dd class="mt-0.5">{{ app.contact_person }}</dd></div>
+      <div><dt class="text-gray-500 text-[11.5px] uppercase tracking-wider font-semibold">Email</dt><dd class="mt-0.5">{{ app.email }}</dd></div>
+      <div><dt class="text-gray-500 text-[11.5px] uppercase tracking-wider font-semibold">Phone</dt><dd class="mt-0.5">{{ app.phone|default:"—" }}</dd></div>
+      <div><dt class="text-gray-500 text-[11.5px] uppercase tracking-wider font-semibold">Location</dt><dd class="mt-0.5">{{ app.location|default:"—" }}</dd></div>
+      <div class="md:col-span-2"><dt class="text-gray-500 text-[11.5px] uppercase tracking-wider font-semibold">Website</dt><dd class="mt-0.5">{{ app.website|default:"—" }}</dd></div>
+      <div class="md:col-span-2"><dt class="text-gray-500 text-[11.5px] uppercase tracking-wider font-semibold">Proposed contribution</dt><dd class="mt-0.5 whitespace-pre-line">{{ app.proposed_contribution|default:"—" }}</dd></div>
+      <div class="md:col-span-2"><dt class="text-gray-500 text-[11.5px] uppercase tracking-wider font-semibold">Proposed project</dt><dd class="mt-0.5 whitespace-pre-line">{{ app.proposed_project|default:"—" }}</dd></div>
+      <div class="md:col-span-2"><dt class="text-gray-500 text-[11.5px] uppercase tracking-wider font-semibold">Additional comments</dt><dd class="mt-0.5 whitespace-pre-line">{{ app.additional_comments|default:"—" }}</dd></div>
+    </dl>
+    {% if app.supporting_document %}<a href="{{ app.supporting_document.url }}" class="mt-4 inline-block text-[13px] text-mapgreen hover:underline">📄 Supporting document</a>{% endif %}
+  </div>
+  <div class="card p-6">
+    <h2 class="font-semibold text-mapnavy mb-4">Decision</h2>
+    <form method="post" class="space-y-3">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="set_status">
+      <div>
+        <label class="form-label">Status</label>
+        <select name="status" class="form-input">
+          {% for value, label in statuses %}<option value="{{ value }}" {% if app.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Reviewer notes</label>
+        <textarea name="reviewer_notes" class="form-input" rows="3">{{ app.reviewer_notes }}</textarea>
+      </div>
+      <button class="btn-primary w-full justify-center">Save</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

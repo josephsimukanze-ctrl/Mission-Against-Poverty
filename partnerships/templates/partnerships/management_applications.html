@@ -1,0 +1,39 @@
+{% extends "management_base.html" %}
+{% block title %}Partnership Applications — {{ ORG_NAME }}{% endblock %}
+{% block breadcrumb %}Partnerships / Applications{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+  <div>
+    <h1 class="text-2xl font-bold text-mapnavy">Partnership Applications</h1>
+    <p class="text-sm text-gray-500 mt-1">{{ paginator.count }} proposal{{ paginator.count|pluralize }}</p>
+  </div>
+  <form method="get" class="flex gap-2">
+    <select name="status" class="form-input" onchange="this.form.submit()">
+      <option value="">All statuses</option>
+      {% for value, label in statuses %}<option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+  </form>
+</div>
+<div class="table-wrapper">
+  <table class="table-base">
+    <thead><tr><th>Organization</th><th>Contact</th><th>Type</th><th>Status</th><th>Submitted</th><th></th></tr></thead>
+    <tbody>
+      {% for a in applications %}
+      <tr>
+        <td class="font-medium text-mapnavy">{{ a.organization_name }}</td>
+        <td class="text-[12.5px]">{{ a.contact_person }}<br><span class="text-gray-500">{{ a.email }}</span></td>
+        <td class="text-[12.5px]">{{ a.get_partnership_type_display }}</td>
+        <td>
+          {% if a.status == 'approved' or a.status == 'active' %}<span class="badge badge-success">{{ a.get_status_display }}</span>
+          {% elif a.status == 'rejected' or a.status == 'terminated' %}<span class="badge badge-danger">{{ a.get_status_display }}</span>
+          {% elif a.status == 'submitted' %}<span class="badge badge-warning">Submitted</span>
+          {% else %}<span class="badge badge-muted">{{ a.get_status_display }}</span>{% endif %}
+        </td>
+        <td class="text-gray-500 text-[12px]">{{ a.created_at|date:"M d, Y" }}</td>
+        <td class="text-right"><a href="/management/partnerships/applications/{{ a.pk }}/" class="text-mapgreen text-[12.5px] font-medium hover:underline">Review</a></td>
+      </tr>
+      {% empty %}<tr><td colspan="6" class="text-center text-gray-500 py-8">No applications yet.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

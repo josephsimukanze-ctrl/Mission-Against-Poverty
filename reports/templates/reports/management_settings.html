@@ -1,0 +1,708 @@
+{% extends "management_base.html" %}
+{% load humanize %}
+{% load call_extras %}
+{% block title %}Site Settings — {{ ORG_NAME }}{% endblock %}
+{% block breadcrumb %}Site Settings{% endblock %}
+
+{% block content %}
+
+<div class="max-w-6xl mx-auto">
+
+  <!-- HEADER -->
+  <div class="mb-6">
+    <div class="flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <h1 class="text-2xl font-bold text-mapnavy tracking-tight">Site Settings</h1>
+        <p class="text-[13px] text-gray-500 mt-1">
+          Everything that appears on your public website — identity, contact,
+          banking, donations, social links, SEO and the About page — all in one place.
+        </p>
+      </div>
+      <a href="/" target="_blank" rel="noopener"
+         class="btn-secondary inline-flex items-center gap-1.5 h-9 text-[12.5px] !px-3.5">
+        View public site
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" aria-hidden="true">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+
+  {% if messages %}
+    <div class="space-y-2 mb-5">
+      {% for m in messages %}
+        <div role="alert"
+             class="rounded-xl px-4 py-3 text-[13px] border flex items-start gap-2.5
+                    {% if m.tags == 'error' %}bg-red-50 text-red-700 border-red-200{% else %}bg-green-50 text-green-700 border-green-200{% endif %}">
+          <span class="mt-0.5 shrink-0" aria-hidden="true">{% if m.tags == 'error' %}⚠{% else %}✓{% endif %}</span>
+          <span class="flex-1">{{ m }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% if form.errors %}
+    <div role="alert" class="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-700">
+      <div class="font-semibold">Please fix the following:</div>
+      <ul class="mt-1.5 space-y-1 list-disc list-inside">
+        {% for field, errs in form.errors.items %}
+          {% for e in errs %}
+            <li>
+              {% if field != "__all__" %}<span class="font-medium">{{ field|title }}:</span>{% endif %}
+              {{ e }}
+            </li>
+          {% endfor %}
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" id="settings-form" novalidate
+        class="grid lg:grid-cols-3 gap-5 items-start">
+
+    {% csrf_token %}
+    <input type="hidden" name="active_tab" id="active-tab-input" value="{{ active_tab }}">
+
+    <div class="lg:col-span-2 space-y-5">
+
+      <!-- Tabs -->
+      <div class="hidden sm:flex flex-wrap gap-1 p-1 rounded-xl bg-mapbg border border-mapborder"
+           role="tablist" aria-label="Settings sections">
+        <button type="button" data-tab="identity" role="tab"
+                class="settings-tab inline-flex items-center h-9 px-4 rounded-lg text-[12.5px] font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40">Identity</button>
+        <button type="button" data-tab="contact" role="tab"
+                class="settings-tab inline-flex items-center h-9 px-4 rounded-lg text-[12.5px] font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40">Contact</button>
+        <button type="button" data-tab="banking" role="tab"
+                class="settings-tab inline-flex items-center h-9 px-4 rounded-lg text-[12.5px] font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40">Banking</button>
+        <button type="button" data-tab="donations" role="tab"
+                class="settings-tab inline-flex items-center h-9 px-4 rounded-lg text-[12.5px] font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40">Donations</button>
+        <button type="button" data-tab="social" role="tab"
+                class="settings-tab inline-flex items-center h-9 px-4 rounded-lg text-[12.5px] font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40">Social</button>
+        <button type="button" data-tab="seo" role="tab"
+                class="settings-tab inline-flex items-center h-9 px-4 rounded-lg text-[12.5px] font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40">SEO &amp; Footer</button>
+        <button type="button" data-tab="about" role="tab"
+                class="settings-tab inline-flex items-center h-9 px-4 rounded-lg text-[12.5px] font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40">About Page</button>
+      </div>
+
+      <!-- Mobile tab selector -->
+      <div class="sm:hidden">
+        <label for="mobile-tab-select"
+               class="block text-[11px] uppercase tracking-[0.12em] font-semibold text-gray-500 mb-1.5">
+          Section
+        </label>
+        <select id="mobile-tab-select" class="form-input w-full text-[13px]">
+          <option value="identity">Identity</option>
+          <option value="contact">Contact</option>
+          <option value="banking">Banking</option>
+          <option value="donations">Donations</option>
+          <option value="social">Social</option>
+          <option value="seo">SEO &amp; Footer</option>
+          <option value="about">About Page</option>
+        </select>
+      </div>
+
+      <!-- PANEL: Identity -->
+      <section data-tab-panel="identity" class="settings-panel card p-6 space-y-5">
+        <header class="flex items-start justify-between gap-3">
+          <div>
+            <h2 class="text-[15px] font-semibold text-mapnavy">Identity</h2>
+            <p class="text-[12px] text-gray-500 mt-0.5">How your organization appears across the site.</p>
+          </div>
+          <a href="/" target="_blank" rel="noopener" class="text-[12px] font-medium text-mapgreen hover:underline shrink-0">Preview ↗</a>
+        </header>
+
+        <div>
+          <label for="{{ form.site_name.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Site name</label>
+          {{ form.site_name }}
+          <p class="mt-1.5 text-[11px] text-gray-500">Shown in the header, footer, and page titles.</p>
+          {% if form.site_name.errors %}<p class="mt-1.5 text-[12.5px] text-red-600">{{ form.site_name.errors|join:" " }}</p>{% endif %}
+        </div>
+
+        <div>
+          <label for="{{ form.tagline.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Tagline</label>
+          {{ form.tagline }}
+          <p class="mt-1.5 text-[11px] text-gray-500">Short phrase shown under the site name in the footer.</p>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label for="{{ form.logo.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Logo</label>
+            {{ form.logo }}
+            {% if site.logo %}
+              <div class="mt-2 flex items-center gap-2 text-[11.5px] text-gray-500">
+                <img src="{{ site.logo.url }}" alt="Current logo" class="h-10 w-10 rounded object-contain border border-mapborder bg-white p-1">
+                <span>Current logo</span>
+              </div>
+            {% endif %}
+          </div>
+          <div>
+            <label for="{{ form.logo_light.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+              Light logo <span class="text-gray-400 font-normal">(for dark backgrounds)</span>
+            </label>
+            {{ form.logo_light }}
+            {% if site.logo_light %}
+              <div class="mt-2 flex items-center gap-2 text-[11.5px] text-gray-500">
+                <img src="{{ site.logo_light.url }}" alt="Current light logo" class="h-10 w-10 rounded object-contain border border-mapborder bg-mapnavy p-1">
+                <span>Current light logo</span>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label for="{{ form.favicon.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Favicon</label>
+            {{ form.favicon }}
+            {% if site.favicon %}
+              <div class="mt-2 flex items-center gap-2 text-[11.5px] text-gray-500">
+                <img src="{{ site.favicon.url }}" alt="Current favicon" class="h-8 w-8 rounded border border-mapborder">
+                <span>Current favicon</span>
+              </div>
+            {% endif %}
+          </div>
+          <div>
+            <label for="{{ form.og_image.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Social share image</label>
+            {{ form.og_image }}
+            <p class="mt-1.5 text-[11px] text-gray-500">1200×630 px. Shown when your site is shared on WhatsApp, Facebook, X, LinkedIn.</p>
+            {% if site.og_image %}
+              <div class="mt-2 flex items-center gap-2 text-[11.5px] text-gray-500">
+                <img src="{{ site.og_image.url }}" alt="Current social share image" class="h-12 w-20 rounded object-cover border border-mapborder">
+                <span>Current image</span>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+
+      <!-- PANEL: Contact -->
+      <section data-tab-panel="contact" class="settings-panel card p-6 space-y-5 hidden">
+        <header>
+          <h2 class="text-[15px] font-semibold text-mapnavy">Contact</h2>
+          <p class="text-[12px] text-gray-500 mt-0.5">Shown in the footer, on the contact page, and in receipts.</p>
+        </header>
+
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label for="{{ form.contact_email.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Email</label>
+            {{ form.contact_email }}
+            <p class="mt-1.5 text-[11px] text-gray-500">Primary contact email.</p>
+          </div>
+          <div>
+            <label for="{{ form.contact_phone.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Phone</label>
+            {{ form.contact_phone }}
+            <p class="mt-1.5 text-[11px] text-gray-500">Main phone line for donors.</p>
+          </div>
+        </div>
+
+        <div>
+          <label for="{{ form.contact_address.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Address</label>
+          {{ form.contact_address }}
+          <p class="mt-1.5 text-[11px] text-gray-500">Line breaks are preserved.</p>
+        </div>
+
+        <div>
+          <label for="{{ form.office_hours.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Office hours</label>
+          {{ form.office_hours }}
+        </div>
+
+        <div>
+          <label for="{{ form.google_maps_embed.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Google Maps embed</label>
+          {{ form.google_maps_embed }}
+          <p class="mt-1.5 text-[11px] text-gray-500">Paste the iframe HTML from Google Maps → Share → Embed a map.</p>
+        </div>
+      </section>
+
+      <!-- PANEL: Banking -->
+      <section data-tab-panel="banking" class="settings-panel card p-6 space-y-5 hidden">
+        <header class="flex items-start justify-between gap-3">
+          <div>
+            <h2 class="text-[15px] font-semibold text-mapnavy">Banking &amp; Mobile Money</h2>
+            <p class="text-[12px] text-gray-500 mt-0.5">These details appear on the donate page and bank transfer instructions.</p>
+          </div>
+          <a href="/donate/" target="_blank" rel="noopener" class="text-[12px] font-medium text-mapgreen hover:underline shrink-0">Preview ↗</a>
+        </header>
+
+        <div class="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-[12px] text-amber-900 leading-relaxed">
+          <strong>Important:</strong> If you enter an account number here, donors will see these bank details immediately after submitting the donation form.
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label for="{{ form.bank_name.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Bank name</label>
+            {{ form.bank_name }}
+          </div>
+          <div>
+            <label for="{{ form.bank_branch.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Branch</label>
+            {{ form.bank_branch }}
+          </div>
+        </div>
+
+        <div>
+          <label for="{{ form.bank_account_name.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Account name</label>
+          {{ form.bank_account_name }}
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label for="{{ form.bank_account_number.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Account number</label>
+            {{ form.bank_account_number }}
+          </div>
+          <div>
+            <label for="{{ form.bank_sort_code.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Sort code <span class="text-gray-400 font-normal">(optional)</span></label>
+            {{ form.bank_sort_code }}
+          </div>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label for="{{ form.bank_swift.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">SWIFT / BIC <span class="text-gray-400 font-normal">(international)</span></label>
+            {{ form.bank_swift }}
+          </div>
+          <div>
+            <label for="{{ form.bank_iban.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">IBAN <span class="text-gray-400 font-normal">(optional)</span></label>
+            {{ form.bank_iban }}
+          </div>
+        </div>
+
+        <div class="border-t border-mapborder pt-5">
+          <div class="text-[11px] uppercase tracking-[0.12em] font-semibold text-gray-500 mb-3">Mobile money (optional)</div>
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label for="{{ form.mobile_money_name.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Provider</label>
+              {{ form.mobile_money_name }}
+            </div>
+            <div>
+              <label for="{{ form.mobile_money_number.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Number</label>
+              {{ form.mobile_money_number }}
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label for="{{ form.bank_transfer_instructions.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Transfer instructions</label>
+          {{ form.bank_transfer_instructions }}
+        </div>
+      </section>
+
+      <!-- PANEL: Donations -->
+      <section data-tab-panel="donations" class="settings-panel card p-6 space-y-5 hidden">
+        <header class="flex items-start justify-between gap-3">
+          <div>
+            <h2 class="text-[15px] font-semibold text-mapnavy">Donation Settings</h2>
+            <p class="text-[12px] text-gray-500 mt-0.5">Currency, minimum amount, and preset buttons shown on the donate page.</p>
+          </div>
+          <a href="/donate/" target="_blank" rel="noopener" class="text-[12px] font-medium text-mapgreen hover:underline shrink-0">Preview ↗</a>
+        </header>
+
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label for="{{ form.currency.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Currency code</label>
+            {{ form.currency }}
+            <p class="mt-1.5 text-[11px] text-gray-500">ISO code: ZMW, USD, EUR, GBP, KES, ZAR</p>
+          </div>
+          <div>
+            <label for="{{ form.currency_symbol.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Currency symbol</label>
+            {{ form.currency_symbol }}
+            <p class="mt-1.5 text-[11px] text-gray-500">The symbol shown before amounts: K, $, €, £</p>
+          </div>
+        </div>
+
+        <div>
+          <label for="{{ form.min_donation.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Minimum donation</label>
+          {{ form.min_donation }}
+          <p class="mt-1.5 text-[11px] text-gray-500">Smallest amount accepted by the donate form.</p>
+        </div>
+
+        <div>
+          <label for="{{ form.preset_amounts.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Preset amounts</label>
+          {{ form.preset_amounts }}
+          {% if form.preset_amounts.errors %}<p class="mt-1.5 text-[12.5px] text-red-600">{{ form.preset_amounts.errors|join:" " }}</p>{% endif %}
+          <p class="mt-1.5 text-[11px] text-gray-500">Comma-separated whole numbers. These become clickable chips on the donate page.</p>
+
+          {% if site.preset_amounts_list %}
+            <div class="mt-3 pt-3 border-t border-mapborder">
+              <div class="text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500 mb-2">Preview</div>
+              <div class="flex flex-wrap gap-2">
+                {% for amt in site.preset_amounts_list %}
+                  <span class="inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-[12.5px] font-semibold border border-gray-200 bg-white text-mapnavy">
+                    {{ site.currency_symbol|default:"K" }} {{ amt }}
+                  </span>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </section>
+
+      <!-- PANEL: Social -->
+      <section data-tab-panel="social" class="settings-panel card p-6 space-y-4 hidden">
+        <header>
+          <h2 class="text-[15px] font-semibold text-mapnavy">Social Media</h2>
+          <p class="text-[12px] text-gray-500 mt-0.5">Links shown in the footer. Leave any field blank to hide the icon.</p>
+        </header>
+
+        <div class="space-y-4">
+          <div class="flex items-start gap-3">
+            <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-mapbg text-mapnavy text-[13px] font-semibold shrink-0 mt-1">f</span>
+            <div class="flex-1 min-w-0">
+              <label for="{{ form.facebook_url.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Facebook</label>
+              {{ form.facebook_url }}
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-mapbg text-mapnavy text-[13px] font-semibold shrink-0 mt-1">𝕏</span>
+            <div class="flex-1 min-w-0">
+              <label for="{{ form.twitter_url.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">X / Twitter</label>
+              {{ form.twitter_url }}
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-mapbg text-mapnavy text-[13px] shrink-0 mt-1">📷</span>
+            <div class="flex-1 min-w-0">
+              <label for="{{ form.instagram_url.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Instagram</label>
+              {{ form.instagram_url }}
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-mapbg text-mapnavy text-[13px] font-semibold shrink-0 mt-1">in</span>
+            <div class="flex-1 min-w-0">
+              <label for="{{ form.linkedin_url.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">LinkedIn</label>
+              {{ form.linkedin_url }}
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-mapbg text-mapnavy text-[13px] shrink-0 mt-1">▶</span>
+            <div class="flex-1 min-w-0">
+              <label for="{{ form.youtube_url.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">YouTube</label>
+              {{ form.youtube_url }}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PANEL: SEO & Footer -->
+      <section data-tab-panel="seo" class="settings-panel card p-6 space-y-5 hidden">
+        <header>
+          <h2 class="text-[15px] font-semibold text-mapnavy">SEO &amp; Footer</h2>
+          <p class="text-[12px] text-gray-500 mt-0.5">Footer content, meta defaults, and analytics.</p>
+        </header>
+
+        <div>
+          <label for="{{ form.footer_description.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Footer description</label>
+          {{ form.footer_description }}
+          <p class="mt-1.5 text-[11px] text-gray-500">Shown under the site name in the footer of every page.</p>
+        </div>
+
+        <div>
+          <label for="{{ form.copyright_text.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Copyright line <span class="text-gray-400 font-normal">(optional)</span></label>
+          {{ form.copyright_text }}
+        </div>
+
+        <div>
+          <label for="{{ form.default_meta_description.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Default meta description</label>
+          {{ form.default_meta_description }}
+          <p class="mt-1.5 text-[11px] text-gray-500">
+            Appears in search results.
+            Currently: <strong id="meta-desc-count">{{ form.default_meta_description.value|length|default:0 }}</strong> characters.
+          </p>
+        </div>
+
+        <div>
+          <label for="{{ form.google_analytics_id.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Google Analytics ID <span class="text-gray-400 font-normal">(optional)</span></label>
+          {{ form.google_analytics_id }}
+        </div>
+      </section>
+
+      <!-- PANEL: About Page -->
+      <section data-tab-panel="about" class="settings-panel card p-6 space-y-5 hidden">
+        <header class="flex items-start justify-between gap-3">
+          <div>
+            <h2 class="text-[15px] font-semibold text-mapnavy">About Page</h2>
+            <p class="text-[12px] text-gray-500 mt-0.5">
+              Hero image, mission, vision, and reach content shown on the public About page.
+            </p>
+          </div>
+          <a href="/about/" target="_blank" rel="noopener" class="text-[12px] font-medium text-mapgreen hover:underline shrink-0">
+            Preview ↗
+          </a>
+        </header>
+
+        <!-- Hero -->
+        <div class="rounded-xl border border-mapborder bg-mapbg/50 p-4 space-y-3">
+          <div class="text-[11px] uppercase tracking-wider text-gray-500 font-semibold">Hero</div>
+          <div>
+            <label for="{{ form.about_hero_image.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Hero image</label>
+            {{ form.about_hero_image }}
+            <p class="mt-1 text-[11px] text-gray-500">1600×900px recommended. Background image behind the About page hero.</p>
+            {% if site.about_hero_image %}
+              <div class="mt-2 flex items-center gap-2 text-[11.5px] text-gray-500">
+                <img src="{{ site.about_hero_image.url }}" alt="" class="h-16 w-28 rounded object-cover border border-mapborder">
+                <span>Current image</span>
+              </div>
+            {% endif %}
+          </div>
+          <div class="grid sm:grid-cols-2 gap-3">
+            <div>
+              <label for="{{ form.about_hero_heading.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Hero heading</label>
+              {{ form.about_hero_heading }}
+            </div>
+            <div>
+              <label for="{{ form.about_hero_subheading.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">Hero subheading</label>
+              {{ form.about_hero_subheading }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Mission -->
+        <div class="rounded-xl border border-mapborder bg-mapbg/50 p-4 space-y-3">
+          <div class="text-[11px] uppercase tracking-wider text-gray-500 font-semibold">Mission</div>
+          <div class="grid sm:grid-cols-3 gap-3">
+            <div>
+              <label for="{{ form.mission_icon.id_for_label }}" class="block text-[11.5px] font-medium text-gray-600 mb-1">Icon (emoji)</label>
+              {{ form.mission_icon }}
+            </div>
+            <div class="sm:col-span-2">
+              <label for="{{ form.mission_heading.id_for_label }}" class="block text-[11.5px] font-medium text-gray-600 mb-1">Heading</label>
+              {{ form.mission_heading }}
+            </div>
+          </div>
+          <div>
+            <label for="{{ form.mission_text.id_for_label }}" class="block text-[11.5px] font-medium text-gray-600 mb-1">Text</label>
+            {{ form.mission_text }}
+          </div>
+          <div>
+            <label for="{{ form.mission_image.id_for_label }}" class="block text-[11.5px] font-medium text-gray-600 mb-1">Image</label>
+            {{ form.mission_image }}
+            <p class="mt-1 text-[11px] text-gray-500">800×600px recommended. Shown below the mission text.</p>
+            {% if site.mission_image %}
+              <div class="mt-2 flex items-center gap-2 text-[11.5px] text-gray-500">
+                <img src="{{ site.mission_image.url }}" alt="" class="h-16 w-24 rounded object-cover border border-mapborder">
+                <span>Current image</span>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Vision -->
+        <div class="rounded-xl border border-mapborder bg-mapbg/50 p-4 space-y-3">
+          <div class="text-[11px] uppercase tracking-wider text-gray-500 font-semibold">Vision</div>
+          <div class="grid sm:grid-cols-3 gap-3">
+            <div>
+              <label for="{{ form.vision_icon.id_for_label }}" class="block text-[11.5px] font-medium text-gray-600 mb-1">Icon (emoji)</label>
+              {{ form.vision_icon }}
+            </div>
+            <div class="sm:col-span-2">
+              <label for="{{ form.vision_heading.id_for_label }}" class="block text-[11.5px] font-medium text-gray-600 mb-1">Heading</label>
+              {{ form.vision_heading }}
+            </div>
+          </div>
+          <div>
+            <label for="{{ form.vision_text.id_for_label }}" class="block text-[11.5px] font-medium text-gray-600 mb-1">Text</label>
+            {{ form.vision_text }}
+          </div>
+          <div>
+            <label for="{{ form.vision_image.id_for_label }}" class="block text-[11.5px] font-medium text-gray-600 mb-1">Image</label>
+            {{ form.vision_image }}
+            <p class="mt-1 text-[11px] text-gray-500">800×600px recommended. Shown below the vision text.</p>
+            {% if site.vision_image %}
+              <div class="mt-2 flex items-center gap-2 text-[11.5px] text-gray-500">
+                <img src="{{ site.vision_image.url }}" alt="" class="h-16 w-24 rounded object-cover border border-mapborder">
+                <span>Current image</span>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Reach -->
+        <div class="rounded-xl border border-mapborder bg-mapbg/50 p-4 space-y-3">
+          <div class="text-[11px] uppercase tracking-wider text-gray-500 font-semibold">Reach</div>
+          <div class="grid sm:grid-cols-3 gap-3">
+            <div>
+              <label for="{{ form.reach_icon.id_for_label }}" class="block text-[11.5px] font-medium text-gray-600 mb-1">Icon (emoji)</label>
+              {{ form.reach_icon }}
+            </div>
+            <div class="sm:col-span-2">
+              <label for="{{ form.reach_heading.id_for_label }}" class="block text-[11.5px] font-medium text-gray-600 mb-1">Heading</label>
+              {{ form.reach_heading }}
+            </div>
+          </div>
+          <div>
+            <label for="{{ form.reach_text.id_for_label }}" class="block text-[11.5px] font-medium text-gray-600 mb-1">Text</label>
+            {{ form.reach_text }}
+          </div>
+          <div>
+            <label for="{{ form.reach_image.id_for_label }}" class="block text-[11.5px] font-medium text-gray-600 mb-1">Image</label>
+            {{ form.reach_image }}
+            <p class="mt-1 text-[11px] text-gray-500">800×600px recommended. Shown below the reach text.</p>
+            {% if site.reach_image %}
+              <div class="mt-2 flex items-center gap-2 text-[11.5px] text-gray-500">
+                <img src="{{ site.reach_image.url }}" alt="" class="h-16 w-24 rounded object-cover border border-mapborder">
+                <span>Current image</span>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+
+      <!-- Actions -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-mapborder">
+        <a href="/management/" class="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-gray-500 hover:text-mapnavy transition">
+          ← Back to Dashboard
+        </a>
+        <div class="flex items-center gap-2">
+          <span class="hidden sm:inline text-[11.5px] text-gray-400" id="unsaved-indicator">All changes saved</span>
+          <button type="submit" id="settings-submit"
+                  class="btn-primary inline-flex items-center gap-2 h-10 text-[13px] !px-5 disabled:opacity-60 disabled:cursor-not-allowed">
+            <svg id="submit-spinner" class="hidden animate-spin" width="14" height="14"
+                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+            </svg>
+            <span id="submit-label">Save settings</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIVE PREVIEW SIDEBAR -->
+    <aside class="hidden lg:block lg:sticky lg:top-24 space-y-4">
+      <div class="card p-5">
+        <div class="text-[11px] uppercase tracking-[0.12em] font-semibold text-gray-500 mb-3">Live preview</div>
+        <div class="rounded-xl border border-mapborder overflow-hidden bg-mapnavy">
+          <div class="px-4 py-3 flex items-center gap-2.5 border-b border-white/10">
+            <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-mapgreen text-white text-sm shrink-0">
+              {% if site.logo_light %}<img src="{{ site.logo_light.url }}" alt="" class="w-full h-full object-cover rounded-full">{% else %}♥{% endif %}
+            </span>
+            <div class="min-w-0">
+              <div id="preview-site-name" class="text-[11px] font-bold text-white uppercase tracking-wider truncate">{{ site.site_name|default:"Your site name" }}</div>
+              <div id="preview-tagline" class="text-[9.5px] text-gray-400 uppercase tracking-wider truncate">{{ site.tagline|default:"Your tagline" }}</div>
+            </div>
+          </div>
+          <div class="px-4 py-5 text-center">
+            <div class="text-[10px] uppercase tracking-[0.15em] text-white/40 font-semibold mb-2">Homepage preview</div>
+            <div class="text-[13px] font-bold text-white">{{ site.site_name|default:"Your Organization" }}</div>
+            <div class="text-[10.5px] text-gray-400 mt-1">{{ site.tagline|default:"Your tagline" }}</div>
+          </div>
+        </div>
+        <p class="mt-3 text-[11px] text-gray-500 leading-relaxed">Header + footer preview. Click <strong>Save</strong> to update the real site.</p>
+      </div>
+
+      <div class="card p-5">
+        <div class="text-[11px] uppercase tracking-[0.12em] font-semibold text-gray-500 mb-3">Contact info</div>
+        <dl class="space-y-2 text-[12px]">
+          <div class="flex justify-between gap-3"><dt class="text-gray-500 shrink-0">Email</dt><dd id="preview-email" class="text-mapnavy truncate text-right">{{ site.contact_email|default:"—" }}</dd></div>
+          <div class="flex justify-between gap-3"><dt class="text-gray-500 shrink-0">Phone</dt><dd id="preview-phone" class="text-mapnavy truncate text-right">{{ site.contact_phone|default:"—" }}</dd></div>
+          <div class="flex justify-between gap-3"><dt class="text-gray-500 shrink-0">Bank</dt><dd class="text-mapnavy truncate text-right">{{ site.bank_name|default:"Not set" }}</dd></div>
+        </dl>
+      </div>
+
+      <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-[11.5px] text-amber-900 leading-relaxed">
+        <strong>Note:</strong> These settings apply to the entire site immediately after saving.
+      </div>
+    </aside>
+  </form>
+</div>
+
+<style>
+  .settings-tab[aria-selected="true"] { background-color: #ffffff; color: #16253d; box-shadow: 0 1px 2px rgba(16,24,40,.06); }
+  .settings-tab:not([aria-selected="true"]) { color: #64748b; }
+  .settings-tab:not([aria-selected="true"]):hover { color: #16253d; background-color: rgba(255,255,255,.5); }
+</style>
+
+<script>
+(function () {
+  const form = document.getElementById('settings-form');
+  const tabs = document.querySelectorAll('.settings-tab');
+  const panels = document.querySelectorAll('.settings-panel');
+  const hiddenInput = document.getElementById('active-tab-input');
+  const mobileTab = document.getElementById('mobile-tab-select');
+  const unsavedInd = document.getElementById('unsaved-indicator');
+
+  const showTab = (name) => {
+    tabs.forEach((t) => t.setAttribute('aria-selected', String(t.dataset.tab === name)));
+    panels.forEach((p) => p.classList.toggle('hidden', p.dataset.tabPanel !== name));
+    if (hiddenInput) hiddenInput.value = name;
+    if (mobileTab) mobileTab.value = name;
+    const url = new URL(window.location);
+    url.searchParams.set('tab', name);
+    window.history.replaceState({}, '', url);
+  };
+
+  tabs.forEach((t) => {
+    t.setAttribute('aria-selected', 'false');
+    t.addEventListener('click', () => showTab(t.dataset.tab));
+  });
+
+  mobileTab?.addEventListener('change', () => showTab(mobileTab.value));
+
+  tabs.forEach((t) => {
+    t.addEventListener('keydown', (e) => {
+      const current = Array.from(tabs).indexOf(t);
+      let next = null;
+      if (e.key === 'ArrowRight') next = (current + 1) % tabs.length;
+      if (e.key === 'ArrowLeft')  next = (current - 1 + tabs.length) % tabs.length;
+      if (next !== null) {
+        e.preventDefault();
+        tabs[next].focus();
+        showTab(tabs[next].dataset.tab);
+      }
+    });
+  });
+
+  showTab("{{ active_tab|default:'identity' }}");
+
+  let dirty = false;
+  form.addEventListener('input', () => {
+    if (!dirty && unsavedInd) {
+      dirty = true;
+      unsavedInd.textContent = 'Unsaved changes';
+      unsavedInd.className = 'hidden sm:inline text-[11.5px] text-amber-600 font-medium';
+    }
+  });
+
+  const submit = document.getElementById('settings-submit');
+  const label = document.getElementById('submit-label');
+  const spinner = document.getElementById('submit-spinner');
+
+  form?.addEventListener('submit', () => {
+    dirty = false;
+    if (submit) submit.disabled = true;
+    if (label)  label.textContent = 'Saving…';
+    if (unsavedInd) {
+      unsavedInd.textContent = 'Saving…';
+      unsavedInd.className = 'hidden sm:inline text-[11.5px] text-gray-400';
+    }
+    spinner?.classList.remove('hidden');
+  });
+
+  window.addEventListener('beforeunload', (e) => {
+    if (!dirty) return;
+    e.preventDefault();
+    e.returnValue = '';
+  });
+
+  const metaDesc = document.getElementById('{{ form.default_meta_description.id_for_label }}');
+  const metaCount = document.getElementById('meta-desc-count');
+  if (metaDesc && metaCount) {
+    metaDesc.addEventListener('input', () => { metaCount.textContent = metaDesc.value.length; });
+  }
+
+  const bindLive = (inputId, targetIds) => {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    input.addEventListener('input', () => {
+      targetIds.forEach((tid) => {
+        const el = document.getElementById(tid);
+        if (el) el.textContent = input.value || el.dataset.fallback || '—';
+      });
+    });
+  };
+
+  bindLive('{{ form.site_name.id_for_label }}', ['preview-site-name']);
+  bindLive('{{ form.tagline.id_for_label }}', ['preview-tagline']);
+  bindLive('{{ form.contact_email.id_for_label }}', ['preview-email']);
+  bindLive('{{ form.contact_phone.id_for_label }}', ['preview-phone']);
+})();
+</script>
+
+{% endblock %}

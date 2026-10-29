@@ -1,0 +1,55 @@
+{% extends "public_base.html" %}
+
+{% block title %}News & Stories — {{ ORG_NAME }}{% endblock %}
+
+{% block content %}
+<section class="bg-mapnavy text-white">
+  <div class="max-w-7xl mx-auto px-6 py-16">
+    <h1 class="text-3xl md:text-4xl font-bold">News &amp; Stories</h1>
+    <p class="mt-2 text-gray-300">Announcements, project updates and stories from the communities we serve.</p>
+  </div>
+</section>
+
+<section class="max-w-7xl mx-auto px-6 py-12">
+  <div class="flex flex-wrap items-center gap-3 mb-8">
+    <a href="{% url 'news:list' %}" class="px-4 py-2 rounded-full text-sm {% if not filters.category %}bg-mapgreen text-white{% else %}bg-white border border-gray-200 text-gray-700 hover:bg-gray-50{% endif %}">All</a>
+    {% for c in categories %}
+      <a href="?category={{ c.slug }}" class="px-4 py-2 rounded-full text-sm {% if filters.category == c.slug %}bg-mapgreen text-white{% else %}bg-white border border-gray-200 text-gray-700 hover:bg-gray-50{% endif %}">{{ c.name }}</a>
+    {% endfor %}
+  </div>
+
+  {% if articles %}
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for a in articles %}
+      <a href="{{ a.get_absolute_url }}" class="bg-white rounded-xl border border-[#e5e9f0] overflow-hidden hover:shadow-md transition group">
+        <div class="aspect-video bg-gray-100 overflow-hidden">
+          {% if a.cover_image %}
+            <img src="{{ a.cover_image.url }}" alt="{{ a.title }}" class="w-full h-full object-cover group-hover:scale-105 transition">
+          {% else %}
+            <div class="w-full h-full flex items-center justify-center text-gray-300 text-5xl">📰</div>
+          {% endif %}
+        </div>
+        <div class="p-5">
+          {% if a.category %}<span class="badge-success mb-2">{{ a.category.name }}</span>{% endif %}
+          <h2 class="font-semibold text-lg text-mapnavy mt-2 group-hover:text-mapgreen">{{ a.title }}</h2>
+          {% if a.summary %}<p class="text-sm text-gray-600 mt-2 line-clamp-2">{{ a.summary }}</p>{% endif %}
+          <div class="text-xs text-gray-400 mt-3">{{ a.published_at|default:a.created_at|date:"M d, Y" }}</div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+      <div class="flex justify-center gap-2 mt-10 text-sm">
+        {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-1.5 rounded border border-gray-200 bg-white hover:bg-gray-50">Previous</a>{% endif %}
+        <span class="px-3 py-1.5 text-gray-500">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}" class="px-3 py-1.5 rounded border border-gray-200 bg-white hover:bg-gray-50">Next</a>{% endif %}
+      </div>
+    {% endif %}
+  {% else %}
+    <div class="text-center py-16 text-gray-500">
+      <p class="text-lg">No articles published yet.</p>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

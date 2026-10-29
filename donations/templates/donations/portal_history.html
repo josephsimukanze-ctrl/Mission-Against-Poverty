@@ -1,0 +1,303 @@
+{% extends "portal_base.html" %}
+{% load humanize %}
+{% block title %}My Donations — {{ ORG_NAME }}{% endblock %}
+{% block nav %}<a href="{% url 'donor_portal:history' %}" class="sidebar-link active">History</a>{% endblock %}
+{% block breadcrumb %}Donation History{% endblock %}
+
+{% block content %}
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-mapnavy tracking-tight">Donation History</h1>
+  <p class="text-[13px] text-gray-500 mt-1">
+    A record of every gift you've made to {{ ORG_NAME }}.
+  </p>
+</div>
+
+<!-- ============================================================
+     SUMMARY KPIs
+     ============================================================ -->
+{% if donations %}
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+
+    <div class="card p-5">
+      <div class="text-[11px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+        Total contributed
+      </div>
+      <div class="mt-2 text-[24px] font-bold text-mapnavy tabular-nums leading-none">
+        K {{ totals.total|default:0|floatformat:0|intcomma }}
+      </div>
+      <div class="mt-2 text-[11.5px] text-gray-500">
+        {{ totals.count|default:0 }} donation{{ totals.count|pluralize }}
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <div class="text-[11px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+        Received
+      </div>
+      <div class="mt-2 text-[24px] font-bold text-mapgreen tabular-nums leading-none">
+        K {{ totals.received|default:0|floatformat:0|intcomma }}
+      </div>
+      <div class="mt-2 text-[11.5px] text-gray-500">
+        Confirmed gifts
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <div class="text-[11px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+        Last donation
+      </div>
+      <div class="mt-2 text-[24px] font-bold text-mapnavy tabular-nums leading-none">
+        {% if totals.last_date %}
+          <time datetime="{{ totals.last_date|date:'c' }}">
+            {{ totals.last_date|date:"M j" }}
+          </time>
+        {% else %}
+          —
+        {% endif %}
+      </div>
+      <div class="mt-2 text-[11.5px] text-gray-500">
+        {% if totals.last_date %}
+          {{ totals.last_date|date:"Y" }}
+        {% else %}
+          No donations yet
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter tabs -->
+  <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+    <div class="inline-flex p-1 rounded-lg bg-mapbg border border-mapborder" role="tablist">
+      <a href="?"
+         role="tab"
+         aria-selected="{% if not status_filter %}true{% else %}false{% endif %}"
+         class="px-3 py-1.5 rounded-md text-[12.5px] font-medium transition
+                {% if not status_filter %}bg-white text-mapnavy shadow-sm{% else %}text-gray-600 hover:text-mapnavy{% endif %}">
+        All
+      </a>
+      <a href="?status=received"
+         role="tab"
+         aria-selected="{% if status_filter == 'received' %}true{% else %}false{% endif %}"
+         class="px-3 py-1.5 rounded-md text-[12.5px] font-medium transition
+                {% if status_filter == 'received' %}bg-white text-mapnavy shadow-sm{% else %}text-gray-600 hover:text-mapnavy{% endif %}">
+        Received
+      </a>
+      <a href="?status=pending"
+         role="tab"
+         aria-selected="{% if status_filter == 'pending' %}true{% else %}false{% endif %}"
+         class="px-3 py-1.5 rounded-md text-[12.5px] font-medium transition
+                {% if status_filter == 'pending' %}bg-white text-mapnavy shadow-sm{% else %}text-gray-600 hover:text-mapnavy{% endif %}">
+        Pending
+      </a>
+    </div>
+
+    <a href="/donate/"
+       class="btn-primary inline-flex items-center h-9 text-[12.5px] !px-3.5">
+      + Give again
+    </a>
+  </div>
+
+  <!-- ============================================================
+       DESKTOP TABLE
+       ============================================================ -->
+  <div class="hidden md:block card overflow-hidden p-0">
+    <div class="overflow-x-auto">
+      <table class="table-base w-full">
+        <caption class="sr-only">Your donation history</caption>
+        <thead class="bg-mapbg border-b border-mapborder">
+          <tr>
+            <th scope="col">Date</th>
+            <th scope="col">Reference</th>
+            <th scope="col" class="text-right">Amount</th>
+            <th scope="col">Campaign</th>
+            <th scope="col">Status</th>
+            <th scope="col" class="text-right w-[1%]">Receipt</th>
+          </tr>
+        </thead>
+
+        <tbody class="divide-y divide-mapborder">
+          {% for d in donations %}
+            <tr class="hover:bg-mapbg/60 transition-colors">
+              <td class="whitespace-nowrap text-[13px] text-mapnavy tabular-nums">
+                <time datetime="{{ d.created_at|date:'c' }}">
+                  {{ d.created_at|date:"M d, Y" }}
+                </time>
+              </td>
+
+              <td>
+                <button type="button"
+                        onclick="navigator.clipboard.writeText('{{ d.reference }}'); this.querySelector('.copy-label').textContent='Copied';"
+                        class="group inline-flex items-center gap-1.5 font-mono text-[12px] text-mapnavy
+                               hover:text-mapgreen transition"
+                        title="Copy reference">
+                  {{ d.reference }}
+                  <span class="copy-label text-[10.5px] text-gray-400 group-hover:text-mapgreen">
+                    copy
+                  </span>
+                </button>
+              </td>
+
+              <td class="text-right text-[13.5px] font-semibold text-mapnavy tabular-nums">
+                K {{ d.amount|floatformat:0|intcomma }}
+              </td>
+
+              <td class="text-[13px] text-gray-600">
+                {% if d.campaign %}
+                  <a href="{{ d.campaign.get_absolute_url }}"
+                     class="hover:text-mapgreen hover:underline">
+                    {{ d.campaign.name }}
+                  </a>
+                {% else %}
+                  <span class="text-gray-400">General fund</span>
+                {% endif %}
+              </td>
+
+              <td>
+                {% if d.status == 'received' %}
+                  <span class="badge badge-success">{{ d.get_status_display }}</span>
+                {% elif d.status == 'pending' %}
+                  <span class="badge badge-warning">{{ d.get_status_display }}</span>
+                {% elif d.status == 'failed' %}
+                  <span class="badge badge-danger">{{ d.get_status_display }}</span>
+                {% else %}
+                  <span class="badge badge-muted">{{ d.get_status_display }}</span>
+                {% endif %}
+              </td>
+
+              <td class="text-right whitespace-nowrap">
+                {% if d.status == 'received' %}
+                  <a href="{% url 'donor_portal:receipt' d.reference %}"
+                     class="inline-flex items-center h-8 px-3 rounded-lg border border-mapborder
+                            text-[12px] font-medium text-mapnavy bg-white
+                            hover:bg-gray-50 hover:border-gray-300 transition">
+                    <span class="mr-1.5" aria-hidden="true">📄</span> Receipt
+                  </a>
+                {% elif d.status == 'pending' %}
+                  <span class="text-[11.5px] text-gray-400"
+                        title="Receipt available once payment is confirmed">
+                    Awaiting confirmation
+                  </span>
+                {% else %}
+                  <span class="text-[11.5px] text-gray-400">—</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" class="py-4">
+                <div class="text-center py-8">
+                  <div class="mx-auto h-11 w-11 rounded-full bg-gray-100 text-gray-500
+                              flex items-center justify-center mb-3 text-lg">
+                    📋
+                  </div>
+                  <p class="text-[13.5px] font-medium text-mapnavy">
+                    No donations match this filter
+                  </p>
+                  <a href="?" class="inline-flex mt-2 text-[12.5px] font-semibold text-mapgreen hover:underline">
+                    Clear filter
+                  </a>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       MOBILE CARDS
+       ============================================================ -->
+  <div class="md:hidden space-y-3">
+    {% for d in donations %}
+      <div class="card p-4">
+        <div class="flex items-start justify-between gap-3 mb-2">
+          <div class="min-w-0">
+            <div class="font-mono text-[11.5px] text-gray-500 truncate">{{ d.reference }}</div>
+            <div class="text-[12px] text-gray-500 mt-0.5">
+              <time datetime="{{ d.created_at|date:'c' }}">
+                {{ d.created_at|date:"M d, Y" }}
+              </time>
+            </div>
+          </div>
+          {% if d.status == 'received' %}
+            <span class="badge badge-success shrink-0">{{ d.get_status_display }}</span>
+          {% elif d.status == 'pending' %}
+            <span class="badge badge-warning shrink-0">{{ d.get_status_display }}</span>
+          {% elif d.status == 'failed' %}
+            <span class="badge badge-danger shrink-0">{{ d.get_status_display }}</span>
+          {% else %}
+            <span class="badge badge-muted shrink-0">{{ d.get_status_display }}</span>
+          {% endif %}
+        </div>
+
+        <div class="text-[18px] font-bold text-mapnavy tabular-nums">
+          K {{ d.amount|floatformat:0|intcomma }}
+        </div>
+
+        {% if d.campaign %}
+          <div class="text-[12px] text-gray-500 mt-1">
+            to
+            <a href="{{ d.campaign.get_absolute_url }}"
+               class="text-mapnavy hover:text-mapgreen hover:underline">
+              {{ d.campaign.name }}
+            </a>
+          </div>
+        {% else %}
+          <div class="text-[12px] text-gray-500 mt-1">General fund</div>
+        {% endif %}
+
+        {% if d.status == 'received' %}
+          <a href="{% url 'donor_portal:receipt' d.reference %}"
+             class="mt-3 inline-flex items-center h-9 px-3.5 rounded-lg border border-mapborder
+                    text-[12.5px] font-medium text-mapnavy bg-white hover:bg-gray-50 transition">
+            <span class="mr-1.5" aria-hidden="true">📄</span> Download receipt
+          </a>
+        {% endif %}
+      </div>
+    {% empty %}
+      <div class="card p-8 text-center">
+        <div class="mx-auto h-11 w-11 rounded-full bg-gray-100 text-gray-500
+                    flex items-center justify-center mb-3 text-lg">
+          📋
+        </div>
+        <p class="text-[13.5px] font-medium text-mapnavy">No donations match this filter</p>
+        <a href="?" class="inline-flex mt-2 text-[12.5px] font-semibold text-mapgreen hover:underline">
+          Clear filter
+        </a>
+      </div>
+    {% endfor %}
+  </div>
+
+{% else %}
+  <!-- ============================================================
+       EMPTY STATE (no donations at all)
+       ============================================================ -->
+  <div class="card p-10 sm:p-14 text-center max-w-xl mx-auto">
+    <div class="mx-auto h-14 w-14 rounded-full bg-mapgreen-50 text-mapgreen
+                flex items-center justify-center text-2xl mb-4">
+      💚
+    </div>
+    <h2 class="text-[17px] font-semibold text-mapnavy">No donations yet</h2>
+    <p class="text-[13px] text-gray-500 mt-2 max-w-sm mx-auto leading-relaxed">
+      When you make your first donation, it will appear here — along with
+      receipts you can download anytime.
+    </p>
+    <div class="mt-5 flex flex-wrap items-center justify-center gap-2">
+      <a href="/donate/"
+         class="btn-primary inline-flex items-center justify-center h-10 px-5 text-[13px]">
+        Make your first donation
+      </a>
+      <a href="/campaigns/"
+         class="btn-secondary inline-flex items-center justify-center h-10 px-4 text-[13px]">
+        Browse campaigns
+      </a>
+    </div>
+  </div>
+{% endif %}
+
+{% endblock %}

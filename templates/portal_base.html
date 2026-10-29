@@ -1,0 +1,320 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body %}
+{% with path=request.path %}
+
+<div class="min-h-screen flex bg-mapbg">
+
+  <!-- ============================================================
+       SIDEBAR (desktop)
+       ============================================================ -->
+  <aside class="w-64 shrink-0 hidden md:flex flex-col bg-mapnavy text-white border-r border-white/5">
+
+    <a href="{{ portal_root|default:'/' }}"
+       class="px-4 h-16 flex items-center gap-3 border-b border-white/10 hover:bg-white/5 transition-colors
+              focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/50">
+      <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-mapgreen text-white
+                   text-base shrink-0 ring-1 ring-white/10">♥</span>
+      <div class="leading-tight min-w-0">
+        <div class="text-[11px] font-extrabold text-white uppercase tracking-[0.08em] truncate">
+          {{ site.site_name|default:"Mission Against Poverty" }}
+        </div>
+        <div class="text-[10px] text-gray-400 tracking-[0.14em] uppercase mt-0.5">My Portal</div>
+      </div>
+    </a>
+
+    <nav class="flex-1 px-2.5 py-3 space-y-0.5 overflow-y-auto text-[13px]">
+
+      <a href="{{ portal_root|default:'/' }}"
+         class="sidebar-link {% if path == portal_root %}active{% endif %}"
+         {% if path == portal_root %}aria-current="page"{% endif %}>
+        <span class="w-5 text-center opacity-80" aria-hidden="true">◧</span> Dashboard
+      </a>
+
+      <a href="/donate/"
+         class="sidebar-link {% if '/donate/' in path %}active{% endif %}"
+         {% if '/donate/' in path %}aria-current="page"{% endif %}>
+        <span class="w-5 text-center opacity-80" aria-hidden="true">💚</span> Make a Donation
+      </a>
+
+      {% block nav %}{% endblock %}
+
+      <div class="border-t border-white/10 my-2"></div>
+
+      <a href="{% url 'accounts:profile' %}"
+         class="sidebar-link {% if '/accounts/profile' in path %}active{% endif %}"
+         {% if '/accounts/profile' in path %}aria-current="page"{% endif %}>
+        <span class="w-5 text-center opacity-80" aria-hidden="true">👤</span> My Profile
+      </a>
+
+      <a href="/" class="sidebar-link">
+        <span class="w-5 text-center opacity-80" aria-hidden="true">🏠</span> Back to Website
+      </a>
+    </nav>
+
+    <div class="px-2.5 py-3 border-t border-white/10">
+      <form method="post" action="{% url 'accounts:logout' %}">
+        {% csrf_token %}
+        <button class="sidebar-link w-full text-left text-red-300/90 hover:text-red-200 hover:bg-red-500/10">
+          <span class="w-5 text-center opacity-80" aria-hidden="true">⏻</span> Logout
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- ============================================================
+       MOBILE DRAWER
+       ============================================================ -->
+  <div id="portal-backdrop"
+       class="md:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none
+              transition-opacity duration-200"></div>
+
+  <aside id="portal-drawer"
+         class="md:hidden fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-mapnavy text-white
+                -translate-x-full transition-transform duration-250 ease-out flex flex-col shadow-2xl"
+         aria-hidden="true">
+    <div class="h-16 flex items-center gap-3 px-4 border-b border-white/10 shrink-0">
+      <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-mapgreen text-white text-base shrink-0 ring-1 ring-white/10">♥</span>
+      <div class="leading-tight min-w-0 flex-1">
+        <div class="text-[11px] font-extrabold uppercase tracking-[0.08em] truncate">{{ site.site_name|default:"Mission Against Poverty" }}</div>
+        <div class="text-[10px] text-gray-400 tracking-[0.14em] uppercase mt-0.5">My Portal</div>
+      </div>
+      <button type="button" id="portal-drawer-close"
+              class="h-9 w-9 inline-flex items-center justify-center rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition"
+              aria-label="Close menu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <nav class="flex-1 px-2.5 py-3 space-y-0.5 overflow-y-auto text-[13px]" aria-label="Portal menu (mobile)">
+      <a href="{{ portal_root|default:'/' }}" class="sidebar-link {% if path == portal_root %}active{% endif %}">
+        <span class="w-5 text-center opacity-80">◧</span> Dashboard
+      </a>
+      <a href="/donate/" class="sidebar-link {% if '/donate/' in path %}active{% endif %}">
+        <span class="w-5 text-center opacity-80">💚</span> Make a Donation
+      </a>
+
+      {% block nav_mobile %}{% endblock %}
+
+      <div class="border-t border-white/10 my-2"></div>
+      <a href="{% url 'accounts:profile' %}" class="sidebar-link {% if '/accounts/profile' in path %}active{% endif %}">
+        <span class="w-5 text-center opacity-80">👤</span> My Profile
+      </a>
+      <a href="/" class="sidebar-link">
+        <span class="w-5 text-center opacity-80">🏠</span> Back to Website
+      </a>
+
+      <form method="post" action="{% url 'accounts:logout' %}" class="pt-2">
+        {% csrf_token %}
+        <button class="sidebar-link w-full text-left text-red-300/90 hover:text-red-200 hover:bg-red-500/10">
+          <span class="w-5 text-center opacity-80">⏻</span> Logout
+        </button>
+      </form>
+    </nav>
+  </aside>
+
+  <!-- ============================================================
+       MAIN COLUMN
+       ============================================================ -->
+  <div class="flex-1 min-w-0 flex flex-col">
+
+    <!-- Topbar -->
+    <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-[#e5e9f0] h-16 flex items-center px-4 lg:px-6 gap-3 shrink-0">
+
+      <button type="button" id="portal-mobile-toggle"
+              class="md:hidden inline-flex items-center justify-center h-9 w-9 rounded-lg border border-[#e5e9f0]
+                     text-gray-700 hover:bg-gray-50 transition"
+              aria-label="Open menu" aria-expanded="false" aria-controls="portal-drawer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+
+      <a href="/"
+         class="hidden md:inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-mapgreen transition-colors">
+        <span aria-hidden="true">←</span> Back to Home
+      </a>
+
+      <div class="hidden md:block h-5 w-px bg-[#e5e9f0]" aria-hidden="true"></div>
+
+      <nav aria-label="Breadcrumb" class="text-[13px] text-gray-500 truncate">
+        <ol class="flex items-center gap-1.5">
+          <li><a href="{{ portal_root|default:'/' }}" class="hover:text-mapnavy transition-colors">My Portal</a></li>
+          <li aria-hidden="true" class="text-gray-300">/</li>
+          <li class="text-mapnavy font-medium">{% block breadcrumb %}Dashboard{% endblock %}</li>
+        </ol>
+      </nav>
+
+      <div class="ml-auto flex items-center gap-2">
+        <a href="/donate/"
+           class="btn-primary inline-flex items-center h-9 text-[12.5px] !px-3.5">
+          + Donate
+        </a>
+
+        <div class="relative" id="portal-dropdown-root">
+          <button type="button" id="portal-dropdown-toggle"
+                  class="inline-flex items-center gap-2 h-9 pl-1 pr-2 rounded-lg
+                         border border-transparent hover:border-[#e5e9f0] hover:bg-gray-50 transition
+                         focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40"
+                  aria-haspopup="menu" aria-expanded="false" aria-controls="portal-dropdown">
+            <span class="h-7 w-7 rounded-full bg-mapgreen-50 text-mapgreen flex items-center justify-center
+                         font-semibold text-[12px] ring-1 ring-mapgreen/15">
+              {{ user.first_name|default:user.username|first|upper }}
+            </span>
+            <span class="hidden sm:block text-[13px] text-gray-700 max-w-[8rem] truncate">
+              {{ user.first_name|default:user.username }}
+            </span>
+            <svg id="portal-dropdown-caret" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.5"
+                 class="text-gray-400 transition-transform duration-200">
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+          </button>
+
+          <div id="portal-dropdown" role="menu"
+               class="hidden absolute right-0 mt-2 w-60 origin-top-right rounded-xl
+                      border border-[#e5e9f0] bg-white shadow-xl shadow-gray-900/5
+                      py-1.5 text-[13px] z-50
+                      transition ease-out duration-150
+                      opacity-0 scale-95">
+            <div class="px-3 py-2.5 border-b border-[#e5e9f0]">
+              <div class="font-semibold text-mapnavy truncate">
+                {{ user.get_full_name|default:user.username }}
+              </div>
+              <div class="text-[11.5px] text-gray-500 truncate">{{ user.email }}</div>
+              <div class="inline-block text-[10px] uppercase tracking-wider text-mapgreen font-semibold
+                          mt-1.5 px-1.5 py-0.5 rounded bg-mapgreen-50">
+                {{ user.get_role_display }}
+              </div>
+            </div>
+
+            <a href="{{ portal_root|default:'/' }}" role="menuitem"
+               class="flex items-center gap-2.5 px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors">
+              <span class="text-gray-400" aria-hidden="true">◧</span> Dashboard
+            </a>
+            <a href="{% url 'accounts:profile' %}" role="menuitem"
+               class="flex items-center gap-2.5 px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors">
+              <span class="text-gray-400" aria-hidden="true">👤</span> My Profile
+            </a>
+            <a href="/" role="menuitem"
+               class="flex items-center gap-2.5 px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors">
+              <span class="text-gray-400" aria-hidden="true">🏠</span> Public Website
+            </a>
+
+            <div class="border-t border-[#e5e9f0] my-1.5"></div>
+
+            <form method="post" action="{% url 'accounts:logout' %}">
+              {% csrf_token %}
+              <button type="submit" role="menuitem"
+                      class="w-full text-left flex items-center gap-2.5 px-3 py-2 text-red-600
+                             hover:bg-red-50 transition-colors">
+                <span aria-hidden="true">⏻</span> Sign out
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-1 p-5 lg:p-8">
+      <div class="max-w-[1400px] mx-auto">
+
+        {% if messages %}
+          <div class="space-y-2 mb-4">
+            {% for m in messages %}
+              <div role="alert"
+                   class="rounded-xl px-4 py-3 text-[13.5px] border flex items-start gap-3
+                          {% if m.tags == 'error' %}bg-red-50 text-red-700 border-red-200{% else %}bg-green-50 text-green-700 border-green-200{% endif %}">
+                <span class="mt-0.5 shrink-0" aria-hidden="true">
+                  {% if m.tags == 'error' %}⚠{% else %}✓{% endif %}
+                </span>
+                <span class="flex-1">{{ m }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+  </div>
+</div>
+
+{% endwith %}
+
+<script>
+(function () {
+  const drawer   = document.getElementById('portal-drawer');
+  const backdrop = document.getElementById('portal-backdrop');
+  const trigger  = document.getElementById('portal-mobile-toggle');
+  const closeBtn = document.getElementById('portal-drawer-close');
+
+  const openDrawer = () => {
+    drawer.classList.remove('-translate-x-full');
+    drawer.setAttribute('aria-hidden', 'false');
+    backdrop.classList.remove('opacity-0', 'pointer-events-none');
+    trigger?.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+    closeBtn?.focus();
+  };
+  const closeDrawer = () => {
+    drawer.classList.add('-translate-x-full');
+    drawer.setAttribute('aria-hidden', 'true');
+    backdrop.classList.add('opacity-0', 'pointer-events-none');
+    trigger?.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+    trigger?.focus();
+  };
+  trigger?.addEventListener('click', () => {
+    const isOpen = trigger.getAttribute('aria-expanded') === 'true';
+    isOpen ? closeDrawer() : openDrawer();
+  });
+  backdrop?.addEventListener('click', closeDrawer);
+  closeBtn?.addEventListener('click', closeDrawer);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && drawer?.getAttribute('aria-hidden') === 'false') closeDrawer();
+  });
+
+  const dt    = document.getElementById('portal-dropdown-toggle');
+  const dm    = document.getElementById('portal-dropdown');
+  const caret = document.getElementById('portal-dropdown-caret');
+
+  const setDropdown = (open) => {
+    if (!dm || !dt) return;
+    dt.setAttribute('aria-expanded', String(open));
+    if (open) {
+      dm.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        dm.classList.remove('opacity-0', 'scale-95');
+        dm.classList.add('opacity-100', 'scale-100');
+        caret?.classList.add('rotate-180');
+      });
+    } else {
+      dm.classList.add('opacity-0', 'scale-95');
+      dm.classList.remove('opacity-100', 'scale-100');
+      caret?.classList.remove('rotate-180');
+      setTimeout(() => {
+        if (dt.getAttribute('aria-expanded') === 'false') dm.classList.add('hidden');
+      }, 150);
+    }
+  };
+  dt?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setDropdown(dt.getAttribute('aria-expanded') !== 'true');
+  });
+  document.addEventListener('click', (e) => {
+    if (dt?.getAttribute('aria-expanded') !== 'true') return;
+    if (!dm.contains(e.target) && !dt.contains(e.target)) setDropdown(false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && dt?.getAttribute('aria-expanded') === 'true') {
+      setDropdown(false);
+      dt.focus();
+    }
+  });
+})();
+</script>
+
+{% block scripts %}{% endblock %}
+{% endblock %}

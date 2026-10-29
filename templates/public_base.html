@@ -1,0 +1,501 @@
+{% extends "base.html" %}
+{% load static %}
+{% block body %}
+
+<header id="site-header"
+  class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-[#e5e9f0] transition-shadow">
+  <div class="max-w-7xl mx-auto px-4 lg:px-8 flex items-center gap-3 h-16">
+
+    <!-- Brand -->
+    <a href="{% url 'pages:home' %}"
+       class="flex items-center gap-2.5 shrink-0 group focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40 rounded-lg">
+      {% if site.logo %}
+        <img src="{{ site.logo.url }}" alt="{{ site.site_name }}"
+             class="h-9 w-auto object-contain">
+      {% else %}
+        <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-mapgreen text-white text-base
+                     ring-1 ring-mapgreen/20 group-hover:ring-mapgreen/40 transition">♥</span>
+      {% endif %}
+      <span class="hidden md:block leading-tight">
+        <span class="block text-[12px] font-extrabold text-mapnavy tracking-[0.08em] uppercase">
+          {{ site.site_name|default:ORG_NAME }}
+        </span>
+      </span>
+    </a>
+
+    <!-- Desktop nav -->
+    <nav class="hidden lg:flex items-center gap-1 ml-4 text-[13px] font-medium text-gray-600">
+      {% with path=request.path %}
+      <a href="{% url 'programs:list' %}"
+         class="relative px-3 py-2 rounded-lg hover:text-mapnavy hover:bg-gray-50 transition
+                {% if '/programs/' in path %}text-mapnavy{% endif %}">
+        Programs
+        {% if '/programs/' in path %}<span class="absolute left-3 right-3 -bottom-0.5 h-0.5 rounded bg-mapgreen"></span>{% endif %}
+      </a>
+      <a href="{% url 'projects:list' %}"
+         class="relative px-3 py-2 rounded-lg hover:text-mapnavy hover:bg-gray-50 transition
+                {% if '/projects/' in path %}text-mapnavy{% endif %}">
+        Projects
+        {% if '/projects/' in path %}<span class="absolute left-3 right-3 -bottom-0.5 h-0.5 rounded bg-mapgreen"></span>{% endif %}
+      </a>
+      <a href="/news/"
+         class="relative px-3 py-2 rounded-lg hover:text-mapnavy hover:bg-gray-50 transition
+                {% if '/news/' in path %}text-mapnavy{% endif %}">
+        News
+        {% if '/news/' in path %}<span class="absolute left-3 right-3 -bottom-0.5 h-0.5 rounded bg-mapgreen"></span>{% endif %}
+      </a>
+      <a href="/events/"
+         class="relative px-3 py-2 rounded-lg hover:text-mapnavy hover:bg-gray-50 transition
+                {% if '/events/' in path %}text-mapnavy{% endif %}">
+        Events
+        {% if '/events/' in path %}<span class="absolute left-3 right-3 -bottom-0.5 h-0.5 rounded bg-mapgreen"></span>{% endif %}
+      </a>
+      <a href="/volunteer/"
+         class="relative px-3 py-2 rounded-lg hover:text-mapnavy hover:bg-gray-50 transition
+                {% if '/volunteer/' in path %}text-mapnavy{% endif %}">
+        Volunteer
+        {% if '/volunteer/' in path %}<span class="absolute left-3 right-3 -bottom-0.5 h-0.5 rounded bg-mapgreen"></span>{% endif %}
+      </a>
+      <a href="/partnerships/"
+         class="relative px-3 py-2 rounded-lg hover:text-mapnavy hover:bg-gray-50 transition
+                {% if '/partnerships/' in path %}text-mapnavy{% endif %}">
+        Partnerships
+        {% if '/partnerships/' in path %}<span class="absolute left-3 right-3 -bottom-0.5 h-0.5 rounded bg-mapgreen"></span>{% endif %}
+      </a>
+      {% endwith %}
+    </nav>
+
+    <!-- Right cluster -->
+    <div class="ml-auto flex items-center gap-1.5 sm:gap-2">
+
+      {% if user.is_authenticated %}
+        {% if user.is_superuser or user.is_staff_member %}
+          <a href="/management/"
+             class="hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-mapnavy text-white
+                    text-[12.5px] font-semibold hover:bg-mapnavy-700 transition
+                    focus:outline-none focus-visible:ring-2 focus-visible:ring-mapnavy/40">
+            <span aria-hidden="true">◧</span>
+            <span class="hidden md:inline">Management</span>
+          </a>
+        {% endif %}
+      {% endif %}
+
+      {% if user.is_authenticated %}
+        <div class="relative hidden sm:block" id="profile-dropdown-root">
+          <button type="button" id="profile-dropdown-toggle"
+            class="inline-flex items-center gap-2 h-9 pl-1 pr-2 rounded-lg
+                   border border-transparent hover:border-[#e5e9f0] hover:bg-gray-50 transition
+                   focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40"
+            aria-haspopup="menu" aria-expanded="false" aria-controls="profile-dropdown">
+            <span class="h-7 w-7 rounded-full bg-mapgreen-50 text-mapgreen flex items-center justify-center
+                         font-semibold text-[12px] ring-1 ring-mapgreen/15">
+              {{ user.first_name|default:user.username|first|upper }}
+            </span>
+            <span class="hidden md:block text-[13px] text-gray-700 max-w-[8rem] truncate">
+              {{ user.first_name|default:user.username }}
+            </span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" class="text-gray-400 transition-transform duration-200"
+                 id="profile-caret">
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+          </button>
+
+          <div id="profile-dropdown" role="menu" aria-labelledby="profile-dropdown-toggle"
+               class="hidden absolute right-0 mt-2 w-64 origin-top-right rounded-xl
+                      border border-[#e5e9f0] bg-white shadow-xl shadow-gray-900/5
+                      py-1.5 text-[13px] z-50
+                      transition ease-out duration-150
+                      opacity-0 scale-95">
+            <div class="px-3 py-2.5 border-b border-[#e5e9f0]">
+              <div class="font-semibold text-mapnavy truncate">
+                {{ user.get_full_name|default:user.username }}
+              </div>
+              <div class="text-[11.5px] text-gray-500 truncate">{{ user.email }}</div>
+              <div class="inline-block text-[10px] uppercase tracking-wider text-mapgreen
+                          font-semibold mt-1.5 px-1.5 py-0.5 rounded bg-mapgreen-50">
+                {{ user.get_role_display }}
+              </div>
+            </div>
+
+            {% if user.is_superuser or user.is_staff_member %}
+              <a href="/management/" role="menuitem"
+                 class="flex items-center gap-2.5 px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors">
+                <span class="text-gray-400" aria-hidden="true">◧</span> Management Dashboard
+              </a>
+            {% else %}
+              {% if user.role == 'donor' %}
+                <a href="/portal/donor/" role="menuitem" class="flex items-center gap-2.5 px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors"><span class="text-gray-400" aria-hidden="true">◧</span> My Donor Portal</a>
+              {% elif user.role == 'volunteer' %}
+                <a href="/portal/volunteer/" role="menuitem" class="flex items-center gap-2.5 px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors"><span class="text-gray-400" aria-hidden="true">◧</span> My Volunteer Portal</a>
+              {% elif user.role == 'partner' %}
+                <a href="/portal/partner/" role="menuitem" class="flex items-center gap-2.5 px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors"><span class="text-gray-400" aria-hidden="true">◧</span> My Partner Portal</a>
+              {% elif user.role == 'beneficiary' %}
+                <a href="/portal/beneficiary/" role="menuitem" class="flex items-center gap-2.5 px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors"><span class="text-gray-400" aria-hidden="true">◧</span> My Beneficiary Portal</a>
+              {% endif %}
+            {% endif %}
+
+            <a href="{% url 'accounts:profile' %}" role="menuitem"
+               class="flex items-center gap-2.5 px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors">
+              <span class="text-gray-400" aria-hidden="true">👤</span> My Profile
+            </a>
+
+            <div class="border-t border-[#e5e9f0] my-1.5"></div>
+
+            <form method="post" action="{% url 'accounts:logout' %}">
+              {% csrf_token %}
+              <button type="submit" role="menuitem"
+                      class="w-full text-left flex items-center gap-2.5 px-3 py-2 text-red-600
+                             hover:bg-red-50 transition-colors">
+                <span aria-hidden="true">⏻</span> Sign out
+              </button>
+            </form>
+          </div>
+        </div>
+      {% else %}
+        <a href="{% url 'accounts:login' %}"
+           class="hidden sm:inline-flex items-center h-9 px-3 rounded-lg text-[13px] text-gray-700
+                  hover:text-mapnavy hover:bg-gray-50 transition">Sign in</a>
+        <a href="{% url 'accounts:register' %}"
+           class="hidden sm:inline-flex items-center h-9 px-3.5 rounded-lg border border-[#e5e9f0]
+                  bg-white text-[12.5px] font-semibold text-mapnavy hover:bg-gray-50 transition">
+          Register
+        </a>
+      {% endif %}
+
+      <a href="/donate/"
+         class="btn-primary inline-flex items-center h-9 text-[12.5px] !px-3 sm:!px-4 rounded-lg
+                font-semibold transition shadow-sm hover:shadow">
+        Donate
+      </a>
+
+      <button type="button" id="mobile-menu-toggle"
+        class="lg:hidden inline-flex items-center justify-center h-9 w-9 rounded-lg
+               border border-[#e5e9f0] text-gray-700 hover:bg-gray-50 transition
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40"
+        aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+        <svg id="mobile-menu-icon-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+        <svg id="mobile-menu-icon-close" class="hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6L6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile menu -->
+  <div id="mobile-menu"
+       class="lg:hidden overflow-hidden border-t border-[#e5e9f0] bg-white
+              max-h-0 opacity-0 transition-[max-height,opacity] duration-300 ease-out">
+    <nav class="max-w-7xl mx-auto px-3 py-2 flex flex-col gap-0.5 text-[14px]">
+
+      {% if user.is_authenticated %}
+        <div class="px-3 py-3 border-b border-[#e5e9f0] flex items-center gap-3">
+          <span class="h-9 w-9 rounded-full bg-mapgreen-50 text-mapgreen flex items-center justify-center
+                       font-semibold text-[13px] ring-1 ring-mapgreen/15">
+            {{ user.first_name|default:user.username|first|upper }}
+          </span>
+          <div class="min-w-0">
+            <div class="font-semibold text-mapnavy text-[13.5px] truncate">
+              {{ user.get_full_name|default:user.username }}
+            </div>
+            <div class="text-[11px] text-gray-500 truncate">{{ user.get_role_display }}</div>
+          </div>
+        </div>
+
+        {% if user.is_superuser or user.is_staff_member %}
+          <a href="/management/" class="mx-1 mt-2 px-3 py-2.5 rounded-lg bg-mapnavy text-white font-semibold flex items-center gap-2">
+            ◧ Management Dashboard
+          </a>
+        {% else %}
+          {% if user.role == 'donor' %}
+            <a href="/portal/donor/" class="mx-1 mt-2 px-3 py-2.5 rounded-lg bg-mapgreen-50 text-mapgreen font-semibold">◧ My Donor Portal</a>
+          {% elif user.role == 'volunteer' %}
+            <a href="/portal/volunteer/" class="mx-1 mt-2 px-3 py-2.5 rounded-lg bg-mapgreen-50 text-mapgreen font-semibold">◧ My Volunteer Portal</a>
+          {% elif user.role == 'partner' %}
+            <a href="/portal/partner/" class="mx-1 mt-2 px-3 py-2.5 rounded-lg bg-mapgreen-50 text-mapgreen font-semibold">◧ My Partner Portal</a>
+          {% elif user.role == 'beneficiary' %}
+            <a href="/portal/beneficiary/" class="mx-1 mt-2 px-3 py-2.5 rounded-lg bg-mapgreen-50 text-mapgreen font-semibold">◧ My Beneficiary Portal</a>
+          {% endif %}
+        {% endif %}
+      {% endif %}
+
+      <div class="text-[10.5px] uppercase tracking-[0.1em] text-gray-400 font-semibold px-3 pt-4 pb-1.5">Explore</div>
+      <a href="{% url 'pages:home' %}" class="px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">Home</a>
+      <a href="{% url 'pages:about' %}" class="px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">About Us</a>
+      <a href="{% url 'programs:list' %}" class="px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">Programs</a>
+      <a href="{% url 'projects:list' %}" class="px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">Projects</a>
+      <a href="/news/" class="px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">News</a>
+      <a href="/events/" class="px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">Events</a>
+
+      <div class="text-[10.5px] uppercase tracking-[0.1em] text-gray-400 font-semibold px-3 pt-4 pb-1.5">Get Involved</div>
+      <a href="/volunteer/" class="px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">Volunteer</a>
+      <a href="/partnerships/" class="px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">Partnerships</a>
+      <a href="/request-assistance/" class="px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">Request Assistance</a>
+      <a href="/contact/" class="px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">Contact</a>
+
+      {% if user.is_authenticated %}
+        <div class="border-t border-[#e5e9f0] mt-2 pt-2">
+          <a href="{% url 'accounts:profile' %}" class="block px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">My Profile</a>
+          <form method="post" action="{% url 'accounts:logout' %}">
+            {% csrf_token %}
+            <button class="block w-full text-left px-3 py-2.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors">Sign out</button>
+          </form>
+        </div>
+      {% else %}
+        <div class="border-t border-[#e5e9f0] mt-2 pt-3 grid grid-cols-2 gap-2 mb-2">
+          <a href="{% url 'accounts:login' %}" class="px-3 py-2.5 rounded-lg border border-[#e5e9f0] text-center font-medium hover:bg-gray-50 transition-colors">Sign in</a>
+          <a href="{% url 'accounts:register' %}" class="px-3 py-2.5 rounded-lg bg-mapgreen text-white text-center font-semibold hover:bg-mapgreen-600 transition-colors">Register</a>
+        </div>
+      {% endif %}
+    </nav>
+  </div>
+</header>
+
+{% if messages %}
+  <div class="max-w-7xl mx-auto px-4 lg:px-8 mt-5 space-y-2">
+    {% for m in messages %}
+      <div role="alert"
+           class="rounded-xl px-4 py-3 text-[13.5px] border flex items-start gap-3
+                  {% if m.tags == 'error' %}bg-red-50 text-red-700 border-red-200{% else %}bg-green-50 text-green-700 border-green-200{% endif %}">
+        <span class="mt-0.5 shrink-0" aria-hidden="true">
+          {% if m.tags == 'error' %}⚠{% else %}✓{% endif %}
+        </span>
+        <span class="flex-1">{{ m }}</span>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<main id="main">{% block content %}{% endblock %}</main>
+
+<footer class="bg-mapnavy text-gray-300 mt-20">
+  <div class="max-w-7xl mx-auto px-4 lg:px-8 py-14 md:py-16 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 md:gap-12 text-sm">
+
+    <!-- Brand column -->
+    <div class="sm:col-span-2 md:col-span-1">
+      <div class="flex items-center gap-3 mb-4">
+        {% if site.logo_light %}
+          <img src="{{ site.logo_light.url }}" alt="{{ site.site_name }}"
+               class="h-10 w-auto object-contain">
+        {% elif site.logo %}
+          <img src="{{ site.logo.url }}" alt="{{ site.site_name }}"
+               class="h-10 w-auto object-contain">
+        {% else %}
+        <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-mapgreen text-white text-lg ring-1 ring-white/10 overflow-hidden">
+  {% if site.logo_light %}
+    <img src="{{ site.logo_light.url }}" alt="{{ ORG_NAME }} logo" class="w-full h-full object-contain">
+  {% elif site.logo %}
+    <img src="{{ site.logo.url }}" alt="{{ ORG_NAME }} logo" class="w-full h-full object-contain">
+  {% else %}
+    ♥
+  {% endif %}
+</span>
+        {% endif %}
+        <span class="leading-tight">
+          <span class="block text-[13px] font-extrabold text-white uppercase tracking-[0.08em]">
+            {{ site.site_name|default:ORG_NAME }}
+          </span>
+          {% if site.tagline %}
+            <span class="block text-[10px] text-gray-400 tracking-[0.15em] mt-0.5 uppercase">
+              {{ site.tagline }}
+            </span>
+          {% endif %}
+        </span>
+      </div>
+
+      <p class="text-gray-400 leading-relaxed text-[13px]">
+        {{ site.footer_description|default:"A community-driven organization committed to reducing poverty through education, health, skills and sustainable development." }}
+      </p>
+
+      {% if site.has_social_links %}
+        <div class="mt-5 flex gap-2">
+          {% for name, url, icon in site.social_links %}
+            {% if url %}
+              <a href="{{ url }}" target="_blank" rel="noopener noreferrer"
+                 aria-label="{{ name|capfirst }}"
+                 class="h-9 w-9 rounded-full bg-white/10 hover:bg-white/20
+                        flex items-center justify-center text-white text-xs transition">
+                {{ icon }}
+              </a>
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Explore -->
+    <div>
+      <div class="font-semibold text-white text-[12px] mb-4 uppercase tracking-[0.12em]">Explore</div>
+      <ul class="space-y-2.5 text-[13px]">
+        <li><a href="{% url 'pages:about' %}" class="text-gray-400 hover:text-white transition-colors">About Us</a></li>
+        <li><a href="{% url 'programs:list' %}" class="text-gray-400 hover:text-white transition-colors">Programs</a></li>
+        <li><a href="{% url 'projects:list' %}" class="text-gray-400 hover:text-white transition-colors">Projects</a></li>
+        <li><a href="/news/" class="text-gray-400 hover:text-white transition-colors">News &amp; Stories</a></li>
+        <li><a href="/events/" class="text-gray-400 hover:text-white transition-colors">Events</a></li>
+      </ul>
+    </div>
+
+    <!-- Get involved -->
+    <div>
+      <div class="font-semibold text-white text-[12px] mb-4 uppercase tracking-[0.12em]">Get Involved</div>
+      <ul class="space-y-2.5 text-[13px]">
+        <li><a href="/donate/" class="text-gray-400 hover:text-white transition-colors">Make a Donation</a></li>
+        <li><a href="/volunteer/" class="text-gray-400 hover:text-white transition-colors">Volunteer</a></li>
+        <li><a href="/partnerships/" class="text-gray-400 hover:text-white transition-colors">Partner With Us</a></li>
+        <li><a href="/request-assistance/" class="text-gray-400 hover:text-white transition-colors">Request Assistance</a></li>
+        <li><a href="/contact/" class="text-gray-400 hover:text-white transition-colors">Contact Us</a></li>
+      </ul>
+    </div>
+
+    <!-- Contact -->
+    <div>
+      <div class="font-semibold text-white text-[12px] mb-4 uppercase tracking-[0.12em]">Contact</div>
+      <p class="text-gray-400 text-[13px] leading-relaxed mb-1">
+        {{ site.full_address|default:"Lusaka, Zambia" }}
+      </p>
+      {% if site.contact_phone %}
+        <p class="text-gray-400 text-[13px] mb-2">
+          <a href="tel:{{ site.contact_phone }}" class="hover:text-white break-all transition-colors">
+            {{ site.contact_phone }}
+          </a>
+        </p>
+      {% endif %}
+      {% if site.contact_email %}
+        <p class="text-gray-400 text-[13px] mb-4">
+          <a href="mailto:{{ site.contact_email }}" class="hover:text-white break-all transition-colors">
+            {{ site.contact_email }}
+          </a>
+        </p>
+      {% endif %}
+
+      <div class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-2">Newsletter</div>
+      <form method="post" action="/contact/newsletter/" class="flex gap-2">
+        {% csrf_token %}
+        <input type="hidden" name="source" value="footer">
+        <input type="email" name="email" placeholder="Your email" required
+               class="flex-1 min-w-0 rounded-lg bg-white/10 border border-white/20 px-3 py-2 text-[13px] text-white
+                      placeholder-gray-400 focus:outline-none focus:border-white/40 focus:bg-white/15 transition">
+        <button type="submit" aria-label="Subscribe"
+                class="rounded-lg bg-mapgreen hover:bg-mapgreen-600 text-white text-[13px] px-3.5 py-2 font-semibold transition">→</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Copyright bar -->
+  <div class="border-t border-white/10">
+    <div class="max-w-7xl mx-auto px-4 lg:px-8 py-5 flex flex-col sm:flex-row justify-between gap-2 text-[11.5px] text-gray-500 text-center sm:text-left">
+      <span>{{ site.copyright_line|default:"© 2026 Mission Against Poverty. All rights reserved." }}</span>
+      <div class="flex gap-5 justify-center sm:justify-end">
+        <a href="/privacy/" class="hover:text-white transition-colors">Privacy</a>
+        <a href="/terms/" class="hover:text-white transition-colors">Terms</a>
+        <a href="/contact/" class="hover:text-white transition-colors">Contact</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  /* ---------- Mobile menu ---------- */
+  const mToggle = document.getElementById('mobile-menu-toggle');
+  const mMenu   = document.getElementById('mobile-menu');
+  const mOpen   = document.getElementById('mobile-menu-icon-open');
+  const mClose  = document.getElementById('mobile-menu-icon-close');
+
+  if (mToggle && mMenu) {
+    const openMenu = () => {
+      mMenu.style.maxHeight = mMenu.scrollHeight + 'px';
+      mMenu.classList.remove('opacity-0');
+      mMenu.classList.add('opacity-100');
+      mOpen?.classList.add('hidden');
+      mClose?.classList.remove('hidden');
+      mToggle.setAttribute('aria-expanded', 'true');
+      mToggle.setAttribute('aria-label', 'Close menu');
+    };
+    const closeMenu = () => {
+      mMenu.style.maxHeight = '0px';
+      mMenu.classList.add('opacity-0');
+      mMenu.classList.remove('opacity-100');
+      mOpen?.classList.remove('hidden');
+      mClose?.classList.add('hidden');
+      mToggle.setAttribute('aria-expanded', 'false');
+      mToggle.setAttribute('aria-label', 'Open menu');
+    };
+
+    mToggle.addEventListener('click', () => {
+      const expanded = mToggle.getAttribute('aria-expanded') === 'true';
+      expanded ? closeMenu() : openMenu();
+    });
+
+    window.addEventListener('resize', () => {
+      if (mToggle.getAttribute('aria-expanded') === 'true') {
+        mMenu.style.maxHeight = mMenu.scrollHeight + 'px';
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && mToggle.getAttribute('aria-expanded') === 'true') {
+        closeMenu();
+      }
+    });
+  }
+
+  /* ---------- Profile dropdown ---------- */
+  const pToggle = document.getElementById('profile-dropdown-toggle');
+  const pMenu   = document.getElementById('profile-dropdown');
+  const pCaret  = document.getElementById('profile-caret');
+
+  if (pToggle && pMenu) {
+    const setOpen = (open) => {
+      pToggle.setAttribute('aria-expanded', String(open));
+      if (open) {
+        pMenu.classList.remove('hidden');
+        requestAnimationFrame(() => {
+          pMenu.classList.remove('opacity-0', 'scale-95');
+          pMenu.classList.add('opacity-100', 'scale-100');
+        });
+        pCaret?.classList.add('rotate-180');
+      } else {
+        pMenu.classList.add('opacity-0', 'scale-95');
+        pMenu.classList.remove('opacity-100', 'scale-100');
+        pCaret?.classList.remove('rotate-180');
+        setTimeout(() => {
+          if (pToggle.getAttribute('aria-expanded') === 'false') pMenu.classList.add('hidden');
+        }, 150);
+      }
+    };
+
+    pToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = pToggle.getAttribute('aria-expanded') === 'true';
+      setOpen(!isOpen);
+    });
+
+    document.addEventListener('click', (e) => {
+      if (pToggle.getAttribute('aria-expanded') !== 'true') return;
+      if (!pMenu.contains(e.target) && !pToggle.contains(e.target)) setOpen(false);
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && pToggle.getAttribute('aria-expanded') === 'true') {
+        setOpen(false);
+        pToggle.focus();
+      }
+    });
+  }
+
+  /* ---------- Sticky header shadow on scroll ---------- */
+  const header = document.getElementById('site-header');
+  if (header) {
+    const onScroll = () => {
+      if (window.scrollY > 4) header.classList.add('shadow-sm');
+      else header.classList.remove('shadow-sm');
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+  }
+})();
+</script>
+{% endblock %}

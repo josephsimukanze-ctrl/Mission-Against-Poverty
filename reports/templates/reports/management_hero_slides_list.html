@@ -1,0 +1,337 @@
+{% extends "management_base.html" %}
+{% block title %}Hero Slides — {{ ORG_NAME }}{% endblock %}
+{% block breadcrumb %}Hero Slides{% endblock %}
+
+{% block content %}
+
+<div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+  <div>
+    <h1 class="text-2xl font-bold text-mapnavy">Hero Slides</h1>
+    <p class="text-sm text-gray-500 mt-1">
+      Slides shown on the homepage hero. Click a slide to upload a new image.
+    </p>
+  </div>
+  <div class="flex gap-2">
+    <a href="/" target="_blank" rel="noopener" class="btn-secondary text-[13px]">
+      Preview homepage ↗
+    </a>
+    <a href="/management/hero-slides/new/" class="btn-primary text-[13px]">+ New hero slide</a>
+  </div>
+</div>
+
+{% if messages %}
+  <div class="space-y-2 mb-5">
+    {% for m in messages %}
+      <div role="alert"
+           class="rounded-xl px-4 py-3 text-[13px] border flex items-start gap-2.5
+                  {% if m.tags == 'error' %}bg-red-50 text-red-700 border-red-200{% else %}bg-green-50 text-green-700 border-green-200{% endif %}">
+        <span class="mt-0.5 shrink-0" aria-hidden="true">
+          {% if m.tags == 'error' %}⚠{% else %}✓{% endif %}
+        </span>
+        <span class="flex-1">{{ m }}</span>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<!-- Stats -->
+<div class="grid grid-cols-3 gap-4 mb-6">
+  <div class="stat-card">
+    <div class="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Total slides</div>
+    <div class="stat-value mt-1">{{ stats.total }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Active</div>
+    <div class="stat-value mt-1 text-mapgreen">{{ stats.active }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">Inactive</div>
+    <div class="stat-value mt-1 text-gray-500">{{ stats.inactive }}</div>
+  </div>
+</div>
+
+<!-- Search -->
+<div class="card p-4 flex flex-wrap gap-3 items-center mb-5">
+  <form method="get" class="flex flex-wrap gap-3 items-center">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search title, headline…"
+           class="form-input max-w-xs">
+    <button class="btn-secondary text-[13px]">Search</button>
+    {% if q %}
+      <a href="/management/hero-slides/" class="text-[12.5px] text-gray-500 hover:text-mapnavy underline">Clear</a>
+    {% endif %}
+  </form>
+  <div class="ml-auto text-[12.5px] text-gray-500">
+    Showing <strong>{{ total }}</strong> slide{{ total|pluralize }}
+  </div>
+</div>
+
+<!-- Table -->
+<div class="table-wrapper overflow-x-auto">
+  <table class="table-base w-full">
+    <caption class="sr-only">List of hero slides with image, title, order, and status</caption>
+    <thead class="sticky top-0 bg-white z-10">
+      <tr>
+        <th style="width: 180px;">Slide</th>
+        <th>Title</th>
+        <th>Headline</th>
+        <th class="text-center" style="width: 80px;">Order</th>
+        <th class="text-center" style="width: 100px;">Active</th>
+        <th class="text-right" style="width: 140px;">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for slide in object_list %}
+        <tr data-slide-id="{{ slide.pk }}">
+          <!-- Image upload cell -->
+          <td class="align-middle">
+            <form method="post"
+                  action="/management/hero-slides/{{ slide.pk }}/photo/"
+                  enctype="multipart/form-data"
+                  id="photo-form-{{ slide.pk }}"
+                  class="photo-form"
+                  data-slide-title="{{ slide.title|default:'slide'|escapejs }}">
+              {% csrf_token %}
+              <label for="photo-input-{{ slide.pk }}"
+                     class="photo-upload-target group relative block cursor-pointer rounded-lg overflow-hidden
+                            transition hover:opacity-90 border-2 border-dashed border-gray-300 hover:border-mapgreen
+                            focus-within:ring-2 focus-within:ring-mapgreen/40"
+                     title="{% if slide.image %}Change image{% else %}Upload image{% endif %}">
+                {% if slide.image %}
+                  <img src="{{ slide.image.url }}" alt="{{ slide.title }}"
+                       class="h-20 w-32 object-cover rounded-md"
+                       onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                  <div class="hidden h-20 w-32 rounded-md bg-gray-100 items-center justify-center text-gray-400">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                      <rect x="3" y="3" width="18" height="18" rx="2"/>
+                      <circle cx="8.5" cy="8.5" r="1.5"/>
+                      <path d="M21 15l-5-5L5 21"/>
+                    </svg>
+                  </div>
+                {% else %}
+                  <div class="h-20 w-32 rounded-md bg-gray-100 flex items-center justify-center text-gray-400">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                      <rect x="3" y="3" width="18" height="18" rx="2"/>
+                      <circle cx="8.5" cy="8.5" r="1.5"/>
+                      <path d="M21 15l-5-5L5 21"/>
+                    </svg>
+                  </div>
+                {% endif %}
+                <div class="absolute inset-0 rounded-md flex items-center justify-center
+                            bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div class="text-center text-white">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" class="mx-auto" aria-hidden="true">
+                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                      <circle cx="12" cy="13" r="4"/>
+                    </svg>
+                    <div class="text-[10px] mt-1 font-medium">
+                      {% if slide.image %}Change{% else %}Upload{% endif %}
+                    </div>
+                  </div>
+                </div>
+              </label>
+              <input type="file"
+                     id="photo-input-{{ slide.pk }}"
+                     name="image"
+                     accept="image/png,image/jpeg,image/webp"
+                     class="hidden"
+                     data-max-mb="5"
+                     aria-label="Upload image for {{ slide.title|default:'slide' }}">
+            </form>
+          </td>
+
+          <td class="align-middle">
+            <div class="font-medium text-mapnavy text-[13.5px]">
+              {{ slide.title|default:"—" }}
+            </div>
+          </td>
+
+          <td class="align-middle text-[12.5px] text-gray-600">
+            {{ slide.headline|default:"—" }}
+            {% if slide.subheadline %}
+              <div class="text-[11.5px] text-gray-400 mt-0.5">{{ slide.subheadline|truncatechars:60 }}</div>
+            {% endif %}
+          </td>
+
+          <td class="text-center align-middle">
+            <a href="/management/hero-slides/{{ slide.pk }}/edit/"
+               class="inline-flex items-center justify-center h-7 w-7 rounded-md
+                      bg-gray-100 hover:bg-gray-200 text-mapnavy text-[12px] font-semibold transition"
+               title="Edit to change order">
+              {{ slide.order }}
+            </a>
+          </td>
+
+          <td class="text-center align-middle">
+            {% if slide.is_active|default:slide.active %}
+              <span class="badge badge-success">Active</span>
+            {% else %}
+              <span class="badge badge-muted">Inactive</span>
+            {% endif %}
+          </td>
+
+          <td class="text-right align-middle">
+            <div class="flex gap-2 justify-end">
+              <a href="/management/hero-slides/{{ slide.pk }}/edit/"
+                 class="text-mapgreen text-[12.5px] font-medium hover:underline">Edit</a>
+              <button type="button"
+                      data-delete-url="/management/hero-slides/{{ slide.pk }}/delete/"
+                      data-delete-title="{{ slide.title|default:'this slide'|escapejs }}"
+                      class="delete-trigger text-red-600 text-[12.5px] hover:underline">
+                Delete
+              </button>
+            </div>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="6" class="text-center py-10">
+          <div class="text-3xl mb-2 text-gray-300">🖼</div>
+          <div class="text-[14px] font-medium text-mapnavy">No hero slides yet</div>
+          <p class="text-[12.5px] text-gray-500 mt-1">
+            Add your first slide to display a hero banner on the homepage.
+          </p>
+          <a href="/management/hero-slides/new/" class="btn-primary text-[13px] mt-4 inline-flex">
+            + Add first slide
+          </a>
+        </td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if is_paginated %}
+  <div class="flex justify-center gap-2 mt-6 text-sm">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}" class="btn-secondary text-[13px]">
+        ← Previous
+      </a>
+    {% endif %}
+    <span class="px-3 py-2 text-gray-500 text-[13px]">
+      Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    </span>
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}" class="btn-secondary text-[13px]">
+        Next →
+      </a>
+    {% endif %}
+  </div>
+{% endif %}
+
+<!-- Upload overlay -->
+<div id="upload-overlay"
+     class="hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm items-center justify-center">
+  <div class="bg-white rounded-xl px-6 py-4 shadow-xl text-center max-w-sm"
+       role="status" aria-live="polite">
+    <div class="inline-block h-8 w-8 rounded-full border-2 border-mapgreen border-t-transparent animate-spin"></div>
+    <div id="upload-overlay-label" class="text-[13px] text-mapnavy font-medium mt-3">
+      Uploading image…
+    </div>
+  </div>
+</div>
+
+<!-- Delete confirmation dialog -->
+<dialog id="delete-dialog"
+        class="rounded-xl p-0 max-w-sm w-full backdrop:bg-black/40 backdrop:backdrop-blur-sm">
+  <form method="post" id="delete-form" class="p-6">
+    {% csrf_token %}
+    <h2 class="text-[15px] font-semibold text-mapnavy">Delete hero slide?</h2>
+    <p class="text-[12.5px] text-gray-600 mt-1.5">
+      <span id="delete-title" class="font-medium"></span> will be permanently removed.
+      This cannot be undone.
+    </p>
+    <div class="flex justify-end gap-2 mt-5">
+      <button type="button" id="delete-cancel" class="btn-secondary text-[13px]">Cancel</button>
+      <button type="submit" class="btn-primary text-[13px] !bg-red-600 hover:!bg-red-700">
+        Delete slide
+      </button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+(function () {
+  // ── Upload flow ──────────────────────────────────────────────
+  const MAX_MB = 5;
+  const overlay = document.getElementById("upload-overlay");
+  const overlayLabel = document.getElementById("upload-overlay-label");
+
+  document.querySelectorAll(".photo-form").forEach((form) => {
+    const input = form.querySelector('input[type="file"]');
+    const title = form.dataset.slideTitle || "slide";
+    if (!input) return;
+
+    input.addEventListener("change", () => {
+      const file = input.files && input.files[0];
+      if (!file) return;
+
+      // Type check
+      if (!file.type.startsWith("image/")) {
+        alert("Please choose an image file.");
+        input.value = "";
+        return;
+      }
+      // Size check
+      if (file.size > MAX_MB * 1024 * 1024) {
+        alert(`Image is too large. Maximum size is ${MAX_MB} MB.`);
+        input.value = "";
+        return;
+      }
+
+      // Show overlay with filename
+      if (overlay && overlayLabel) {
+        overlayLabel.textContent = `Uploading "${file.name}"…`;
+        overlay.classList.remove("hidden");
+        overlay.classList.add("flex");
+      }
+
+      // Submit the form
+      form.submit();
+    });
+  });
+
+  // Re-hide overlay if the browser restores from bfcache (back navigation)
+  window.addEventListener("pageshow", (e) => {
+    if (e.persisted && overlay) {
+      overlay.classList.add("hidden");
+      overlay.classList.remove("flex");
+    }
+  });
+
+  // ── Delete dialog ────────────────────────────────────────────
+  const dialog = document.getElementById("delete-dialog");
+  const deleteForm = document.getElementById("delete-form");
+  const deleteTitle = document.getElementById("delete-title");
+  const cancelBtn = document.getElementById("delete-cancel");
+
+  if (dialog && deleteForm && "showModal" in dialog) {
+    document.querySelectorAll(".delete-trigger").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        deleteForm.action = btn.dataset.deleteUrl;
+        deleteTitle.textContent = `"${btn.dataset.deleteTitle}"`;
+        dialog.showModal();
+      });
+    });
+
+    cancelBtn?.addEventListener("click", () => dialog.close());
+    dialog.addEventListener("click", (e) => {
+      // Click outside the dialog closes it
+      if (e.target === dialog) dialog.close();
+    });
+  } else {
+    // Fallback: old browsers — navigate directly
+    document.querySelectorAll(".delete-trigger").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (confirm("Delete this hero slide? This cannot be undone.")) {
+          window.location.href = btn.dataset.deleteUrl;
+        }
+      });
+    });
+  }
+})();
+</script>
+
+{% endblock %}

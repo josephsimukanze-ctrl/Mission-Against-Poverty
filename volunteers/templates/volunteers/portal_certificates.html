@@ -1,0 +1,25 @@
+{% extends "portal_base.html" %}
+{% block title %}Certificates — {{ ORG_NAME }}{% endblock %}
+{% block nav %}
+  <a href="{% url 'volunteer_portal:portal_assignments' %}" class="sidebar-link">My Assignments</a>
+  <a href="{% url 'volunteer_portal:portal_hours' %}" class="sidebar-link">Volunteer Hours</a>
+  <a href="{% url 'volunteer_portal:portal_certificates' %}" class="sidebar-link active">Certificates</a>
+{% endblock %}
+{% block breadcrumb %}Certificates{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold text-mapnavy mb-6">Certificates</h1>
+{% if certificates %}
+  <div class="grid md:grid-cols-2 gap-4">
+    {% for c in certificates %}
+      <div class="card p-5">
+        <div class="text-[11px] uppercase text-gray-500 tracking-wider">Certificate</div>
+        <div class="font-semibold text-mapnavy text-[15px] mt-1">{{ c.title }}</div>
+        <div class="text-[12px] text-gray-500 mt-1">Issued {{ c.issued_on|date:"M d, Y" }}</div>
+        {% if c.description %}<p class="text-[13px] text-gray-600 mt-2">{{ c.description }}</p>{% endif %}
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card p-10 text-center text-gray-500">No certificates issued yet.</div>
+{% endif %}
+{% endblock %}

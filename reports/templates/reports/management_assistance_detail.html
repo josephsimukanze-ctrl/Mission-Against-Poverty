@@ -1,0 +1,186 @@
+{% extends "management_base.html" %}
+{% block title %}{{ req.reference }} — {{ ORG_NAME }}{% endblock %}
+{% block breadcrumb %}Assistance / {{ req.reference }}{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+
+  <a href="/management/beneficiaries/" class="inline-flex items-center gap-1.5 text-[13px] text-mapgreen hover:underline">
+    ← All requests
+  </a>
+
+  <div class="flex items-center justify-between flex-wrap gap-3 mt-3 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-mapnavy">{{ req.reference }}</h1>
+      <p class="text-sm text-gray-500 mt-1">
+        {{ req.full_name }} · {{ req.created_at|date:"M d, Y · H:i" }}
+      </p>
+    </div>
+    <div>
+      {% if req.status == 'submitted' %}<span class="badge badge-warning px-3 py-1.5 text-[12px]">● Submitted</span>
+      {% elif req.status == 'under_review' %}<span class="badge badge-muted px-3 py-1.5 text-[12px] bg-blue-50 text-blue-700">● Under Review</span>
+      {% elif req.status == 'info_required' %}<span class="badge badge-warning px-3 py-1.5 text-[12px]">● Info Required</span>
+      {% elif req.status == 'approved' %}<span class="badge badge-success px-3 py-1.5 text-[12px]">● Approved</span>
+      {% elif req.status == 'declined' %}<span class="badge badge-danger px-3 py-1.5 text-[12px]">● Declined</span>
+      {% elif req.status == 'delivered' %}<span class="badge badge-success px-3 py-1.5 text-[12px]">● Delivered</span>
+      {% elif req.status == 'closed' %}<span class="badge badge-muted px-3 py-1.5 text-[12px]">● Closed</span>
+      {% else %}<span class="badge badge-muted px-3 py-1.5 text-[12px]">{{ req.get_status_display }}</span>{% endif %}
+    </div>
+  </div>
+
+  {% if messages %}
+    <div class="space-y-2 mb-5">
+      {% for m in messages %}
+        <div role="alert"
+             class="rounded-xl px-4 py-3 text-[13px] border flex items-start gap-2.5
+                    {% if m.tags == 'error' %}bg-red-50 text-red-700 border-red-200{% else %}bg-green-50 text-green-700 border-green-200{% endif %}">
+          <span class="mt-0.5 shrink-0" aria-hidden="true">{% if m.tags == 'error' %}⚠{% else %}✓{% endif %}</span>
+          <span class="flex-1">{{ m }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="grid lg:grid-cols-3 gap-5">
+
+    <!-- Main column -->
+    <div class="lg:col-span-2 space-y-5">
+
+      <!-- Applicant -->
+      <div class="card p-6">
+        <h2 class="text-[11px] uppercase tracking-wider text-gray-500 font-semibold mb-4">Applicant</h2>
+        <div class="flex items-start gap-4">
+          <div class="h-12 w-12 rounded-full bg-mapgreen-50 text-mapgreen flex items-center justify-center text-lg font-bold shrink-0">
+            {{ req.full_name|first|upper }}
+          </div>
+          <div class="flex-1 grid grid-cols-2 gap-x-8 gap-y-3 text-[13.5px]">
+            <div class="col-span-2">
+              <div class="text-[10.5px] uppercase tracking-wider text-gray-500 font-semibold mb-0.5">Full name</div>
+              <div class="font-semibold text-mapnavy">{{ req.full_name }}</div>
+            </div>
+            {% if req.phone %}
+            <div>
+              <div class="text-[10.5px] uppercase tracking-wider text-gray-500 font-semibold mb-0.5">Phone</div>
+              <div><a href="tel:{{ req.phone }}" class="text-mapnavy hover:text-mapgreen">{{ req.phone }}</a></div>
+            </div>
+            {% endif %}
+            {% if req.email %}
+            <div>
+              <div class="text-[10.5px] uppercase tracking-wider text-gray-500 font-semibold mb-0.5">Email</div>
+              <div><a href="mailto:{{ req.email }}" class="text-mapnavy hover:text-mapgreen break-all">{{ req.email }}</a></div>
+            </div>
+            {% endif %}
+            {% if req.location %}
+            <div class="col-span-2">
+              <div class="text-[10.5px] uppercase tracking-wider text-gray-500 font-semibold mb-0.5">Location</div>
+              <div class="text-gray-700">{{ req.location }}</div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Request details -->
+      <div class="card p-6">
+        <h2 class="text-[11px] uppercase tracking-wider text-gray-500 font-semibold mb-4">Request details</h2>
+        <dl class="grid grid-cols-2 gap-4 text-[13.5px] mb-5">
+          <div>
+            <dt class="text-[10.5px] uppercase tracking-wider text-gray-500 font-semibold mb-0.5">Category</dt>
+            <dd class="font-semibold text-mapnavy">{{ req.get_category_display }}</dd>
+          </div>
+          <div>
+            <dt class="text-[10.5px] uppercase tracking-wider text-gray-500 font-semibold mb-0.5">Household size</dt>
+            <dd class="font-semibold text-mapnavy">{{ req.household_size }} {{ req.household_size|pluralize:"person,people" }}</dd>
+          </div>
+          <div>
+            <dt class="text-[10.5px] uppercase tracking-wider text-gray-500 font-semibold mb-0.5">Submitted</dt>
+            <dd class="text-gray-700">{{ req.created_at|date:"M d, Y · H:i" }}</dd>
+          </div>
+          <div>
+            <dt class="text-[10.5px] uppercase tracking-wider text-gray-500 font-semibold mb-0.5">Time ago</dt>
+            <dd class="text-gray-700">{{ req.created_at|timesince }} ago</dd>
+          </div>
+        </dl>
+
+        <div>
+          <div class="text-[10.5px] uppercase tracking-wider text-gray-500 font-semibold mb-2">Description</div>
+          <p class="whitespace-pre-line text-[14px] text-gray-800 leading-relaxed">{{ req.description }}</p>
+        </div>
+
+        {% if req.supporting_document %}
+          <div class="mt-5 pt-5 border-t border-[#e5e9f0]">
+            <div class="text-[10.5px] uppercase tracking-wider text-gray-500 font-semibold mb-2">Supporting document</div>
+            <a href="{{ req.supporting_document.url }}" target="_blank"
+               class="inline-flex items-center gap-1.5 text-mapgreen text-[13px] font-medium hover:underline">
+              📎 {{ req.supporting_document.name }}
+            </a>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Reviewer notes -->
+      {% if req.reviewer_notes %}
+        <div class="card p-6 border-l-4 border-l-mapgreen">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-[11px] uppercase tracking-wider text-mapgreen font-semibold">Reviewer notes</h2>
+            {% if req.reviewed_by %}
+              <span class="text-[11px] text-gray-500">by {{ req.reviewed_by.get_full_name|default:req.reviewed_by.get_username }}</span>
+            {% endif %}
+          </div>
+          <p class="whitespace-pre-line text-[13.5px] text-gray-700 leading-relaxed">{{ req.reviewer_notes }}</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="space-y-5">
+
+      <!-- Decision form -->
+      <div class="card p-6">
+        <h2 class="font-semibold text-mapnavy mb-4 text-[14px]">Update status</h2>
+        <form method="post" class="space-y-3">
+          {% csrf_token %}
+          <div>
+            <label class="form-label">Status</label>
+            <select name="status" class="form-input">
+              {% for value, label in statuses %}
+                <option value="{{ value }}" {% if req.status == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Reviewer notes</label>
+            <textarea name="reviewer_notes" rows="4" class="form-input"
+                      placeholder="Notes visible to staff only…">{{ req.reviewer_notes }}</textarea>
+          </div>
+          <button class="btn-primary w-full justify-center">Save</button>
+        </form>
+      </div>
+
+      <!-- Quick info -->
+      <div class="card p-5">
+        <h2 class="text-[11px] uppercase tracking-wider text-gray-500 font-semibold mb-3">Quick info</h2>
+        <dl class="space-y-2 text-[12.5px]">
+          <div class="flex justify-between gap-3">
+            <dt class="text-gray-500">Reference</dt>
+            <dd class="font-mono text-mapnavy">{{ req.reference }}</dd>
+          </div>
+          <div class="flex justify-between gap-3">
+            <dt class="text-gray-500">Household</dt>
+            <dd class="text-mapnavy">{{ req.household_size }}</dd>
+          </div>
+          <div class="flex justify-between gap-3">
+            <dt class="text-gray-500">Category</dt>
+            <dd class="text-mapnavy text-right">{{ req.get_category_display|truncatechars:30 }}</dd>
+          </div>
+        </dl>
+      </div>
+
+      <!-- Note -->
+      <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-[11.5px] text-amber-900 leading-relaxed">
+        <strong>Confidential:</strong> This information is only visible to staff. Never share applicant details outside the organization.
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}

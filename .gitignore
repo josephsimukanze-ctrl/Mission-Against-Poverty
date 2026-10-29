@@ -1,7 +1,37 @@
-.venv/
+# Python
 __pycache__/
-*.pyc
-.env
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Django
+*.log
+logs/
 db.sqlite3
-media/
+db.sqlite3-journal
+*.sqlite3
 staticfiles/
+media/
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Editors / OS
+*.bak
+*.swp
+*~
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

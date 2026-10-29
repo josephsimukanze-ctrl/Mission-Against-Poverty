@@ -1,0 +1,186 @@
+{% extends "management_base.html" %}
+{% load humanize %}
+{% block title %}{{ msg.subject }} — {{ ORG_NAME }}{% endblock %}
+{% block breadcrumb %}Contacts / {{ msg.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+
+  <!-- Header -->
+  <div class="mb-6">
+    <div class="flex items-center justify-between flex-wrap gap-3">
+      <div class="min-w-0">
+        <a href="/management/contacts/" class="inline-flex items-center gap-1.5 text-[13px] text-mapgreen hover:underline">
+          ← All messages
+        </a>
+        <h1 class="text-2xl font-bold text-mapnavy tracking-tight mt-2 break-words">{{ msg.subject }}</h1>
+        <div class="flex items-center gap-3 mt-1.5 text-[12.5px] text-gray-500 flex-wrap">
+          <span class="inline-flex items-center gap-1.5">
+            <span class="h-6 w-6 rounded-full bg-mapgreen-50 text-mapgreen flex items-center justify-center text-[10px] font-semibold">
+              {{ msg.name|first|upper }}
+            </span>
+            {{ msg.name }}
+          </span>
+          <span class="text-gray-300">·</span>
+          <span>{{ msg.created_at|date:"M d, Y · H:i" }}</span>
+          <span class="text-gray-300">·</span>
+          <span>{{ msg.created_at|timesince }} ago</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 shrink-0">
+        <!-- Status pill -->
+        {% if msg.status == 'new' %}
+          <span class="badge badge-warning px-3 py-1.5 text-[12px]">● New</span>
+        {% elif msg.status == 'read' %}
+          <span class="badge badge-muted px-3 py-1.5 text-[12px]">● Read</span>
+        {% elif msg.status == 'replied' %}
+          <span class="badge badge-success px-3 py-1.5 text-[12px]">● Replied</span>
+        {% elif msg.status == 'archived' %}
+          <span class="badge badge-muted px-3 py-1.5 text-[12px]">● Archived</span>
+        {% endif %}
+
+        <!-- Reply button -->
+        <a href="mailto:{{ msg.email }}?subject=Re: {{ msg.subject|urlencode }}&body={{ 'Hi '|add:msg.name|add:','|urlencode }}%0D%0A%0D%0A{{ 'Thanks for reaching out. '|urlencode }}%0D%0A%0D%0A— {{ user.get_full_name|default:user.get_username|urlencode }}%0D%0A{{ ORG_NAME|urlencode }}"
+           class="btn-primary inline-flex items-center gap-1.5 h-9 text-[12.5px] !px-3.5">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M4 4h16v16H4z"/><path d="M22 6l-10 7L2 6"/>
+          </svg>
+          Reply by email
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flash messages -->
+  {% if messages %}
+    <div class="space-y-2 mb-5">
+      {% for m in messages %}
+        <div role="alert"
+             class="rounded-xl px-4 py-3 text-[13px] border flex items-start gap-2.5
+                    {% if m.tags == 'error' %}bg-red-50 text-red-700 border-red-200{% else %}bg-green-50 text-green-700 border-green-200{% endif %}">
+          <span class="mt-0.5 shrink-0" aria-hidden="true">{% if m.tags == 'error' %}⚠{% else %}✓{% endif %}</span>
+          <span class="flex-1">{{ m }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="grid lg:grid-cols-3 gap-5">
+
+    <!-- Main column — message body -->
+    <div class="lg:col-span-2 space-y-5">
+      <div class="card p-6">
+        <div class="flex items-center gap-2 mb-4">
+          <h2 class="text-[11px] uppercase tracking-wider text-gray-500 font-semibold">Message</h2>
+        </div>
+        <div class="prose prose-slate max-w-none">
+          <p class="whitespace-pre-line text-[14.5px] text-gray-800 leading-relaxed">{{ msg.message }}</p>
+        </div>
+      </div>
+
+      <!-- Reply notes -->
+      {% if msg.reply_notes %}
+        <div class="card p-6 border-l-4 border-l-mapgreen">
+          <h2 class="text-[11px] uppercase tracking-wider text-mapgreen font-semibold mb-3">Reply notes</h2>
+          <p class="whitespace-pre-line text-[13.5px] text-gray-700 leading-relaxed">{{ msg.reply_notes }}</p>
+          {% if msg.replied_at %}
+            <p class="text-[11.5px] text-gray-400 mt-3">Sent {{ msg.replied_at|date:"M d, Y · H:i" }}</p>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      <!-- Update notes -->
+      <div class="card p-6">
+        <h2 class="text-[11px] uppercase tracking-wider text-gray-500 font-semibold mb-4">
+          Internal notes
+          <span class="text-[10.5px] text-gray-400 font-normal normal-case tracking-normal ml-1">Not visible to sender</span>
+        </h2>
+        <form method="post" class="space-y-3">
+          {% csrf_token %}
+          <input type="hidden" name="status" value="{{ msg.status }}">
+          <textarea name="reply_notes" rows="4" class="form-input"
+                    placeholder="Add internal notes about this message…">{{ msg.reply_notes }}</textarea>
+          <div class="flex justify-end">
+            <button class="btn-secondary text-[12.5px]">Save notes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="space-y-5">
+
+      <!-- Contact details -->
+      <div class="card p-5">
+        <h2 class="text-[11px] uppercase tracking-wider text-gray-500 font-semibold mb-4">Sender</h2>
+        <div class="flex items-center gap-3 mb-4">
+          <div class="h-11 w-11 rounded-full bg-mapgreen-50 text-mapgreen flex items-center justify-center text-lg font-bold shrink-0">
+            {{ msg.name|first|upper }}
+          </div>
+          <div class="min-w-0">
+            <div class="font-semibold text-mapnavy text-[14px] truncate">{{ msg.name }}</div>
+            <div class="text-[11.5px] text-gray-500">Sender</div>
+          </div>
+        </div>
+
+        <dl class="space-y-3 text-[13px]">
+          <div>
+            <dt class="text-[10.5px] uppercase text-gray-500 font-semibold mb-0.5">Email</dt>
+            <dd>
+              <a href="mailto:{{ msg.email }}" class="text-mapgreen hover:underline break-all">{{ msg.email }}</a>
+            </dd>
+          </div>
+          {% if msg.phone %}
+            <div>
+              <dt class="text-[10.5px] uppercase text-gray-500 font-semibold mb-0.5">Phone</dt>
+              <dd><a href="tel:{{ msg.phone }}" class="text-mapnavy hover:underline">{{ msg.phone }}</a></dd>
+            </div>
+          {% endif %}
+          <div>
+            <dt class="text-[10.5px] uppercase text-gray-500 font-semibold mb-0.5">Received</dt>
+            <dd class="text-gray-700">{{ msg.created_at|date:"M d, Y · H:i" }}</dd>
+          </div>
+        </dl>
+      </div>
+
+      <!-- Status -->
+      <div class="card p-5">
+        <h2 class="text-[11px] uppercase tracking-wider text-gray-500 font-semibold mb-4">Status</h2>
+
+        <form method="post" class="space-y-3">
+          {% csrf_token %}
+          <input type="hidden" name="reply_notes" value="{{ msg.reply_notes }}">
+          <div class="grid grid-cols-2 gap-2">
+            <button type="submit" name="status" value="new"
+                    class="px-3 py-2 rounded-lg text-[12px] font-medium transition text-left
+                           {% if msg.status == 'new' %}bg-amber-50 text-amber-700 border border-amber-200{% else %}bg-white border border-gray-200 text-gray-700 hover:border-amber-200 hover:bg-amber-50{% endif %}">
+              ● New
+            </button>
+            <button type="submit" name="status" value="read"
+                    class="px-3 py-2 rounded-lg text-[12px] font-medium transition text-left
+                           {% if msg.status == 'read' %}bg-gray-100 text-gray-700 border border-gray-300{% else %}bg-white border border-gray-200 text-gray-700 hover:border-gray-300{% endif %}">
+              ● Read
+            </button>
+            <button type="submit" name="status" value="replied"
+                    class="px-3 py-2 rounded-lg text-[12px] font-medium transition text-left
+                           {% if msg.status == 'replied' %}bg-mapgreen-50 text-mapgreen border border-mapgreen/30{% else %}bg-white border border-gray-200 text-gray-700 hover:border-mapgreen/40 hover:bg-mapgreen-50{% endif %}">
+              ● Replied
+            </button>
+            <button type="submit" name="status" value="archived"
+                    class="px-3 py-2 rounded-lg text-[12px] font-medium transition text-left
+                           {% if msg.status == 'archived' %}bg-gray-100 text-gray-600 border border-gray-300{% else %}bg-white border border-gray-200 text-gray-700 hover:border-gray-300{% endif %}">
+              ● Archived
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Danger zone -->
+      <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-[12px] text-red-700 leading-relaxed">
+        <strong>Note:</strong> This message is saved permanently for record-keeping. Archive it to hide it from the default contacts list.
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}

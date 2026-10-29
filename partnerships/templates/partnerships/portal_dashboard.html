@@ -1,0 +1,59 @@
+{% extends "portal_base.html" %}
+{% block title %}Partner Dashboard — {{ ORG_NAME }}{% endblock %}
+{% block nav %}
+  <a href="{% url 'partner_portal:applications' %}" class="sidebar-link">My Applications</a>
+  <a href="{% url 'accounts:profile' %}" class="sidebar-link">Profile</a>
+{% endblock %}
+{% block breadcrumb %}Partner Dashboard{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold text-mapnavy">Welcome, {{ user.first_name|default:user.username }}</h1>
+<p class="text-sm text-gray-500 mt-1">Thank you for partnering with us.</p>
+{% if orgs %}
+  <div class="grid md:grid-cols-2 gap-4 mt-6">
+    {% for o in orgs %}
+      <div class="card p-5">
+        <div class="text-[11px] uppercase tracking-wider text-gray-500">Organization</div>
+        <div class="font-semibold text-mapnavy mt-1">{{ o.name }}</div>
+        <div class="text-[12px] text-gray-500">{{ o.type|default:"Partner" }}</div>
+        {% if o.approved %}<span class="badge badge-success mt-2">Approved</span>{% else %}<span class="badge badge-warning mt-2">Pending</span>{% endif %}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+<div class="mt-8 grid lg:grid-cols-2 gap-5">
+  <div class="card p-5">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="font-semibold text-mapnavy">My Applications</h2>
+      <a href="{% url 'partner_portal:applications' %}" class="text-[12px] text-mapgreen hover:underline">View all →</a>
+    </div>
+    {% if applications %}
+      <div class="space-y-2">
+        {% for a in applications %}
+          <div class="border border-[#e5e9f0] rounded-lg p-3 flex items-center justify-between">
+            <div>
+              <div class="font-medium text-mapnavy text-[13.5px]">{{ a.organization_name }}</div>
+              <div class="text-[11.5px] text-gray-500">{{ a.created_at|date:"M d, Y" }} · {{ a.get_partnership_type_display }}</div>
+            </div>
+            {% if a.status == 'approved' or a.status == 'active' %}<span class="badge badge-success">{{ a.get_status_display }}</span>
+            {% elif a.status == 'rejected' %}<span class="badge badge-danger">{{ a.get_status_display }}</span>
+            {% else %}<span class="badge badge-muted">{{ a.get_status_display }}</span>{% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-sm text-gray-500 py-4">No applications yet. <a href="/partnerships/" class="text-mapgreen">Apply →</a></p>
+    {% endif %}
+  </div>
+  <div class="card p-5">
+    <h2 class="font-semibold text-mapnavy mb-3">Agreements &amp; Projects</h2>
+    {% if agreements or partner_projects %}
+      <div class="space-y-2 text-[13px]">
+        {% for ag in agreements %}<div class="border border-[#e5e9f0] rounded-lg p-3"><div class="font-medium text-mapnavy">{{ ag.title }}</div><div class="text-[11.5px] text-gray-500">{{ ag.get_status_display }}</div></div>{% endfor %}
+        {% for pp in partner_projects %}<div class="border border-[#e5e9f0] rounded-lg p-3"><div class="font-medium text-mapnavy">{{ pp.project.name }}</div><div class="text-[11.5px] text-gray-500">{{ pp.role|default:"Contributor" }}</div></div>{% endfor %}
+      </div>
+    {% else %}
+      <p class="text-sm text-gray-500 py-4">No agreements or projects linked yet.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

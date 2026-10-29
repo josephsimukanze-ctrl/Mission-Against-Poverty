@@ -1,0 +1,9 @@
+{% extends "public_base.html" %}
+{% block title %}{{ story.title }} — {{ ORG_NAME }}{% endblock %}
+{% block content %}
+<article class="max-w-3xl mx-auto px-6 py-12">
+  <h1 class="text-3xl md:text-4xl font-bold text-mapnavy">{{ story.title }}</h1>
+  {% if story.cover_image %}<img src="{{ story.cover_image.url }}" alt="{{ story.title }}" class="w-full rounded-xl mt-6">{% endif %}
+  <div class="prose prose-slate mt-6 max-w-none whitespace-pre-line">{{ story.body }}</div>
+</article>
+{% endblock %}
