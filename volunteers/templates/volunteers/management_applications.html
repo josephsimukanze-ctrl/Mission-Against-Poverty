@@ -4,9 +4,7 @@
 
 {% block content %}
 
-<!-- ============================================================
-     HEADER
-     ============================================================ -->
+<!-- HEADER -->
 <div class="mb-6">
   <div class="flex flex-wrap items-end justify-between gap-3">
     <div>
@@ -14,281 +12,353 @@
         Volunteer Applications
       </h1>
       <p class="text-[13px] text-gray-500 mt-1">
-        {% if status_filter %}
+        {% if filters.q or filters.status %}
           <span class="font-semibold text-mapnavy">{{ paginator.count }}</span>
           match{{ paginator.count|pluralize:"es" }}
           <span class="text-gray-300 mx-1.5">·</span>
-          <a href="?" class="text-mapgreen hover:underline">Clear filter</a>
+          <a href="?" class="text-mapgreen hover:underline">Clear all filters</a>
         {% else %}
           {{ paginator.count }} application{{ paginator.count|pluralize }} total
         {% endif %}
       </p>
     </div>
 
-    <a href="/management/volunteers/"
-       class="btn-secondary inline-flex items-center h-9 text-[12.5px] !px-3.5">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="2.5" class="mr-1.5" aria-hidden="true">
-        <path d="M19 12H5M11 18l-6-6 6-6"/>
-      </svg>
-      All volunteers
-    </a>
+    <div class="flex items-center gap-2">
+      <a href="/volunteer/" target="_blank" rel="noopener"
+         class="btn-secondary inline-flex items-center gap-1.5 h-9 text-[12.5px] !px-3.5">
+        Public form ↗
+      </a>
+      <a href="/management/volunteers/"
+         class="btn-secondary inline-flex items-center gap-1.5 h-9 text-[12.5px] !px-3.5">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <path d="M19 12H5M11 18l-6-6 6-6"/>
+        </svg>
+        All volunteers
+      </a>
+    </div>
   </div>
 
-  <!-- Filter toolbar -->
-  <form method="get"
-        class="mt-4 flex flex-wrap items-center gap-2">
+  <!-- Status tabs -->
+  <div class="mt-4 flex flex-wrap items-center gap-1 p-1 rounded-xl bg-mapbg border border-mapborder max-w-fit">
+    <a href="?{% if filters.q %}q={{ filters.q }}{% endif %}"
+       class="inline-flex items-center h-8 px-3 rounded-lg text-[12.5px] font-semibold transition
+              {% if not filters.status %}bg-white text-mapnavy shadow-sm{% else %}text-gray-600 hover:text-mapnavy{% endif %}">
+      All
+      <span class="ml-1.5 inline-flex items-center justify-center min-w-[20px] h-4 px-1 rounded text-[10.5px] font-bold
+                   {% if not filters.status %}bg-mapgreen-50 text-mapgreen{% else %}bg-gray-100 text-gray-600{% endif %}">
+        {{ paginator.count }}
+      </span>
+    </a>
+    {% for value, label in statuses %}
+      <a href="?status={{ value }}{% if filters.q %}&q={{ filters.q }}{% endif %}"
+         class="inline-flex items-center h-8 px-3 rounded-lg text-[12.5px] font-semibold transition
+                {% if filters.status == value %}bg-white text-mapnavy shadow-sm{% else %}text-gray-600 hover:text-mapnavy{% endif %}">
+        {{ label }}
+      </a>
+    {% endfor %}
+  </div>
 
-    <label class="text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
-      Filter
-    </label>
+  <!-- Search + sort -->
+  <form method="get" class="mt-3 flex flex-wrap items-center gap-2">
+    {% if filters.status %}
+      <input type="hidden" name="status" value="{{ filters.status }}">
+    {% endif %}
 
-    <select name="status"
-            aria-label="Filter by status"
+    <div class="relative flex-1 min-w-[240px] max-w-md">
+      <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400" aria-hidden="true">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+        </svg>
+      </span>
+      <input type="text" name="q" value="{{ filters.q }}"
+             placeholder="Search name, email, phone, location…"
+             aria-label="Search applications"
+             class="form-input w-full pl-9 pr-9 text-[13px]">
+      {% if filters.q %}
+        <a href="?{% if filters.status %}status={{ filters.status }}{% endif %}"
+           aria-label="Clear search"
+           class="absolute inset-y-0 right-2 flex items-center px-1 text-gray-400 hover:text-gray-600 transition">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </a>
+      {% endif %}
+    </div>
+
+    <select name="sort"
+            aria-label="Sort applications"
             onchange="this.form.submit()"
-            class="form-input min-w-[160px] max-w-[200px] text-[13px]">
-      <option value="">All statuses</option>
-      {% for value, label in statuses %}
-        <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>
-          {{ label }}
-        </option>
-      {% endfor %}
+            class="form-input min-w-[140px] text-[13px]">
+      <option value="">Newest first</option>
+      <option value="oldest" {% if filters.sort == 'oldest' %}selected{% endif %}>Oldest first</option>
+      <option value="name" {% if filters.sort == 'name' %}selected{% endif %}>Name (A→Z)</option>
     </select>
 
-    {% if status_filter %}
-      <a href="?"
-         class="text-[12.5px] text-gray-500 hover:text-mapnavy underline-offset-2 hover:underline">
+    <button type="submit" class="btn-primary inline-flex items-center h-9 text-[12.5px] !px-3.5">
+      Search
+    </button>
+
+    {% if filters.q or filters.status or filters.sort %}
+      <a href="?" class="text-[12.5px] text-gray-500 hover:text-mapnavy underline-offset-2 hover:underline">
         Clear
       </a>
     {% endif %}
   </form>
-
-  <!-- Active filter chip -->
-  {% if status_filter %}
-    <div class="flex flex-wrap items-center gap-2 mt-3">
-      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md
-                   bg-mapbg border border-mapborder text-[11.5px] text-gray-700">
-        <span class="text-gray-400 text-[10px] uppercase tracking-wider font-semibold">
-          Status
-        </span>
-        <span class="font-medium text-mapnavy">{{ status_filter|title }}</span>
-        <a href="?"
-           aria-label="Remove status filter"
-           class="text-gray-400 hover:text-mapnavy transition">✕</a>
-      </span>
-    </div>
-  {% endif %}
 </div>
 
-<!-- ============================================================
-     BODY
-     ============================================================ -->
+<!-- BODY -->
 {% if applications %}
 
-  <!-- Desktop table -->
-  <div class="hidden md:block card overflow-hidden p-0">
-    <div class="overflow-x-auto">
-      <table class="table-base w-full table-fixed">
-        <caption class="sr-only">
-          Volunteer applications — {{ paginator.count }} total
-          {% if status_filter %}with status filter{% endif %}
-        </caption>
+  <!-- BULK ACTION BAR (only when there's a form to submit to) -->
+  <form method="post" id="bulk-form" action="{% url 'volunteers:bulk_action' %}">
+    {% csrf_token %}
 
-        <colgroup>
-          <col style="width: auto;">
-          <col style="width: 240px;">
-          <col style="width: 140px;">
-          <col style="width: 240px;">
-          <col style="width: 130px;">
-          <col style="width: 130px;">
-          <col style="width: 130px;">
-        </colgroup>
+    <!-- Desktop table -->
+    <div class="hidden md:block card overflow-hidden p-0">
+      <div class="overflow-x-auto">
+        <table class="table-base w-full">
+          <caption class="sr-only">
+            Volunteer applications — {{ paginator.count }} total
+            {% if filters.status %}with status filter{% endif %}
+          </caption>
 
-        <thead class="bg-mapbg border-b border-mapborder">
-          <tr>
-            <th scope="col"
-                class="text-left text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
-              Applicant
-            </th>
-            <th scope="col"
-                class="text-left text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
-              Email
-            </th>
-            <th scope="col"
-                class="text-left text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
-              Location
-            </th>
-            <th scope="col"
-                class="text-left text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
-              Skills
-            </th>
-            <th scope="col"
-                class="text-left text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
-              Status
-            </th>
-            <th scope="col"
-                class="text-left text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
-              Submitted
-            </th>
-            <th scope="col"
-                class="text-right text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
-              Actions
-            </th>
-          </tr>
-        </thead>
-
-        <tbody class="divide-y divide-mapborder">
-          {% for a in applications %}
-            <tr class="hover:bg-mapbg/60 transition-colors group">
-
-              <!-- Applicant -->
-              <td class="py-3 pr-3 align-middle">
-                <a href="/management/volunteers/applications/{{ a.pk }}/"
-                   class="block hover:text-mapgreen transition">
-                  <div class="font-semibold text-mapnavy text-[13.5px] truncate">
-                    {{ a.full_name|default:"—" }}
-                  </div>
-                  {% if a.phone %}
-                    <div class="text-[11px] text-gray-500 truncate">{{ a.phone }}</div>
-                  {% endif %}
-                </a>
-              </td>
-
-              <!-- Email -->
-              <td class="py-3 pr-3 align-middle">
-                <a href="mailto:{{ a.email }}"
-                   class="text-[13px] text-mapgreen hover:underline truncate block">
-                  {{ a.email|default:"—" }}
-                </a>
-              </td>
-
-              <!-- Location -->
-              <td class="py-3 pr-3 align-middle text-[13px] text-gray-600 truncate">
-                {{ a.location|default:"—" }}
-              </td>
-
-              <!-- Skills (truncated) -->
-              <td class="py-3 pr-3 align-middle">
-                <div class="text-[12.5px] text-gray-600 truncate" title="{{ a.skills|default:'' }}">
-                  {{ a.skills|default:"—"|truncatechars:60 }}
-                </div>
-              </td>
-
-              <!-- Status -->
-              <td class="py-3 pr-3 align-middle">
-                {% if a.status == 'approved' %}
-                  <span class="badge badge-success">{{ a.get_status_display }}</span>
-                {% elif a.status == 'submitted' %}
-                  <span class="badge badge-warning">{{ a.get_status_display }}</span>
-                {% elif a.status == 'rejected' %}
-                  <span class="badge badge-danger">{{ a.get_status_display }}</span>
-                {% else %}
-                  <span class="badge badge-muted">{{ a.get_status_display }}</span>
-                {% endif %}
-              </td>
-
-              <!-- Submitted -->
-              <td class="py-3 align-middle text-[12.5px] text-gray-500 tabular-nums">
-                <time datetime="{{ a.created_at|date:'c' }}">
-                  {{ a.created_at|date:"M d, Y" }}
-                </time>
-              </td>
-
-              <!-- Actions -->
-              <td class="py-3 align-middle text-right whitespace-nowrap">
-                <div class="inline-flex items-center gap-1 justify-end
-                            md:opacity-60 md:group-hover:opacity-100 transition-opacity">
-                  <a href="/management/volunteers/applications/{{ a.pk }}/"
-                     class="inline-flex items-center h-7 px-2.5 rounded-md
-                            text-[12px] font-medium text-mapgreen
-                            hover:bg-mapgreen-50 transition">
-                    Review
-                  </a>
-                  {% if a.email %}
-                    <a href="mailto:{{ a.email }}"
-                       class="inline-flex items-center h-7 px-2.5 rounded-md
-                              text-[12px] font-medium text-gray-600
-                              hover:bg-gray-100 transition">
-                      Email
-                    </a>
-                  {% endif %}
-                </div>
-              </td>
+          <thead class="bg-mapbg border-b border-mapborder sticky top-0 z-10">
+            <tr>
+              <th scope="col" class="w-10 px-3 py-2.5">
+                <input type="checkbox" id="select-all"
+                       aria-label="Select all applications"
+                       class="h-4 w-4 rounded border-gray-300 text-mapgreen focus:ring-mapgreen/40">
+              </th>
+              <th scope="col" class="text-left text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+                Applicant
+              </th>
+              <th scope="col" class="text-left text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+                Contact
+              </th>
+              <th scope="col" class="text-left text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+                Location
+              </th>
+              <th scope="col" class="text-left text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+                Skills
+              </th>
+              <th scope="col" class="text-left text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+                Status
+              </th>
+              <th scope="col" class="text-left text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+                Submitted
+              </th>
+              <th scope="col" class="text-right text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+                Actions
+              </th>
             </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+          </thead>
+
+          <tbody class="divide-y divide-mapborder">
+            {% for a in applications %}
+              <tr class="hover:bg-mapbg/60 transition-colors group">
+                <td class="px-3 py-3 align-middle">
+                  <input type="checkbox" name="application_ids" value="{{ a.pk }}"
+                         aria-label="Select {{ a.full_name|default:'application' }}"
+                         class="row-checkbox h-4 w-4 rounded border-gray-300 text-mapgreen focus:ring-mapgreen/40">
+                </td>
+
+                <td class="py-3 pr-3 align-middle">
+                  <a href="/management/volunteers/applications/{{ a.pk }}/"
+                     class="block hover:text-mapgreen transition">
+                    <div class="font-semibold text-mapnavy text-[13.5px] truncate">
+                      {{ a.full_name|default:"—" }}
+                    </div>
+                    {% if a.phone %}
+                      <div class="text-[11px] text-gray-500 truncate">{{ a.phone }}</div>
+                    {% endif %}
+                  </a>
+                </td>
+
+                <td class="py-3 pr-3 align-middle">
+                  <a href="mailto:{{ a.email }}"
+                     class="text-[12.5px] text-mapgreen hover:underline truncate block">
+                    {{ a.email|default:"—" }}
+                  </a>
+                </td>
+
+                <td class="py-3 pr-3 align-middle text-[12.5px] text-gray-600 truncate">
+                  {{ a.location|default:"—" }}
+                </td>
+
+                <td class="py-3 pr-3 align-middle">
+                  <div class="text-[12px] text-gray-600 truncate" title="{{ a.skills|default:'' }}">
+                    {{ a.skills|default:"—"|truncatechars:50 }}
+                  </div>
+                </td>
+
+                <td class="py-3 pr-3 align-middle">
+                  {% if a.status == 'approved' %}
+                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full
+                                 bg-green-50 text-green-700 border border-green-200
+                                 text-[10.5px] uppercase tracking-wider font-semibold">
+                      <span class="h-1.5 w-1.5 rounded-full bg-green-500"></span>
+                      {{ a.get_status_display }}
+                    </span>
+                  {% elif a.status == 'submitted' %}
+                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full
+                                 bg-amber-50 text-amber-700 border border-amber-200
+                                 text-[10.5px] uppercase tracking-wider font-semibold">
+                      <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                      {{ a.get_status_display }}
+                    </span>
+                  {% elif a.status == 'rejected' %}
+                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full
+                                 bg-red-50 text-red-700 border border-red-200
+                                 text-[10.5px] uppercase tracking-wider font-semibold">
+                      <span class="h-1.5 w-1.5 rounded-full bg-red-500"></span>
+                      {{ a.get_status_display }}
+                    </span>
+                  {% else %}
+                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full
+                                 bg-gray-100 text-gray-600 border border-gray-200
+                                 text-[10.5px] uppercase tracking-wider font-semibold">
+                      {{ a.get_status_display }}
+                    </span>
+                  {% endif %}
+                </td>
+
+                <td class="py-3 pr-3 align-middle text-[12px] text-gray-500 tabular-nums">
+                  <div class="whitespace-nowrap">
+                    <time datetime="{{ a.created_at|date:'c' }}" title="{{ a.created_at|date:'F j, Y · H:i' }}">
+                      {{ a.created_at|date:"M d, Y" }}
+                    </time>
+                  </div>
+                  <div class="text-[10.5px] text-gray-400">
+                    {{ a.created_at|timesince }} ago
+                  </div>
+                </td>
+
+                <td class="py-3 align-middle text-right whitespace-nowrap">
+                  <div class="inline-flex items-center gap-1 justify-end
+                              md:opacity-60 md:group-hover:opacity-100 transition-opacity">
+                    <a href="/management/volunteers/applications/{{ a.pk }}/"
+                       class="inline-flex items-center h-7 px-2.5 rounded-md
+                              text-[12px] font-medium text-mapgreen
+                              hover:bg-mapgreen-50 transition">
+                      Review
+                    </a>
+                    {% if a.status == 'submitted' %}
+                      <button type="submit" name="quick_action" value="approve:{{ a.pk }}"
+                              class="inline-flex items-center h-7 px-2.5 rounded-md
+                                     text-[12px] font-medium text-gray-700
+                                     hover:bg-gray-100 transition"
+                              title="Quick approve">
+                        ✓
+                      </button>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
 
-  <!-- Mobile cards -->
-  <div class="md:hidden space-y-3">
-    {% for a in applications %}
-      <div class="card p-4">
-
-        <!-- Name + status -->
-        <div class="flex items-start justify-between gap-3 mb-2">
-          <div class="min-w-0 flex-1">
-            <div class="font-semibold text-mapnavy text-[14px] truncate">
-              {{ a.full_name|default:"—" }}
+    <!-- Mobile cards -->
+    <div class="md:hidden space-y-3">
+      {% for a in applications %}
+        <div class="card p-4">
+          <div class="flex items-start gap-3 mb-2">
+            <input type="checkbox" name="application_ids" value="{{ a.pk }}"
+                   aria-label="Select {{ a.full_name|default:'application' }}"
+                   class="row-checkbox mt-1 h-4 w-4 rounded border-gray-300 text-mapgreen focus:ring-mapgreen/40">
+            <div class="min-w-0 flex-1">
+              <div class="font-semibold text-mapnavy text-[14px] truncate">
+                {{ a.full_name|default:"—" }}
+              </div>
+              <div class="text-[11.5px] text-gray-500 truncate">
+                {{ a.email|default:"—" }}
+              </div>
             </div>
-            <div class="text-[11.5px] text-gray-500 truncate">
-              {{ a.email|default:"—" }}
-            </div>
+            {% if a.status == 'approved' %}
+              <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200 text-[10px] uppercase tracking-wider font-semibold shrink-0">
+                <span class="h-1.5 w-1.5 rounded-full bg-green-500"></span>
+                {{ a.get_status_display }}
+              </span>
+            {% elif a.status == 'submitted' %}
+              <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[10px] uppercase tracking-wider font-semibold shrink-0">
+                <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                {{ a.get_status_display }}
+              </span>
+            {% elif a.status == 'rejected' %}
+              <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200 text-[10px] uppercase tracking-wider font-semibold shrink-0">
+                <span class="h-1.5 w-1.5 rounded-full bg-red-500"></span>
+                {{ a.get_status_display }}
+              </span>
+            {% else %}
+              <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200 text-[10px] uppercase tracking-wider font-semibold shrink-0">
+                {{ a.get_status_display }}
+              </span>
+            {% endif %}
           </div>
-          {% if a.status == 'approved' %}
-            <span class="badge badge-success shrink-0">{{ a.get_status_display }}</span>
-          {% elif a.status == 'submitted' %}
-            <span class="badge badge-warning shrink-0">{{ a.get_status_display }}</span>
-          {% elif a.status == 'rejected' %}
-            <span class="badge badge-danger shrink-0">{{ a.get_status_display }}</span>
-          {% else %}
-            <span class="badge badge-muted shrink-0">{{ a.get_status_display }}</span>
-          {% endif %}
-        </div>
 
-        <!-- Details -->
-        <dl class="space-y-1.5 text-[12.5px]">
-          <div class="flex justify-between gap-3">
-            <dt class="text-gray-500">Location</dt>
-            <dd class="text-mapnavy text-right truncate">{{ a.location|default:"—" }}</dd>
-          </div>
-          <div class="flex justify-between gap-3">
-            <dt class="text-gray-500">Submitted</dt>
-            <dd class="text-mapnavy text-right tabular-nums">
-              {{ a.created_at|date:"M d, Y" }}
-            </dd>
-          </div>
-          {% if a.skills %}
-            <div class="flex flex-col gap-1">
-              <dt class="text-gray-500">Skills</dt>
-              <dd class="text-mapnavy text-[12px] leading-relaxed">
-                {{ a.skills|truncatechars:100 }}
+          <dl class="space-y-1.5 text-[12.5px] mb-3">
+            <div class="flex justify-between gap-3">
+              <dt class="text-gray-500">Location</dt>
+              <dd class="text-mapnavy text-right truncate">{{ a.location|default:"—" }}</dd>
+            </div>
+            <div class="flex justify-between gap-3">
+              <dt class="text-gray-500">Submitted</dt>
+              <dd class="text-mapnavy text-right tabular-nums">
+                {{ a.created_at|date:"M d, Y" }}
               </dd>
             </div>
-          {% endif %}
-        </dl>
+          </dl>
 
-        <!-- Actions -->
-        <div class="mt-3 pt-3 border-t border-mapborder flex items-center justify-end gap-1">
-          <a href="/management/volunteers/applications/{{ a.pk }}/"
-             class="inline-flex items-center h-8 px-3 rounded-md
-                    text-[12px] font-medium text-mapgreen hover:bg-mapgreen-50 transition">
-            Review
-          </a>
-          {% if a.email %}
-            <a href="mailto:{{ a.email }}"
+          <div class="pt-3 border-t border-mapborder flex items-center justify-end gap-1">
+            <a href="/management/volunteers/applications/{{ a.pk }}/"
                class="inline-flex items-center h-8 px-3 rounded-md
-                      text-[12px] font-medium text-gray-600 hover:bg-gray-100 transition">
-              Email
+                      text-[12px] font-medium text-mapgreen hover:bg-mapgreen-50 transition">
+              Review
             </a>
-          {% endif %}
+            {% if a.email %}
+              <a href="mailto:{{ a.email }}"
+                 class="inline-flex items-center h-8 px-3 rounded-md
+                        text-[12px] font-medium text-gray-600 hover:bg-gray-100 transition">
+                Email
+              </a>
+            {% endif %}
+          </div>
         </div>
-      </div>
-    {% endfor %}
-  </div>
+      {% endfor %}
+    </div>
 
-  <!-- Pagination -->
+    <!-- BULK ACTIONS -->
+    <div id="bulk-bar"
+         class="hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-40
+                rounded-xl bg-mapnavy text-white shadow-2xl
+                px-4 py-3 flex items-center gap-3">
+      <span class="text-[12.5px]">
+        <strong id="bulk-count">0</strong> selected
+      </span>
+      <div class="h-4 w-px bg-white/20" aria-hidden="true"></div>
+      <button type="submit" name="bulk_action" value="approve"
+              class="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg
+                     bg-mapgreen text-white text-[12px] font-semibold
+                     hover:bg-mapgreen-600 transition">
+        ✓ Approve all
+      </button>
+      <button type="submit" name="bulk_action" value="reject"
+              onclick="return confirm('Reject the selected applications?')"
+              class="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg
+                     bg-red-500 text-white text-[12px] font-semibold
+                     hover:bg-red-600 transition">
+        ✗ Reject all
+      </button>
+      <button type="button" id="bulk-clear"
+              class="inline-flex items-center justify-center h-8 w-8 rounded-lg
+                     text-white/70 hover:text-white hover:bg-white/10 transition"
+              aria-label="Clear selection">✕</button>
+    </div>
+  </form>
+
+  <!-- PAGINATION -->
   {% if is_paginated %}
     <nav class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6"
          aria-label="Pagination">
@@ -300,7 +370,7 @@
 
       <div class="flex items-center gap-1 order-1 sm:order-2">
         {% if page_obj.has_previous %}
-          <a href="?page={{ page_obj.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}"
+          <a href="?page={{ page_obj.previous_page_number }}{% if filters.status %}&status={{ filters.status }}{% endif %}{% if filters.q %}&q={{ filters.q }}{% endif %}{% if filters.sort %}&sort={{ filters.sort }}{% endif %}"
              class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-white
                     text-[12.5px] font-medium text-gray-700 hover:bg-gray-50 transition">
             ← Prev
@@ -316,20 +386,16 @@
           {% if num == page_obj.number %}
             <span aria-current="page"
                   class="inline-flex items-center justify-center h-9 w-9 rounded-lg
-                         bg-mapgreen text-white text-[12.5px] font-semibold">
-              {{ num }}
-            </span>
+                         bg-mapgreen text-white text-[12.5px] font-semibold">{{ num }}</span>
           {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
-            <a href="?page={{ num }}{% if status_filter %}&status={{ status_filter }}{% endif %}"
+            <a href="?page={{ num }}{% if filters.status %}&status={{ filters.status }}{% endif %}{% if filters.q %}&q={{ filters.q }}{% endif %}{% if filters.sort %}&sort={{ filters.sort }}{% endif %}"
                class="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-mapborder
-                      bg-white text-[12.5px] font-medium text-gray-700 hover:bg-gray-50 transition">
-              {{ num }}
-            </a>
+                      bg-white text-[12.5px] font-medium text-gray-700 hover:bg-gray-50 transition">{{ num }}</a>
           {% endif %}
         {% endfor %}
 
         {% if page_obj.has_next %}
-          <a href="?page={{ page_obj.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}"
+          <a href="?page={{ page_obj.next_page_number }}{% if filters.status %}&status={{ filters.status }}{% endif %}{% if filters.q %}&q={{ filters.q }}{% endif %}{% if filters.sort %}&sort={{ filters.sort }}{% endif %}"
              class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-white
                     text-[12.5px] font-medium text-gray-700 hover:bg-gray-50 transition">
             Next →
@@ -345,34 +411,35 @@
   {% endif %}
 
 {% else %}
-  <!-- Empty state -->
+  <!-- EMPTY STATE -->
   <div class="card p-10 sm:p-14 text-center max-w-lg mx-auto">
     <div class="mx-auto h-14 w-14 rounded-full bg-mapgreen-50 text-mapgreen
                 flex items-center justify-center mb-4 text-2xl">
       📝
     </div>
     <h2 class="text-[16px] font-semibold text-mapnavy">
-      {% if status_filter %}
-        No {{ status_filter }} applications
+      {% if filters.q or filters.status %}
+        No matching applications
       {% else %}
         No applications yet
       {% endif %}
     </h2>
     <p class="text-[13px] text-gray-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
-      {% if status_filter %}
-        Try a different status filter, or clear it to see all applications.
+      {% if filters.q %}
+        No applications match "{{ filters.q }}". Try a different search or clear filters.
+      {% elif filters.status %}
+        No {{ filters.status }} applications. Try a different status filter.
       {% else %}
         When someone applies through the volunteer page, their application will appear here for review.
       {% endif %}
     </p>
     <div class="mt-5 flex flex-wrap items-center justify-center gap-2">
-      {% if status_filter %}
+      {% if filters.q or filters.status %}
         <a href="?" class="btn-primary inline-flex items-center h-10 px-5 text-[13px]">
-          Clear filter
+          Clear all filters
         </a>
       {% else %}
-        <a href="/volunteer/"
-           target="_blank" rel="noopener"
+        <a href="/volunteer/" target="_blank" rel="noopener"
            class="btn-secondary inline-flex items-center h-10 px-4 text-[13px]">
           View public apply page
         </a>

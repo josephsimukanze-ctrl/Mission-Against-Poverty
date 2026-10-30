@@ -1,13 +1,286 @@
 {% extends "public_base.html" %}
+{% load humanize %}
 {% block title %}Thank you — {{ ORG_NAME }}{% endblock %}
+{% block meta_description %}Thank you for applying to partner with {{ ORG_NAME }}. Here's what happens next.{% endblock %}
+
+{% block head %}
+{{ block.super }}
+<meta name="robots" content="noindex, nofollow">
+{% endblock %}
+
 {% block content %}
-<section class="max-w-xl mx-auto px-5 lg:px-8 py-16 text-center">
-  <div class="mx-auto h-16 w-16 rounded-full bg-mapgreen-50 text-mapgreen flex items-center justify-center text-3xl">✓</div>
-  <h1 class="text-2xl font-bold text-mapnavy mt-6">Application received</h1>
-  <p class="text-gray-600 mt-3">Thank you for your interest in partnering with us. Our team will review your proposal and get back to you shortly.</p>
-  <div class="mt-8 flex justify-center gap-3">
-    <a href="/" class="btn-secondary">Back to home</a>
-    <a href="{% url 'projects:list' %}" class="btn-primary">Browse our projects</a>
-  </div>
-</section>
+
+<a href="#main-content"
+   class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100]
+          focus:px-4 focus:py-2.5 focus:rounded-lg focus:bg-mapnavy focus:text-white
+          focus:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen">
+  Skip to main content
+</a>
+
+<main id="main-content" class="bg-mapbg">
+
+  <!-- CELEBRATION HERO -->
+  <section class="relative overflow-hidden bg-mapnavy text-white">
+    <div class="absolute inset-0 opacity-25 pointer-events-none"
+         style="background-image:
+           radial-gradient(circle at 20% 20%, #1e9e5f 0, transparent 40%),
+           radial-gradient(circle at 80% 80%, #1f3350 0, transparent 40%);"></div>
+
+    <div class="relative max-w-2xl mx-auto px-5 lg:px-8 py-16 lg:py-20 text-center">
+
+      <!-- Animated check -->
+      <div class="relative inline-flex mb-6">
+        <span class="absolute inset-0 rounded-full bg-mapgreen opacity-20 animate-ping"></span>
+        <div class="relative inline-flex h-20 w-20 rounded-full bg-mapgreen items-center justify-center text-white shadow-2xl">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="3"
+               stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
+        </div>
+      </div>
+
+      <p class="text-[11px] uppercase tracking-[0.18em] font-semibold text-mapgreen mb-2">
+        Application received
+      </p>
+
+      <h1 class="text-3xl md:text-4xl lg:text-[42px] font-bold tracking-tight leading-tight">
+        Thank you{% if application.contact_person %}, {{ application.contact_person|truncatewords:2 }}{% endif %}!
+      </h1>
+
+      <p class="mt-4 text-gray-300 text-[15px] max-w-lg mx-auto leading-relaxed">
+        Your partnership proposal is in. Our team will review it and get back to you
+        within 3–5 working days.
+      </p>
+
+      <div class="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
+        <a href="/"
+           class="inline-flex items-center justify-center h-11 px-6 rounded-lg
+                  border border-white/25 text-white font-semibold text-[14px]
+                  hover:bg-white/10 transition
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40">
+          Back to home
+        </a>
+        <a href="{% url 'projects:list' %}"
+           class="inline-flex items-center justify-center h-11 px-6 rounded-lg
+                  bg-mapgreen text-white font-semibold text-[14px]
+                  hover:bg-mapgreen-600 transition shadow-sm
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/50">
+          Browse our projects
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT HAPPENS NEXT -->
+  <section class="max-w-3xl mx-auto px-5 lg:px-8 py-14 lg:py-16">
+    <div class="text-center mb-10">
+      <div class="text-[11px] uppercase tracking-[0.14em] font-semibold text-mapgreen mb-2">
+        Next steps
+      </div>
+      <h2 class="text-[22px] md:text-[26px] font-bold text-mapnavy tracking-tight">
+        What happens now
+      </h2>
+    </div>
+
+    <ol class="relative space-y-8 pl-10">
+      <div class="absolute left-4 top-2 bottom-2 w-0.5 bg-mapborder" aria-hidden="true"></div>
+
+      <!-- Step 1 -->
+      <li class="relative">
+        <span class="absolute -left-10 top-0 inline-flex h-8 w-8 rounded-full bg-mapgreen text-white items-center justify-center font-bold text-[12px] shadow-sm">
+          1
+        </span>
+        <div class="card p-5">
+          <div class="flex items-center gap-2 mb-1">
+            <h3 class="font-semibold text-mapnavy text-[15px]">We review your proposal</h3>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 text-[10px] uppercase tracking-wider font-semibold">
+              In progress
+            </span>
+          </div>
+          <p class="text-[13px] text-gray-600 leading-relaxed">
+            Our partnerships team reads every submission and assesses fit with our current programs, geographic reach, and priorities.
+          </p>
+        </div>
+      </li>
+
+      <!-- Step 2 -->
+      <li class="relative">
+        <span class="absolute -left-10 top-0 inline-flex h-8 w-8 rounded-full bg-white border-2 border-mapborder text-mapnavy items-center justify-center font-bold text-[12px]">
+          2
+        </span>
+        <div class="card p-5">
+          <h3 class="font-semibold text-mapnavy text-[15px] mb-1">We get in touch</h3>
+          <p class="text-[13px] text-gray-600 leading-relaxed">
+            Within 3–5 working days you'll hear from us — usually with a short call
+            to talk through the proposal and answer any questions.
+          </p>
+        </div>
+      </li>
+
+      <!-- Step 3 -->
+      <li class="relative">
+        <span class="absolute -left-10 top-0 inline-flex h-8 w-8 rounded-full bg-white border-2 border-mapborder text-mapnavy items-center justify-center font-bold text-[12px]">
+          3
+        </span>
+        <div class="card p-5">
+          <h3 class="font-semibold text-mapnavy text-[15px] mb-1">We formalize the partnership</h3>
+          <p class="text-[13px] text-gray-600 leading-relaxed">
+            Once aligned, we agree the scope, sign an MOU, and start the work together —
+            with clear milestones and reporting on both sides.
+          </p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <!-- SHARE + PREVIEW -->
+  <section class="max-w-3xl mx-auto px-5 lg:px-8 pb-14 lg:pb-16">
+    <div class="grid md:grid-cols-2 gap-5">
+
+      <!-- Forward to colleague -->
+      <div class="card p-6">
+        <div class="flex items-start gap-3">
+          <span class="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-mapgreen-50 text-mapgreen text-lg shrink-0"
+                aria-hidden="true">📨</span>
+          <div class="flex-1">
+            <h3 class="font-semibold text-mapnavy text-[14px]">Forward this to a colleague?</h3>
+            <p class="text-[12.5px] text-gray-600 mt-1 leading-relaxed">
+              If someone else in your organization handles partnerships, share the link below.
+            </p>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button type="button"
+                      onclick="navigator.clipboard.writeText('{{ request.scheme }}://{{ request.get_host }}{% url 'partnerships:apply' %}').then(()=>{this.textContent='✓ Copied'; setTimeout(()=>{this.textContent='🔗 Copy link'},1500)})"
+                      class="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-mapborder
+                             text-[11.5px] text-gray-700 hover:bg-mapgreen-50 hover:border-mapgreen transition">
+                🔗 Copy partnership link
+              </button>
+              <a href="mailto:?subject=Partnership%20with%20{{ ORG_NAME|urlencode }}&body=Hi%2C%20you%20can%20apply%20to%20partner%20with%20{{ ORG_NAME|urlencode }}%20here%3A%20{{ request.scheme }}://{{ request.get_host }}{% url 'partnerships:apply' %}"
+                 class="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-mapborder
+                        text-[11.5px] text-gray-700 hover:bg-mapgreen-50 hover:border-mapgreen transition">
+                ✉ Email it
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact -->
+      <div class="card p-6 bg-mapgreen-50 border-mapgreen-50">
+        <div class="flex items-start gap-3">
+          <span class="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white text-mapgreen text-lg shrink-0"
+                aria-hidden="true">💬</span>
+          <div class="flex-1">
+            <h3 class="font-semibold text-mapnavy text-[14px]">Questions in the meantime?</h3>
+            <p class="text-[12.5px] text-gray-700 mt-1 leading-relaxed">
+              Reach our partnerships team directly.
+            </p>
+            <p class="mt-2 text-[12.5px] text-gray-700">
+              <a href="mailto:{{ site.contact_email|default:'info@map.org' }}"
+                 class="text-mapgreen font-medium hover:underline break-all">
+                {{ site.contact_email|default:"info@map.org" }}
+              </a>
+            </p>
+            {% if site.contact_phone %}
+              <p class="text-[12.5px] text-gray-700">
+                <a href="tel:{{ site.contact_phone }}" class="text-mapgreen font-medium hover:underline">
+                  {{ site.contact_phone }}
+                </a>
+              </p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACTIVE PROJECTS PREVIEW -->
+  {% if featured_projects %}
+    <section class="bg-white border-t border-mapborder">
+      <div class="max-w-5xl mx-auto px-5 lg:px-8 py-14 lg:py-16">
+        <div class="text-center mb-8">
+          <div class="text-[11px] uppercase tracking-[0.14em] font-semibold text-mapgreen mb-2">
+            While you're here
+          </div>
+          <h2 class="text-[22px] md:text-[26px] font-bold text-mapnavy tracking-tight">
+            Work you could be part of
+          </h2>
+          <p class="text-[13px] text-gray-500 mt-2 max-w-lg mx-auto">
+            Just a glimpse of what we're building — imagine the impact with your partnership behind it.
+          </p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-5">
+          {% for p in featured_projects %}
+            <a href="{{ p.get_absolute_url }}"
+               class="group card card-hover overflow-hidden flex flex-col h-full
+                      focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40">
+              <div class="aspect-[16/10] bg-gray-100 overflow-hidden shrink-0">
+                {% if p.cover_image %}
+                  <img src="{{ p.cover_image.url }}" alt="{{ p.name }}"
+                       loading="lazy" decoding="async"
+                       class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500">
+                {% elif site.about_hero_image %}
+                  <img src="{{ site.about_hero_image.url }}" alt="{{ p.name }}"
+                       loading="lazy" decoding="async"
+                       class="w-full h-full object-cover opacity-90 group-hover:scale-[1.03] transition-transform duration-500">
+                {% else %}
+                  <div class="w-full h-full flex items-center justify-center bg-mapgreen-50 text-mapgreen text-3xl"
+                       aria-hidden="true">📁</div>
+                {% endif %}
+              </div>
+              <div class="p-4 flex flex-col flex-1">
+                {% if p.category %}
+                  <span class="text-[10.5px] uppercase tracking-wider font-semibold text-mapgreen mb-1">
+                    {{ p.category.name }}
+                  </span>
+                {% endif %}
+                <h3 class="font-semibold text-[14px] text-mapnavy leading-snug clamp-2
+                           group-hover:text-mapgreen transition-colors">
+                  {{ p.name }}
+                </h3>
+                {% if p.summary %}
+                  <p class="text-[12px] text-gray-600 mt-1.5 leading-relaxed clamp-2">
+                    {{ p.summary }}
+                  </p>
+                {% endif %}
+                <div class="mt-auto pt-3">
+                  <span class="text-[11.5px] font-semibold text-mapgreen group-hover:underline inline-flex items-center gap-1">
+                    View project
+                    <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span>
+                  </span>
+                </div>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+
+        <div class="text-center mt-8">
+          <a href="{% url 'projects:list' %}"
+             class="btn-secondary inline-flex items-center h-10 px-5 text-[13px]">
+            Browse all projects
+          </a>
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+</main>
+
+<style>
+  .clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  @media print {
+    .btn-primary, .btn-secondary, button, a[href*="mailto"] { display: none !important; }
+    section.bg-mapnavy { background: white !important; color: black !important; }
+    section.bg-mapnavy h1 { color: black !important; }
+    .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+  }
+</style>
+
 {% endblock %}

@@ -100,11 +100,15 @@
             <div>
               <label for="{{ form.donor_name.id_for_label }}"
                      class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
-                Full name
+                Full name <span class="text-red-500" aria-hidden="true">*</span>
               </label>
               {{ form.donor_name }}
               {% if form.donor_name.errors %}
-                <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.donor_name.errors|join:" " }}</p>
+                <p id="{{ form.donor_name.id_for_label }}-error"
+                   class="mt-1.5 text-[12.5px] text-red-600 flex items-start gap-1.5">
+                  <span aria-hidden="true">⚠</span>
+                  <span>{{ form.donor_name.errors|join:" " }}</span>
+                </p>
               {% endif %}
             </div>
 
@@ -115,7 +119,11 @@
               </label>
               {{ form.donor_email }}
               {% if form.donor_email.errors %}
-                <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.donor_email.errors|join:" " }}</p>
+                <p id="{{ form.donor_email.id_for_label }}-error"
+                   class="mt-1.5 text-[12.5px] text-red-600 flex items-start gap-1.5">
+                  <span aria-hidden="true">⚠</span>
+                  <span>{{ form.donor_email.errors|join:" " }}</span>
+                </p>
               {% endif %}
             </div>
           </div>
@@ -127,7 +135,11 @@
             </label>
             {{ form.donor_phone }}
             {% if form.donor_phone.errors %}
-              <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.donor_phone.errors|join:" " }}</p>
+              <p id="{{ form.donor_phone.id_for_label }}-error"
+                 class="mt-1.5 text-[12.5px] text-red-600 flex items-start gap-1.5">
+                <span aria-hidden="true">⚠</span>
+                <span>{{ form.donor_phone.errors|join:" " }}</span>
+              </p>
             {% endif %}
           </div>
 
@@ -167,22 +179,30 @@
             <div>
               <label for="{{ form.kind.id_for_label }}"
                      class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
-                Type
+                Type <span class="text-red-500" aria-hidden="true">*</span>
               </label>
               {{ form.kind }}
               {% if form.kind.errors %}
-                <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.kind.errors|join:" " }}</p>
+                <p id="{{ form.kind.id_for_label }}-error"
+                   class="mt-1.5 text-[12.5px] text-red-600 flex items-start gap-1.5">
+                  <span aria-hidden="true">⚠</span>
+                  <span>{{ form.kind.errors|join:" " }}</span>
+                </p>
               {% endif %}
             </div>
 
             <div>
               <label for="{{ form.frequency.id_for_label }}"
                      class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
-                Frequency
+                Frequency <span class="text-red-500" aria-hidden="true">*</span>
               </label>
               {{ form.frequency }}
               {% if form.frequency.errors %}
-                <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.frequency.errors|join:" " }}</p>
+                <p id="{{ form.frequency.id_for_label }}-error"
+                   class="mt-1.5 text-[12.5px] text-red-600 flex items-start gap-1.5">
+                  <span aria-hidden="true">⚠</span>
+                  <span>{{ form.frequency.errors|join:" " }}</span>
+                </p>
               {% endif %}
             </div>
           </div>
@@ -191,27 +211,35 @@
             <div class="sm:col-span-2">
               <label for="{{ form.amount.id_for_label }}"
                      class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
-                Amount
+                Amount <span class="text-red-500" aria-hidden="true">*</span>
               </label>
-              <div class="relative">
+              <div class="relative amount-input-wrap">
                 <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center
                              text-[13px] font-semibold text-gray-400"
                       aria-hidden="true">{{ site.currency_symbol|default:"K" }}</span>
                 {{ form.amount }}
               </div>
               {% if form.amount.errors %}
-                <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.amount.errors|join:" " }}</p>
+                <p id="{{ form.amount.id_for_label }}-error"
+                   class="mt-1.5 text-[12.5px] text-red-600 flex items-start gap-1.5">
+                  <span aria-hidden="true">⚠</span>
+                  <span>{{ form.amount.errors|join:" " }}</span>
+                </p>
               {% endif %}
             </div>
 
             <div>
               <label for="{{ form.currency.id_for_label }}"
                      class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
-                Currency
+                Currency <span class="text-red-500" aria-hidden="true">*</span>
               </label>
               {{ form.currency }}
               {% if form.currency.errors %}
-                <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.currency.errors|join:" " }}</p>
+                <p id="{{ form.currency.id_for_label }}-error"
+                   class="mt-1.5 text-[12.5px] text-red-600 flex items-start gap-1.5">
+                  <span aria-hidden="true">⚠</span>
+                  <span>{{ form.currency.errors|join:" " }}</span>
+                </p>
               {% endif %}
             </div>
           </div>
@@ -286,7 +314,7 @@
         <div>
           <label for="{{ form.status.id_for_label }}"
                  class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
-            Current status
+            Current status <span class="text-red-500" aria-hidden="true">*</span>
           </label>
           {{ form.status }}
 
@@ -310,8 +338,17 @@
 
       <!-- Live summary -->
       <div class="card p-5">
-        <div class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-3">
-          Live summary
+        <div class="flex items-center justify-between mb-3">
+          <div class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold">
+            Live summary
+          </div>
+          <span id="summary-dirty"
+                class="hidden inline-flex items-center gap-1 text-[10px] font-semibold
+                       text-amber-600 uppercase tracking-wider"
+                aria-live="polite">
+            <span class="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true"></span>
+            Unsaved
+          </span>
         </div>
 
         <div class="space-y-3">
@@ -377,9 +414,11 @@
 
         {% if mode == "edit" %}
           <button type="submit" name="save_and_continue" value="1"
+                  id="donation-submit-continue"
                   class="w-full inline-flex items-center justify-center h-10 rounded-lg
                          border border-mapborder bg-white text-[12.5px] font-medium text-gray-700
-                         hover:bg-gray-50 transition">
+                         hover:bg-gray-50 transition
+                         disabled:opacity-60 disabled:cursor-not-allowed">
             Save &amp; continue editing
           </button>
         {% endif %}
@@ -417,37 +456,57 @@
 
 <!-- ============================================================
      Widget styling
+     (real <style> block — no @apply, because @apply only works
+      inside Tailwind's PostCSS pipeline, not inline <style>)
      ============================================================ -->
 <style>
+  /* Shared input styling — matches the Tailwind classes you'd
+     normally use, without depending on @apply. */
   #donation-form input[type="text"],
   #donation-form input[type="email"],
   #donation-form input[type="tel"],
   #donation-form input[type="number"],
   #donation-form select,
   #donation-form textarea {
-    @apply block w-full rounded-lg border border-mapborder bg-white px-3 py-2.5
-           text-[14px] text-mapnavy placeholder-gray-400 transition
-           hover:border-gray-300
-           focus:outline-none focus:border-mapgreen focus:ring-2 focus:ring-mapgreen/20;
+    display: block;
+    width: 100%;
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-mapborder, #e5e7eb);
+    background-color: #fff;
+    padding: 0.625rem 0.75rem;
+    font-size: 14px;
+    color: var(--color-mapnavy, #16253d);
+    transition: border-color 120ms, box-shadow 120ms;
+  }
+  #donation-form input:hover,
+  #donation-form select:hover,
+  #donation-form textarea:hover { border-color: #d1d5db; }
+  #donation-form input:focus,
+  #donation-form select:focus,
+  #donation-form textarea:focus {
+    outline: none;
+    border-color: var(--color-mapgreen, #1e9e5f);
+    box-shadow: 0 0 0 3px rgba(30, 158, 95, 0.18);
   }
 
   #donation-form input[type="number"] {
     font-variant-numeric: tabular-nums;
-    padding-left: 1.75rem;
+    padding-left: 2.25rem; /* room for the currency prefix */
   }
 
   #donation-form textarea { min-height: 88px; resize: vertical; }
 
   #donation-form input[type="checkbox"] {
-    @apply h-4 w-4 rounded border-gray-300 text-mapgreen
-           focus:outline-none focus:ring-2 focus:ring-mapgreen/40;
+    height: 1rem; width: 1rem;
+    border-radius: 0.25rem;
+    border: 1px solid #d1d5db;
+    accent-color: var(--color-mapgreen, #1e9e5f);
   }
 
-  #donation-form input[aria-invalid="true"],
-  #donation-form select[aria-invalid="true"],
-  #donation-form textarea[aria-invalid="true"] {
-    border-color: #fca5a5;
-    background-color: #fef2f2;
+  /* Server-side invalid state */
+  #donation-form [aria-invalid="true"] {
+    border-color: #fca5a5 !important;
+    background-color: #fef2f2 !important;
   }
 </style>
 
@@ -471,6 +530,7 @@
   const elFrequency   = document.getElementById('summary-frequency');
   const elAllocation  = document.getElementById('summary-allocation');
   const elStatus      = document.getElementById('summary-status');
+  const elDirty       = document.getElementById('summary-dirty');
 
   const statusLabel = (v) => ({
     received: 'Received',
@@ -484,6 +544,7 @@
     if (v === 'received') return 'badge badge-success';
     if (v === 'pending')  return 'badge badge-warning';
     if (v === 'failed')   return 'badge badge-danger';
+    if (v === 'refunded') return 'badge badge-info';
     return 'badge badge-muted';
   };
 
@@ -511,27 +572,52 @@
     elStatus.innerHTML = `<span class="${statusBadge(status)}">${statusLabel(status)}</span>`;
   };
 
+  /* ---------- Anonymous toggles name field ---------- */
+  const anonCheckbox = get('is_anonymous');
+  const nameInput    = get('donor_name');
+  const syncAnon = () => {
+    if (!anonCheckbox || !nameInput) return;
+    const anon = anonCheckbox.checked;
+    nameInput.disabled = anon;
+    if (anon) nameInput.value = '';
+    updateSummary();
+  };
+  anonCheckbox?.addEventListener('change', syncAnon);
+  syncAnon();
+
   form.addEventListener('input', updateSummary);
   form.addEventListener('change', updateSummary);
   updateSummary();
 
+  /* ---------- Dirty tracking + summary indicator ---------- */
+  let dirty = false;
+  const setDirty = (v) => {
+    dirty = v;
+    if (!elDirty) return;
+    elDirty.classList.toggle('hidden', !v);
+  };
+  form.addEventListener('input',  () => setDirty(true));
+  form.addEventListener('change', () => setDirty(true));
+
+  // Clear the dirty flag after submit so beforeunload doesn't nag
+  // (this also runs when the browser re-shows the page after Back).
+  form.addEventListener('submit', () => setDirty(false));
+  window.addEventListener('pageshow', () => setDirty(false));
+
   /* ---------- Submit guard ---------- */
-  const submit  = document.getElementById('donation-submit');
-  const label   = document.getElementById('submit-label');
-  const spinner = document.getElementById('submit-spinner');
+  const submit      = document.getElementById('donation-submit');
+  const submitCont  = document.getElementById('donation-submit-continue');
+  const label       = document.getElementById('submit-label');
+  const spinner     = document.getElementById('submit-spinner');
 
   form.addEventListener('submit', () => {
-    if (submit) submit.disabled = true;
-    if (label)  label.textContent = 'Saving…';
+    if (submit)     submit.disabled = true;
+    if (submitCont) submitCont.disabled = true;
+    if (label)      label.textContent = 'Saving…';
     spinner?.classList.remove('hidden');
   });
 
-  /* ---------- Unsaved changes guard ---------- */
-  let dirty = false;
-  form.addEventListener('input',  () => { dirty = true; });
-  form.addEventListener('change', () => { dirty = true; });
-  form.addEventListener('submit', () => { dirty = false; });
-
+  /* ---------- Unsaved-changes guard ---------- */
   window.addEventListener('beforeunload', (e) => {
     if (!dirty) return;
     e.preventDefault();

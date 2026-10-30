@@ -1,130 +1,166 @@
 {% extends "management_base.html" %}
+{% load humanize %}
 {% block title %}Volunteers — {{ ORG_NAME }}{% endblock %}
 {% block breadcrumb %}Volunteers{% endblock %}
 
 {% block content %}
 
-<!-- ============================================================
-     HEADER
-     ============================================================ -->
+<!-- HEADER -->
 <div class="mb-6">
   <div class="flex flex-wrap items-end justify-between gap-3">
     <div>
       <h1 class="text-2xl font-bold text-mapnavy tracking-tight">Volunteers</h1>
       <p class="text-[13px] text-gray-500 mt-1">
-        {% if q %}
+        {% if filters.q %}
           <span class="font-semibold text-mapnavy">{{ paginator.count }}</span>
           match{{ paginator.count|pluralize:"es" }}
           <span class="text-gray-300 mx-1.5">·</span>
           <a href="?" class="text-mapgreen hover:underline">Clear search</a>
         {% else %}
-          {{ paginator.count }} active volunteer{{ paginator.count|pluralize }}
+          {{ paginator.count }} volunteer{{ paginator.count|pluralize }}
         {% endif %}
       </p>
     </div>
 
-    <a href="/management/volunteers/applications/"
-       class="btn-secondary inline-flex items-center h-9 text-[12.5px] !px-3.5">
-      Applications
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="2.5" class="ml-1.5" aria-hidden="true">
-        <path d="M5 12h14M13 6l6 6-6 6"/>
-      </svg>
+    <div class="flex items-center gap-2">
+      <a href="/management/volunteers/applications/"
+         class="btn-secondary inline-flex items-center gap-1.5 h-9 text-[12.5px] !px-3.5">
+        Applications
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <path d="M5 12h14M13 6l6 6-6 6"/>
+        </svg>
+      </a>
+      <a href="/volunteer/" target="_blank" rel="noopener"
+         class="btn-secondary inline-flex items-center gap-1.5 h-9 text-[12.5px] !px-3.5">
+        Public form ↗
+      </a>
+    </div>
+  </div>
+
+  <!-- Pending approval banner -->
+  {% if pending_count %}
+    <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 flex items-start gap-2.5">
+      <span class="text-amber-600 shrink-0 mt-0.5" aria-hidden="true">⚠</span>
+      <div class="flex-1 text-[12.5px] text-amber-900 leading-relaxed">
+        <strong>{{ pending_count }} volunteer{{ pending_count|pluralize }}</strong>
+        {{ pending_count|pluralize:"is,are" }} pending approval.
+        <a href="/management/volunteers/applications/?status=submitted"
+           class="font-semibold underline underline-offset-2 hover:no-underline">
+          Review applications →
+        </a>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Status tabs -->
+  <div class="mt-4 flex flex-wrap items-center gap-1 p-1 rounded-xl bg-mapbg border border-mapborder max-w-fit">
+    <a href="?{% if filters.q %}q={{ filters.q }}{% endif %}"
+       class="inline-flex items-center h-8 px-3 rounded-lg text-[12.5px] font-semibold transition
+              {% if not filters.status %}bg-white text-mapnavy shadow-sm{% else %}text-gray-600 hover:text-mapnavy{% endif %}">
+      All
+    </a>
+    <a href="?status=approved{% if filters.q %}&q={{ filters.q }}{% endif %}"
+       class="inline-flex items-center h-8 px-3 rounded-lg text-[12.5px] font-semibold transition
+              {% if filters.status == 'approved' %}bg-white text-mapnavy shadow-sm{% else %}text-gray-600 hover:text-mapnavy{% endif %}">
+      Approved
+    </a>
+    <a href="?status=pending{% if filters.q %}&q={{ filters.q }}{% endif %}"
+       class="inline-flex items-center h-8 px-3 rounded-lg text-[12.5px] font-semibold transition
+              {% if filters.status == 'pending' %}bg-white text-mapnavy shadow-sm{% else %}text-gray-600 hover:text-mapnavy{% endif %}">
+      Pending
+      {% if pending_count %}
+        <span class="ml-1.5 inline-flex items-center justify-center min-w-[20px] h-4 px-1 rounded text-[10.5px] font-bold bg-amber-100 text-amber-700">
+          {{ pending_count }}
+        </span>
+      {% endif %}
     </a>
   </div>
 
-  <!-- Search toolbar -->
-  <form method="get" role="search" class="mt-4 flex flex-wrap items-center gap-2">
+  <!-- Search + sort -->
+  <form method="get" class="mt-3 flex flex-wrap items-center gap-2">
+    {% if filters.status %}
+      <input type="hidden" name="status" value="{{ filters.status }}">
+    {% endif %}
+
     <div class="relative flex-1 min-w-[200px] max-w-md">
-      <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400"
-            aria-hidden="true">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"/>
-          <path d="M21 21l-4.35-4.35"/>
+      <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400" aria-hidden="true">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
         </svg>
       </span>
-      <input type="text"
-             name="q"
-             value="{{ q }}"
-             placeholder="Search by name, email, or phone…"
+      <input type="text" name="q" value="{{ filters.q }}"
+             placeholder="Search name, email, phone…"
              aria-label="Search volunteers"
              class="form-input w-full pl-9 pr-9 text-[13px]">
-      {% if q %}
-        <a href="?"
+      {% if filters.q %}
+        <a href="?{% if filters.status %}status={{ filters.status }}{% endif %}"
            aria-label="Clear search"
-           class="absolute inset-y-0 right-2 flex items-center px-1 text-gray-400
-                  hover:text-gray-600 transition">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="2">
+           class="absolute inset-y-0 right-2 flex items-center px-1 text-gray-400 hover:text-gray-600 transition">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M18 6L6 18M6 6l12 12"/>
           </svg>
         </a>
       {% endif %}
     </div>
 
+    <select name="sort"
+            aria-label="Sort volunteers"
+            onchange="this.form.submit()"
+            class="form-input min-w-[160px] text-[13px]">
+      <option value="">Newest joined</option>
+      <option value="hours" {% if filters.sort == 'hours' %}selected{% endif %}>Most hours</option>
+      <option value="assignments" {% if filters.sort == 'assignments' %}selected{% endif %}>Most assignments</option>
+      <option value="name" {% if filters.sort == 'name' %}selected{% endif %}>Name (A→Z)</option>
+    </select>
+
     <button class="btn-secondary inline-flex items-center h-9 text-[12.5px] !px-3.5">
       Search
     </button>
+
+    {% if filters.q or filters.status or filters.sort %}
+      <a href="?" class="text-[12.5px] text-gray-500 hover:text-mapnavy underline-offset-2 hover:underline">
+        Clear
+      </a>
+    {% endif %}
   </form>
 </div>
 
-<!-- ============================================================
-     BODY
-     ============================================================ -->
+<!-- BODY -->
 {% if volunteers %}
 
   <!-- Desktop table -->
   <div class="hidden md:block card overflow-hidden p-0">
     <div class="overflow-x-auto">
-      <table class="table-base w-full table-fixed">
-        <caption class="sr-only">Volunteer directory</caption>
+      <table class="table-base w-full">
+        <caption class="sr-only">Volunteer directory — {{ paginator.count }} total</caption>
 
-        <colgroup>
-          <col style="width: 56px;">
-          <col style="width: auto;">
-          <col style="width: 240px;">
-          <col style="width: 160px;">
-          <col style="width: 130px;">
-          <col style="width: 100px;">
-          <col style="width: 120px;">
-          <col style="width: 130px;">
-          <col style="width: 160px;">
-        </colgroup>
-
-        <thead class="bg-mapbg border-b border-mapborder">
+        <thead class="bg-mapbg border-b border-mapborder sticky top-0 z-10">
           <tr>
-            <th scope="col" aria-hidden="true"></th>
-            <th scope="col"
-                class="text-left text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+            <th scope="col" class="w-14 pl-4">
+              <span class="sr-only">Avatar</span>
+            </th>
+            <th scope="col" class="text-left text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
               Volunteer
             </th>
-            <th scope="col"
-                class="text-left text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+            <th scope="col" class="text-left text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
               Contact
             </th>
-            <th scope="col"
-                class="text-left text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+            <th scope="col" class="text-left text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
               Location
             </th>
-            <th scope="col"
-                class="text-right text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+            <th scope="col" class="text-right text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
               Assignments
             </th>
-            <th scope="col"
-                class="text-right text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+            <th scope="col" class="text-right text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
               Hours
             </th>
-            <th scope="col"
-                class="text-right text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+            <th scope="col" class="text-right text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
               Certs
             </th>
-            <th scope="col"
-                class="text-left text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+            <th scope="col" class="text-left text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
               Status
             </th>
-            <th scope="col"
-                class="text-right text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+            <th scope="col" class="text-right text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
               Actions
             </th>
           </tr>
@@ -134,16 +170,20 @@
           {% for v in volunteers %}
             <tr class="hover:bg-mapbg/60 transition-colors group">
 
-              <!-- Avatar -->
-              <td class="py-3 pr-0 align-middle">
-                <div class="h-9 w-9 rounded-full bg-mapgreen-50 text-mapgreen
-                            flex items-center justify-center text-[13px] font-semibold
-                            ring-1 ring-mapgreen/15">
-                  {{ v.first_name|default:v.username|first|upper }}
-                </div>
+              <td class="py-3 pl-4 pr-0 align-middle">
+                {% if v.userprofile.photo %}
+                  <img src="{{ v.userprofile.photo.url }}"
+                       alt=""
+                       class="h-9 w-9 rounded-full object-cover ring-1 ring-mapgreen/15">
+                {% else %}
+                  <div class="h-9 w-9 rounded-full bg-mapgreen-50 text-mapgreen
+                              flex items-center justify-center text-[13px] font-semibold
+                              ring-1 ring-mapgreen/15">
+                    {{ v.first_name|default:v.username|first|upper }}
+                  </div>
+                {% endif %}
               </td>
 
-              <!-- Name + Joined -->
               <td class="py-3 pr-3 align-middle">
                 <a href="/management/users/{{ v.pk }}/"
                    class="block hover:text-mapgreen transition">
@@ -159,70 +199,65 @@
                 </a>
               </td>
 
-              <!-- Contact -->
               <td class="py-3 pr-3 align-middle">
-                <div class="text-[13px] text-gray-600 truncate">
-                  {{ v.email|default:"—" }}
-                </div>
+                <div class="text-[13px] text-gray-600 truncate">{{ v.email|default:"—" }}</div>
                 {% if v.phone %}
-                  <div class="text-[11.5px] text-gray-400 truncate">
-                    {{ v.phone }}
-                  </div>
+                  <div class="text-[11.5px] text-gray-400 truncate">{{ v.phone }}</div>
                 {% endif %}
               </td>
 
-              <!-- Location -->
               <td class="py-3 pr-3 align-middle text-[13px] text-gray-600 truncate">
                 {% if v.profile_obj %}{{ v.profile_obj.location|default:"—" }}{% else %}—{% endif %}
               </td>
 
-              <!-- Assignments -->
               <td class="py-3 align-middle text-right tabular-nums">
-                <span class="text-[13.5px] font-semibold text-mapnavy">
-                  {{ v.assignments_count }}
-                </span>
+                <span class="text-[13.5px] font-semibold text-mapnavy">{{ v.assignments_count }}</span>
                 {% if v.completed_count %}
-                  <span class="block text-[10.5px] text-gray-400">
-                    {{ v.completed_count }} done
-                  </span>
+                  <span class="block text-[10.5px] text-gray-400">{{ v.completed_count }} done</span>
                 {% endif %}
               </td>
 
-              <!-- Hours -->
               <td class="py-3 align-middle text-right tabular-nums text-[13.5px] font-semibold text-mapnavy">
-                {{ v.hours_total|floatformat:"-2" }}
+                {{ v.hours_total|floatformat:"-2"|intcomma }}
               </td>
 
-              <!-- Certificates -->
               <td class="py-3 align-middle text-right tabular-nums text-[13.5px] text-gray-600">
                 {{ v.certificates_count }}
               </td>
 
-              <!-- Status -->
               <td class="py-3 align-middle">
                 {% if v.profile_obj and v.profile_obj.approved %}
-                  <span class="badge badge-success">Approved</span>
+                  <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full
+                               bg-green-50 text-green-700 border border-green-200
+                               text-[10.5px] uppercase tracking-wider font-semibold">
+                    <span class="h-1.5 w-1.5 rounded-full bg-green-500"></span>
+                    Approved
+                  </span>
                 {% else %}
-                  <span class="badge badge-warning">Pending</span>
+                  <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full
+                               bg-amber-50 text-amber-700 border border-amber-200
+                               text-[10.5px] uppercase tracking-wider font-semibold">
+                    <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                    Pending
+                  </span>
                 {% endif %}
               </td>
 
-              <!-- Actions -->
-              <td class="py-3 align-middle text-right whitespace-nowrap">
+              <td class="py-3 pr-4 align-middle text-right whitespace-nowrap">
                 <div class="inline-flex items-center gap-1 justify-end
                             md:opacity-60 md:group-hover:opacity-100 transition-opacity">
+                  <button type="button"
+                          data-email="{{ v.email|default:'' }}"
+                          class="copy-email inline-flex items-center h-7 px-2 rounded-md
+                                 text-[12px] font-medium text-gray-500 hover:bg-gray-100 transition
+                                 {% if not v.email %}opacity-40 cursor-not-allowed{% endif %}"
+                          {% if not v.email %}disabled{% endif %}
+                          title="Copy email">📋</button>
                   <a href="/management/users/{{ v.pk }}/"
                      class="inline-flex items-center h-7 px-2.5 rounded-md
                             text-[12px] font-medium text-mapgreen hover:bg-mapgreen-50 transition">
                     View
                   </a>
-                  {% if v.profile_obj %}
-                    <a href="/management/volunteers/{{ v.pk }}/edit/"
-                       class="inline-flex items-center h-7 px-2.5 rounded-md
-                              text-[12px] font-medium text-gray-600 hover:bg-gray-100 transition">
-                      Edit
-                    </a>
-                  {% endif %}
                 </div>
               </td>
             </tr>
@@ -237,11 +272,16 @@
     {% for v in volunteers %}
       <div class="card p-4">
         <div class="flex items-start gap-3 mb-3">
-          <div class="h-10 w-10 rounded-full bg-mapgreen-50 text-mapgreen
-                      flex items-center justify-center text-[14px] font-semibold
-                      ring-1 ring-mapgreen/15 shrink-0">
-            {{ v.first_name|default:v.username|first|upper }}
-          </div>
+          {% if v.userprofile.photo %}
+            <img src="{{ v.userprofile.photo.url }}" alt=""
+                 class="h-10 w-10 rounded-full object-cover ring-1 ring-mapgreen/15 shrink-0">
+          {% else %}
+            <div class="h-10 w-10 rounded-full bg-mapgreen-50 text-mapgreen
+                        flex items-center justify-center text-[14px] font-semibold
+                        ring-1 ring-mapgreen/15 shrink-0">
+              {{ v.first_name|default:v.username|first|upper }}
+            </div>
+          {% endif %}
           <div class="min-w-0 flex-1">
             <div class="font-semibold text-mapnavy text-[14px] truncate">
               {{ v.get_full_name|default:v.username }}
@@ -251,9 +291,15 @@
             </div>
           </div>
           {% if v.profile_obj and v.profile_obj.approved %}
-            <span class="badge badge-success shrink-0">Approved</span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200 text-[10px] uppercase tracking-wider font-semibold shrink-0">
+              <span class="h-1.5 w-1.5 rounded-full bg-green-500"></span>
+              Approved
+            </span>
           {% else %}
-            <span class="badge badge-warning shrink-0">Pending</span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[10px] uppercase tracking-wider font-semibold shrink-0">
+              <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+              Pending
+            </span>
           {% endif %}
         </div>
 
@@ -272,15 +318,13 @@
             <dt class="text-gray-500">Assignments</dt>
             <dd class="text-mapnavy text-right tabular-nums">
               {{ v.assignments_count }}
-              {% if v.completed_count %}
-                <span class="text-gray-400">({{ v.completed_count }} done)</span>
-              {% endif %}
+              {% if v.completed_count %}<span class="text-gray-400">({{ v.completed_count }} done)</span>{% endif %}
             </dd>
           </div>
           <div class="flex justify-between gap-3">
             <dt class="text-gray-500">Hours logged</dt>
             <dd class="text-mapnavy text-right tabular-nums">
-              {{ v.hours_total|floatformat:"-2" }}
+              {{ v.hours_total|floatformat:"-2"|intcomma }}
             </dd>
           </div>
           <div class="flex justify-between gap-3">
@@ -295,11 +339,11 @@
                     text-[12px] font-medium text-mapgreen hover:bg-mapgreen-50 transition">
             View profile
           </a>
-          {% if v.profile_obj %}
-            <a href="/management/volunteers/{{ v.pk }}/edit/"
+          {% if v.email %}
+            <a href="mailto:{{ v.email }}"
                class="inline-flex items-center h-8 px-3 rounded-md
                       text-[12px] font-medium text-gray-600 hover:bg-gray-100 transition">
-              Edit
+              Email
             </a>
           {% endif %}
         </div>
@@ -309,8 +353,7 @@
 
   <!-- Pagination -->
   {% if is_paginated %}
-    <nav class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6"
-         aria-label="Pagination">
+    <nav class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6" aria-label="Pagination">
       <p class="text-[12.5px] text-gray-500 order-2 sm:order-1">
         Showing
         <span class="font-semibold text-mapnavy">{{ page_obj.start_index }}</span>–<span class="font-semibold text-mapnavy">{{ page_obj.end_index }}</span>
@@ -319,85 +362,91 @@
 
       <div class="flex items-center gap-1 order-1 sm:order-2">
         {% if page_obj.has_previous %}
-          <a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}"
+          <a href="?page={{ page_obj.previous_page_number }}{% if filters.q %}&q={{ filters.q }}{% endif %}{% if filters.status %}&status={{ filters.status }}{% endif %}{% if filters.sort %}&sort={{ filters.sort }}{% endif %}"
              class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-white
                     text-[12.5px] font-medium text-gray-700 hover:bg-gray-50 transition">
             ← Prev
           </a>
         {% else %}
           <span class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-gray-50
-                       text-[12.5px] font-medium text-gray-400 cursor-not-allowed">
-            ← Prev
-          </span>
+                       text-[12.5px] font-medium text-gray-400 cursor-not-allowed">← Prev</span>
         {% endif %}
 
         {% for num in page_obj.paginator.page_range %}
           {% if num == page_obj.number %}
             <span aria-current="page"
                   class="inline-flex items-center justify-center h-9 w-9 rounded-lg
-                         bg-mapgreen text-white text-[12.5px] font-semibold">
-              {{ num }}
-            </span>
+                         bg-mapgreen text-white text-[12.5px] font-semibold">{{ num }}</span>
           {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
-            <a href="?page={{ num }}{% if q %}&q={{ q }}{% endif %}"
+            <a href="?page={{ num }}{% if filters.q %}&q={{ filters.q }}{% endif %}{% if filters.status %}&status={{ filters.status }}{% endif %}{% if filters.sort %}&sort={{ filters.sort }}{% endif %}"
                class="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-mapborder
-                      bg-white text-[12.5px] font-medium text-gray-700 hover:bg-gray-50 transition">
-              {{ num }}
-            </a>
+                      bg-white text-[12.5px] font-medium text-gray-700 hover:bg-gray-50 transition">{{ num }}</a>
           {% endif %}
         {% endfor %}
 
         {% if page_obj.has_next %}
-          <a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}"
+          <a href="?page={{ page_obj.next_page_number }}{% if filters.q %}&q={{ filters.q }}{% endif %}{% if filters.status %}&status={{ filters.status }}{% endif %}{% if filters.sort %}&sort={{ filters.sort }}{% endif %}"
              class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-white
                     text-[12.5px] font-medium text-gray-700 hover:bg-gray-50 transition">
             Next →
           </a>
         {% else %}
           <span class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-gray-50
-                       text-[12.5px] font-medium text-gray-400 cursor-not-allowed">
-            Next →
-          </span>
+                       text-[12.5px] font-medium text-gray-400 cursor-not-allowed">Next →</span>
         {% endif %}
       </div>
     </nav>
   {% endif %}
 
 {% else %}
-  <!-- Empty state -->
+  <!-- EMPTY STATE -->
   <div class="card p-10 sm:p-14 text-center max-w-lg mx-auto">
-    <div class="mx-auto h-14 w-14 rounded-full bg-mapgreen-50 text-mapgreen
-                flex items-center justify-center mb-4 text-2xl">
+    <div class="mx-auto h-14 w-14 rounded-full bg-mapgreen-50 text-mapgreen flex items-center justify-center mb-4 text-2xl">
       🤝
     </div>
     <h2 class="text-[16px] font-semibold text-mapnavy">
-      {% if q %}No volunteers match "{{ q }}"{% else %}No volunteers yet{% endif %}
+      {% if filters.q %}No volunteers match "{{ filters.q }}"{% elif filters.status %}No {{ filters.status }} volunteers{% else %}No volunteers yet{% endif %}
     </h2>
     <p class="text-[13px] text-gray-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
-      {% if q %}
-        Try a different search term, or clear the search to see all volunteers.
+      {% if filters.q or filters.status %}
+        Try a different filter or clear to see all volunteers.
       {% else %}
         Approve volunteer applications to add them to the directory. They'll appear here with their assignments, hours, and certificates.
       {% endif %}
     </p>
     <div class="mt-5 flex flex-wrap items-center justify-center gap-2">
-      {% if q %}
-        <a href="?" class="btn-primary inline-flex items-center h-10 px-5 text-[13px]">
-          Clear search
-        </a>
+      {% if filters.q or filters.status %}
+        <a href="?" class="btn-primary inline-flex items-center h-10 px-5 text-[13px]">Clear filters</a>
       {% else %}
-        <a href="/management/volunteers/applications/"
-           class="btn-primary inline-flex items-center h-10 px-5 text-[13px]">
+        <a href="/management/volunteers/applications/" class="btn-primary inline-flex items-center h-10 px-5 text-[13px]">
           View applications
         </a>
-        <a href="/volunteer/"
-           target="_blank" rel="noopener"
-           class="btn-secondary inline-flex items-center h-10 px-4 text-[13px]">
+        <a href="/volunteer/" target="_blank" rel="noopener" class="btn-secondary inline-flex items-center h-10 px-4 text-[13px]">
           Public apply page
         </a>
       {% endif %}
     </div>
   </div>
 {% endif %}
+
+<script>
+(function () {
+  // Copy email buttons
+  document.querySelectorAll('.copy-email').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const email = btn.dataset.email;
+      if (!email) return;
+      try {
+        await navigator.clipboard.writeText(email);
+        const original = btn.textContent;
+        btn.textContent = '✓';
+        setTimeout(() => { btn.textContent = original; }, 1500);
+      } catch (e) {
+        console.warn('Clipboard failed', e);
+      }
+    });
+  });
+})();
+</script>
 
 {% endblock %}

@@ -3,19 +3,28 @@
 
 {% block body %}
 {% with path=request.path %}
-
 <div class="min-h-screen flex bg-mapbg">
 
   <!-- ============================================================
-       SIDEBAR (desktop)
+       SIDEBAR (desktop, md+)
        ============================================================ -->
-  <aside class="w-64 shrink-0 hidden md:flex flex-col bg-mapnavy text-white border-r border-white/5">
+  <aside class="w-64 shrink-0 hidden md:flex flex-col bg-mapnavy text-white border-r border-white/5"
+         aria-label="Portal sidebar">
 
+    <!-- Brand -->
     <a href="{{ portal_root|default:'/' }}"
        class="px-4 h-16 flex items-center gap-3 border-b border-white/10 hover:bg-white/5 transition-colors
               focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/50">
       <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-mapgreen text-white
-                   text-base shrink-0 ring-1 ring-white/10">♥</span>
+                   text-base shrink-0 ring-1 ring-white/10 overflow-hidden">
+        {% if site.logo_light %}
+          <img src="{{ site.logo_light.url }}" alt="" class="w-full h-full object-contain p-1">
+        {% elif site.logo %}
+          <img src="{{ site.logo.url }}" alt="" class="w-full h-full object-contain p-1">
+        {% else %}
+          <span aria-hidden="true">♥</span>
+        {% endif %}
+      </span>
       <div class="leading-tight min-w-0">
         <div class="text-[11px] font-extrabold text-white uppercase tracking-[0.08em] truncate">
           {{ site.site_name|default:"Mission Against Poverty" }}
@@ -24,7 +33,8 @@
       </div>
     </a>
 
-    <nav class="flex-1 px-2.5 py-3 space-y-0.5 overflow-y-auto text-[13px]">
+    <!-- Nav -->
+    <nav class="flex-1 px-2.5 py-3 space-y-0.5 overflow-y-auto text-[13px] [scrollbar-gutter:stable]">
 
       <a href="{{ portal_root|default:'/' }}"
          class="sidebar-link {% if path == portal_root %}active{% endif %}"
@@ -33,8 +43,8 @@
       </a>
 
       <a href="/donate/"
-         class="sidebar-link {% if '/donate/' in path %}active{% endif %}"
-         {% if '/donate/' in path %}aria-current="page"{% endif %}>
+         class="sidebar-link {% if path|slice:':8' == '/donate/' %}active{% endif %}"
+         {% if path|slice:':8' == '/donate/' %}aria-current="page"{% endif %}>
         <span class="w-5 text-center opacity-80" aria-hidden="true">💚</span> Make a Donation
       </a>
 
@@ -43,8 +53,8 @@
       <div class="border-t border-white/10 my-2"></div>
 
       <a href="{% url 'accounts:profile' %}"
-         class="sidebar-link {% if '/accounts/profile' in path %}active{% endif %}"
-         {% if '/accounts/profile' in path %}aria-current="page"{% endif %}>
+         class="sidebar-link {% if path|slice:':17' == '/accounts/profile' %}active{% endif %}"
+         {% if path|slice:':17' == '/accounts/profile' %}aria-current="page"{% endif %}>
         <span class="w-5 text-center opacity-80" aria-hidden="true">👤</span> My Profile
       </a>
 
@@ -53,6 +63,7 @@
       </a>
     </nav>
 
+    <!-- Logout -->
     <div class="px-2.5 py-3 border-t border-white/10">
       <form method="post" action="{% url 'accounts:logout' %}">
         {% csrf_token %}
@@ -68,47 +79,78 @@
        ============================================================ -->
   <div id="portal-backdrop"
        class="md:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none
-              transition-opacity duration-200"></div>
+              transition-opacity duration-200"
+       aria-hidden="true"></div>
 
   <aside id="portal-drawer"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="portal-drawer-title"
+         aria-hidden="true"
          class="md:hidden fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-mapnavy text-white
-                -translate-x-full transition-transform duration-250 ease-out flex flex-col shadow-2xl"
-         aria-hidden="true">
+                -translate-x-full transition-transform duration-200 ease-out flex flex-col shadow-2xl">
+
     <div class="h-16 flex items-center gap-3 px-4 border-b border-white/10 shrink-0">
-      <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-mapgreen text-white text-base shrink-0 ring-1 ring-white/10">♥</span>
+      <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-mapgreen text-white text-base shrink-0 ring-1 ring-white/10 overflow-hidden">
+        {% if site.logo_light %}
+          <img src="{{ site.logo_light.url }}" alt="" class="w-full h-full object-contain p-1">
+        {% elif site.logo %}
+          <img src="{{ site.logo.url }}" alt="" class="w-full h-full object-contain p-1">
+        {% else %}
+          <span aria-hidden="true">♥</span>
+        {% endif %}
+      </span>
       <div class="leading-tight min-w-0 flex-1">
-        <div class="text-[11px] font-extrabold uppercase tracking-[0.08em] truncate">{{ site.site_name|default:"Mission Against Poverty" }}</div>
+        <div id="portal-drawer-title" class="text-[11px] font-extrabold uppercase tracking-[0.08em] truncate">
+          {{ site.site_name|default:"Mission Against Poverty" }}
+        </div>
         <div class="text-[10px] text-gray-400 tracking-[0.14em] uppercase mt-0.5">My Portal</div>
       </div>
       <button type="button" id="portal-drawer-close"
-              class="h-9 w-9 inline-flex items-center justify-center rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition"
+              class="h-9 w-9 inline-flex items-center justify-center rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition
+                     focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/50"
               aria-label="Close menu">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6L6 18M6 6l12 12"/>
+        </svg>
       </button>
     </div>
 
     <nav class="flex-1 px-2.5 py-3 space-y-0.5 overflow-y-auto text-[13px]" aria-label="Portal menu (mobile)">
-      <a href="{{ portal_root|default:'/' }}" class="sidebar-link {% if path == portal_root %}active{% endif %}">
-        <span class="w-5 text-center opacity-80">◧</span> Dashboard
-      </a>
-      <a href="/donate/" class="sidebar-link {% if '/donate/' in path %}active{% endif %}">
-        <span class="w-5 text-center opacity-80">💚</span> Make a Donation
+
+      <a href="{{ portal_root|default:'/' }}"
+         class="sidebar-link {% if path == portal_root %}active{% endif %}"
+         {% if path == portal_root %}aria-current="page"{% endif %}>
+        <span class="w-5 text-center opacity-80" aria-hidden="true">◧</span> Dashboard
       </a>
 
-      {% block nav_mobile %}{% endblock %}
+      <a href="/donate/"
+         class="sidebar-link {% if path|slice:':8' == '/donate/' %}active{% endif %}"
+         {% if path|slice:':8' == '/donate/' %}aria-current="page"{% endif %}>
+        <span class="w-5 text-center opacity-80" aria-hidden="true">💚</span> Make a Donation
+      </a>
+
+      {% block nav_mobile %}
+        {# Falls back to the desktop nav if child template only overrides `nav` #}
+        {% block nav_desktop_for_mobile %}{% endblock %}
+      {% endblock %}
 
       <div class="border-t border-white/10 my-2"></div>
-      <a href="{% url 'accounts:profile' %}" class="sidebar-link {% if '/accounts/profile' in path %}active{% endif %}">
-        <span class="w-5 text-center opacity-80">👤</span> My Profile
+
+      <a href="{% url 'accounts:profile' %}"
+         class="sidebar-link {% if path|slice:':17' == '/accounts/profile' %}active{% endif %}"
+         {% if path|slice:':17' == '/accounts/profile' %}aria-current="page"{% endif %}>
+        <span class="w-5 text-center opacity-80" aria-hidden="true">👤</span> My Profile
       </a>
+
       <a href="/" class="sidebar-link">
-        <span class="w-5 text-center opacity-80">🏠</span> Back to Website
+        <span class="w-5 text-center opacity-80" aria-hidden="true">🏠</span> Back to Website
       </a>
 
       <form method="post" action="{% url 'accounts:logout' %}" class="pt-2">
         {% csrf_token %}
         <button class="sidebar-link w-full text-left text-red-300/90 hover:text-red-200 hover:bg-red-500/10">
-          <span class="w-5 text-center opacity-80">⏻</span> Logout
+          <span class="w-5 text-center opacity-80" aria-hidden="true">⏻</span> Logout
         </button>
       </form>
     </nav>
@@ -120,11 +162,12 @@
   <div class="flex-1 min-w-0 flex flex-col">
 
     <!-- Topbar -->
-    <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-[#e5e9f0] h-16 flex items-center px-4 lg:px-6 gap-3 shrink-0">
+    <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-mapborder h-16 flex items-center px-4 lg:px-6 gap-3 shrink-0">
 
       <button type="button" id="portal-mobile-toggle"
-              class="md:hidden inline-flex items-center justify-center h-9 w-9 rounded-lg border border-[#e5e9f0]
-                     text-gray-700 hover:bg-gray-50 transition"
+              class="md:hidden inline-flex items-center justify-center h-9 w-9 rounded-lg border border-mapborder
+                     text-gray-700 hover:bg-gray-50 transition
+                     focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40"
               aria-label="Open menu" aria-expanded="false" aria-controls="portal-drawer">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M4 6h16M4 12h16M4 18h16"/>
@@ -136,13 +179,19 @@
         <span aria-hidden="true">←</span> Back to Home
       </a>
 
-      <div class="hidden md:block h-5 w-px bg-[#e5e9f0]" aria-hidden="true"></div>
+      <div class="hidden md:block h-5 w-px bg-mapborder" aria-hidden="true"></div>
 
       <nav aria-label="Breadcrumb" class="text-[13px] text-gray-500 truncate">
         <ol class="flex items-center gap-1.5">
-          <li><a href="{{ portal_root|default:'/' }}" class="hover:text-mapnavy transition-colors">My Portal</a></li>
+          <li>
+            <a href="{{ portal_root|default:'/' }}" class="hover:text-mapnavy transition-colors">
+              My Portal
+            </a>
+          </li>
           <li aria-hidden="true" class="text-gray-300">/</li>
-          <li class="text-mapnavy font-medium">{% block breadcrumb %}Dashboard{% endblock %}</li>
+          <li class="text-mapnavy font-medium" aria-current="page">
+            {% block breadcrumb %}Dashboard{% endblock %}
+          </li>
         </ol>
       </nav>
 
@@ -155,30 +204,36 @@
         <div class="relative" id="portal-dropdown-root">
           <button type="button" id="portal-dropdown-toggle"
                   class="inline-flex items-center gap-2 h-9 pl-1 pr-2 rounded-lg
-                         border border-transparent hover:border-[#e5e9f0] hover:bg-gray-50 transition
+                         border border-transparent hover:border-mapborder hover:bg-gray-50 transition
                          focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40"
                   aria-haspopup="menu" aria-expanded="false" aria-controls="portal-dropdown">
-            <span class="h-7 w-7 rounded-full bg-mapgreen-50 text-mapgreen flex items-center justify-center
-                         font-semibold text-[12px] ring-1 ring-mapgreen/15">
-              {{ user.first_name|default:user.username|first|upper }}
-            </span>
+       <span class="h-7 w-7 rounded-full bg-mapgreen-50 text-mapgreen flex items-center justify-center
+             font-semibold text-[12px] ring-1 ring-mapgreen/15 overflow-hidden">
+  {% if user.userprofile and user.userprofile.photo %}
+    <img src="{{ user.userprofile.photo.url }}" alt="" class="w-full h-full object-cover rounded-full">
+  {% elif site.logo %}
+    <img src="{{ site.logo.url }}" alt="" class="w-full h-full object-contain p-0.5">
+  {% else %}
+    <span aria-hidden="true">{{ user.first_name|default:user.username|first|upper }}</span>
+  {% endif %}
+</span>
             <span class="hidden sm:block text-[13px] text-gray-700 max-w-[8rem] truncate">
               {{ user.first_name|default:user.username }}
             </span>
             <svg id="portal-dropdown-caret" width="12" height="12" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="2.5"
-                 class="text-gray-400 transition-transform duration-200">
+                 class="text-gray-400 transition-transform duration-200" aria-hidden="true">
               <path d="M6 9l6 6 6-6"/>
             </svg>
           </button>
 
           <div id="portal-dropdown" role="menu"
                class="hidden absolute right-0 mt-2 w-60 origin-top-right rounded-xl
-                      border border-[#e5e9f0] bg-white shadow-xl shadow-gray-900/5
+                      border border-mapborder bg-white shadow-xl shadow-gray-900/5
                       py-1.5 text-[13px] z-50
                       transition ease-out duration-150
                       opacity-0 scale-95">
-            <div class="px-3 py-2.5 border-b border-[#e5e9f0]">
+            <div class="px-3 py-2.5 border-b border-mapborder">
               <div class="font-semibold text-mapnavy truncate">
                 {{ user.get_full_name|default:user.username }}
               </div>
@@ -202,7 +257,7 @@
               <span class="text-gray-400" aria-hidden="true">🏠</span> Public Website
             </a>
 
-            <div class="border-t border-[#e5e9f0] my-1.5"></div>
+            <div class="border-t border-mapborder my-1.5"></div>
 
             <form method="post" action="{% url 'accounts:logout' %}">
               {% csrf_token %}
@@ -217,7 +272,7 @@
       </div>
     </header>
 
-    <main class="flex-1 p-5 lg:p-8">
+    <main class="flex-1 p-5 lg:p-8" id="main">
       <div class="max-w-[1400px] mx-auto">
 
         {% if messages %}
@@ -225,9 +280,11 @@
             {% for m in messages %}
               <div role="alert"
                    class="rounded-xl px-4 py-3 text-[13.5px] border flex items-start gap-3
-                          {% if m.tags == 'error' %}bg-red-50 text-red-700 border-red-200{% else %}bg-green-50 text-green-700 border-green-200{% endif %}">
+                          {% if m.tags == 'error' %}bg-red-50 text-red-700 border-red-200
+                          {% elif m.tags == 'warning' %}bg-amber-50 text-amber-700 border-amber-200
+                          {% else %}bg-green-50 text-green-700 border-green-200{% endif %}">
                 <span class="mt-0.5 shrink-0" aria-hidden="true">
-                  {% if m.tags == 'error' %}⚠{% else %}✓{% endif %}
+                  {% if m.tags == 'error' %}⚠{% elif m.tags == 'warning' %}⚠{% else %}✓{% endif %}
                 </span>
                 <span class="flex-1">{{ m }}</span>
               </div>
@@ -240,50 +297,96 @@
     </main>
   </div>
 </div>
-
 {% endwith %}
 
 <script>
 (function () {
+  'use strict';
+
+  // ── Mobile drawer ───────────────────────────────────────────
   const drawer   = document.getElementById('portal-drawer');
   const backdrop = document.getElementById('portal-backdrop');
   const trigger  = document.getElementById('portal-mobile-toggle');
   const closeBtn = document.getElementById('portal-drawer-close');
 
+  let previousFocus = null;
+
   const openDrawer = () => {
+    if (!drawer) return;
+    previousFocus = document.activeElement;
     drawer.classList.remove('-translate-x-full');
     drawer.setAttribute('aria-hidden', 'false');
-    backdrop.classList.remove('opacity-0', 'pointer-events-none');
+    backdrop?.classList.remove('opacity-0', 'pointer-events-none');
     trigger?.setAttribute('aria-expanded', 'true');
     document.body.style.overflow = 'hidden';
     closeBtn?.focus();
   };
+
   const closeDrawer = () => {
+    if (!drawer) return;
     drawer.classList.add('-translate-x-full');
     drawer.setAttribute('aria-hidden', 'true');
-    backdrop.classList.add('opacity-0', 'pointer-events-none');
+    backdrop?.classList.add('opacity-0', 'pointer-events-none');
     trigger?.setAttribute('aria-expanded', 'false');
     document.body.style.overflow = '';
-    trigger?.focus();
+    if (previousFocus && typeof previousFocus.focus === 'function') {
+      previousFocus.focus();
+    } else {
+      trigger?.focus();
+    }
   };
+
   trigger?.addEventListener('click', () => {
     const isOpen = trigger.getAttribute('aria-expanded') === 'true';
     isOpen ? closeDrawer() : openDrawer();
   });
   backdrop?.addEventListener('click', closeDrawer);
   closeBtn?.addEventListener('click', closeDrawer);
+
+  // Focus trap
+  drawer?.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab' || drawer.getAttribute('aria-hidden') === 'true') return;
+    const focusable = drawer.querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  });
+
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && drawer?.getAttribute('aria-hidden') === 'false') closeDrawer();
   });
 
+  // Scroll active link into view
+  const activeLink = document.querySelector('.sidebar-link.active');
+  if (activeLink) {
+    activeLink.scrollIntoView({ block: 'center' });
+  }
+
+  // ── User dropdown ───────────────────────────────────────────
   const dt    = document.getElementById('portal-dropdown-toggle');
   const dm    = document.getElementById('portal-dropdown');
   const caret = document.getElementById('portal-dropdown-caret');
 
+  let closeTimeout = null;
+
   const setDropdown = (open) => {
     if (!dm || !dt) return;
     dt.setAttribute('aria-expanded', String(open));
+
     if (open) {
+      if (closeTimeout) {
+        clearTimeout(closeTimeout);
+        closeTimeout = null;
+      }
       dm.classList.remove('hidden');
       requestAnimationFrame(() => {
         dm.classList.remove('opacity-0', 'scale-95');
@@ -294,27 +397,36 @@
       dm.classList.add('opacity-0', 'scale-95');
       dm.classList.remove('opacity-100', 'scale-100');
       caret?.classList.remove('rotate-180');
-      setTimeout(() => {
-        if (dt.getAttribute('aria-expanded') === 'false') dm.classList.add('hidden');
+      closeTimeout = setTimeout(() => {
+        if (dt.getAttribute('aria-expanded') === 'false') {
+          dm.classList.add('hidden');
+        }
       }, 150);
     }
   };
+
   dt?.addEventListener('click', (e) => {
     e.stopPropagation();
     setDropdown(dt.getAttribute('aria-expanded') !== 'true');
   });
+
   document.addEventListener('click', (e) => {
     if (dt?.getAttribute('aria-expanded') !== 'true') return;
-    if (!dm.contains(e.target) && !dt.contains(e.target)) setDropdown(false);
+    if (!dm.contains(e.target) && !dt.contains(e.target)) {
+      setDropdown(false);
+    }
   });
+
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && dt?.getAttribute('aria-expanded') === 'true') {
       setDropdown(false);
       dt.focus();
     }
   });
+
+  dm?.querySelectorAll('a[role="menuitem"]').forEach((a) => {
+    a.addEventListener('click', () => setDropdown(false));
+  });
 })();
 </script>
-
-{% block scripts %}{% endblock %}
 {% endblock %}

@@ -6,36 +6,386 @@
   <a href="{% url 'volunteer_portal:portal_certificates' %}" class="sidebar-link">Certificates</a>
 {% endblock %}
 {% block breadcrumb %}My Assignments{% endblock %}
+
 {% block content %}
-<h1 class="text-2xl font-bold text-mapnavy mb-6">My Assignments</h1>
-<div class="space-y-3">
-  {% for a in assignments %}
-    <div class="card p-5">
-      <div class="flex items-start justify-between gap-4">
-        <div class="flex-1 min-w-0">
-          <div class="font-semibold text-mapnavy">{{ a.title }}</div>
-          {% if a.description %}<p class="text-[13px] text-gray-600 mt-1">{{ a.description }}</p>{% endif %}
-          {% if a.scheduled_for %}<div class="text-[12px] text-gray-500 mt-2">📅 {{ a.scheduled_for|date:"M d, Y H:i" }}</div>{% endif %}
-        </div>
-        <div class="flex flex-col items-end gap-2">
-          {% if a.status == 'accepted' %}<span class="badge badge-success">Accepted</span>
-          {% elif a.status == 'proposed' %}<span class="badge badge-warning">Proposed</span>
-          {% elif a.status == 'completed' %}<span class="badge badge-muted">Completed</span>
-          {% elif a.status == 'declined' %}<span class="badge badge-danger">Declined</span>
-          {% else %}<span class="badge badge-muted">{{ a.get_status_display }}</span>{% endif %}
-          {% if a.status == 'proposed' %}
-            <div class="flex gap-2">
-              <a href="{% url 'volunteer_portal:respond_assignment' a.pk 'accept' %}" class="btn-primary text-[11px] !py-1.5">Accept</a>
-              <a href="{% url 'volunteer_portal:respond_assignment' a.pk 'decline' %}" class="btn-secondary text-[11px] !py-1.5">Decline</a>
+
+<a href="#main-content"
+   class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100]
+          focus:px-4 focus:py-2.5 focus:rounded-lg focus:bg-mapnavy focus:text-white
+          focus:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen">
+  Skip to main content
+</a>
+
+<!-- HEADER -->
+<div class="mb-6">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-bold text-mapnavy tracking-tight">My Assignments</h1>
+      <p class="text-[13px] text-gray-500 mt-1">
+        {% if assignments %}
+          {{ assignments|length }} assignment{{ assignments|length|pluralize }} —
+          {{ proposed_count }} awaiting your response.
+        {% else %}
+          No assignments yet.
+        {% endif %}
+      </p>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <a href="{% url 'volunteer_portal:portal_hours' %}"
+         class="btn-secondary inline-flex items-center gap-1.5 h-9 text-[12.5px] !px-3.5">
+        Log hours
+      </a>
+    </div>
+  </div>
+
+  <!-- Status tabs (client-side filter) -->
+  {% if assignments %}
+    <div class="mt-4 flex flex-wrap items-center gap-1 p-1 rounded-xl bg-mapbg border border-mapborder max-w-fit"
+         role="tablist" aria-label="Filter assignments by status">
+      <button type="button" data-filter="all" role="tab" aria-selected="true"
+              class="assignment-filter inline-flex items-center h-8 px-3 rounded-lg text-[12.5px] font-semibold
+                     bg-white text-mapnavy shadow-sm transition">
+        All
+        <span class="ml-1.5 inline-flex items-center justify-center min-w-[20px] h-4 px-1 rounded text-[10.5px] font-bold bg-mapgreen-50 text-mapgreen">
+          {{ assignments|length }}
+        </span>
+      </button>
+      {% if proposed_count %}
+        <button type="button" data-filter="proposed" role="tab" aria-selected="false"
+                class="assignment-filter inline-flex items-center h-8 px-3 rounded-lg text-[12.5px] font-semibold
+                       text-gray-600 hover:text-mapnavy transition">
+          Proposed
+          <span class="ml-1.5 inline-flex items-center justify-center min-w-[20px] h-4 px-1 rounded text-[10.5px] font-bold bg-amber-100 text-amber-700">
+            {{ proposed_count }}
+          </span>
+        </button>
+      {% endif %}
+      {% if accepted_count %}
+        <button type="button" data-filter="accepted" role="tab" aria-selected="false"
+                class="assignment-filter inline-flex items-center h-8 px-3 rounded-lg text-[12.5px] font-semibold
+                       text-gray-600 hover:text-mapnavy transition">
+          Accepted
+          <span class="ml-1.5 inline-flex items-center justify-center min-w-[20px] h-4 px-1 rounded text-[10.5px] font-bold bg-green-100 text-green-700">
+            {{ accepted_count }}
+          </span>
+        </button>
+      {% endif %}
+      {% if completed_count %}
+        <button type="button" data-filter="completed" role="tab" aria-selected="false"
+                class="assignment-filter inline-flex items-center h-8 px-3 rounded-lg text-[12.5px] font-semibold
+                       text-gray-600 hover:text-mapnavy transition">
+          Completed
+          <span class="ml-1.5 inline-flex items-center justify-center min-w-[20px] h-4 px-1 rounded text-[10.5px] font-bold bg-gray-200 text-gray-700">
+            {{ completed_count }}
+          </span>
+        </button>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+
+<!-- BULK ACTIONS (proposed only) -->
+{% if proposed_count > 1 %}
+  <div id="bulk-actions-bar" class="mb-4 rounded-xl border border-mapborder bg-white p-3 flex items-center gap-3">
+    <div class="flex items-center gap-2">
+      <input type="checkbox" id="select-all-proposed"
+             class="h-4 w-4 rounded border-gray-300 text-mapgreen focus:ring-mapgreen/40">
+      <label for="select-all-proposed" class="text-[12.5px] text-gray-600">
+        Select all proposed
+      </label>
+    </div>
+    <div class="ml-auto flex items-center gap-2">
+      <span id="selected-count" class="text-[12px] text-gray-500">0 selected</span>
+      <form method="post" action="{% url 'volunteer_portal:bulk_respond' %}" class="inline" id="bulk-form">
+        {% csrf_token %}
+        <input type="hidden" name="action" id="bulk-action-input" value="">
+        <input type="hidden" name="ids" id="bulk-ids-input" value="">
+        <button type="button" onclick="submitBulk('accept')"
+                class="inline-flex items-center h-8 px-3 rounded-lg
+                       bg-mapgreen text-white text-[12px] font-semibold
+                       hover:bg-mapgreen-600 transition disabled:opacity-50"
+                id="bulk-accept-btn" disabled>
+          ✓ Accept all
+        </button>
+        <button type="button" onclick="submitBulk('decline')"
+                class="inline-flex items-center h-8 px-3 rounded-lg
+                       bg-red-500 text-white text-[12px] font-semibold
+                       hover:bg-red-600 transition disabled:opacity-50"
+                id="bulk-decline-btn" disabled>
+          ✗ Decline all
+        </button>
+      </form>
+    </div>
+  </div>
+{% endif %}
+
+<!-- ASSIGNMENTS LIST -->
+<main id="main-content">
+  {% if assignments %}
+    <div class="space-y-3" id="assignments-list">
+      {% for a in assignments %}
+        <article class="assignment-card card p-5 border-l-4 transition"
+                 data-status="{{ a.status }}"
+                 data-id="{{ a.pk }}"
+                 data-bulk-eligible="{% if a.status == 'proposed' %}true{% else %}false{% endif %}"
+                 style="border-left-color:
+                   {% if a.status == 'accepted' %}#1e9e5f
+                   {% elif a.status == 'proposed' %}#f59e0b
+                   {% elif a.status == 'completed' %}#9ca3af
+                   {% elif a.status == 'declined' %}#ef4444
+                   {% else %}#e5e9f0{% endif %};">
+
+          <div class="flex items-start gap-3">
+            <!-- Bulk checkbox (only for proposed) -->
+            {% if a.status == 'proposed' and proposed_count > 1 %}
+              <input type="checkbox"
+                     class="bulk-checkbox mt-1 h-4 w-4 rounded border-gray-300 text-mapgreen focus:ring-mapgreen/40 shrink-0"
+                     data-id="{{ a.pk }}"
+                     aria-label="Select assignment {{ a.title }}">
+            {% endif %}
+
+            <div class="flex-1 min-w-0">
+              <!-- Title + status -->
+              <div class="flex flex-wrap items-start justify-between gap-3">
+                <h2 class="font-semibold text-mapnavy text-[15px] leading-snug flex-1 min-w-0">
+                  {{ a.title }}
+                </h2>
+                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full
+                             text-[10.5px] uppercase tracking-wider font-semibold shrink-0
+                             {% if a.status == 'accepted' %}bg-green-50 text-green-700 border border-green-200
+                             {% elif a.status == 'proposed' %}bg-amber-50 text-amber-700 border border-amber-200
+                             {% elif a.status == 'completed' %}bg-gray-100 text-gray-600 border border-gray-200
+                             {% elif a.status == 'declined' %}bg-red-50 text-red-700 border border-red-200
+                             {% else %}bg-gray-100 text-gray-600 border border-gray-200{% endif %}">
+                  <span class="h-1.5 w-1.5 rounded-full
+                    {% if a.status == 'accepted' %}bg-green-500
+                    {% elif a.status == 'proposed' %}bg-amber-500
+                    {% elif a.status == 'completed' %}bg-gray-400
+                    {% elif a.status == 'declined' %}bg-red-500
+                    {% else %}bg-gray-400{% endif %}">
+                  </span>
+                  {{ a.get_status_display }}
+                </span>
+              </div>
+
+              <!-- Meta row -->
+              {% if a.scheduled_for %}
+                <div class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-gray-500">
+                  <span class="inline-flex items-center gap-1">
+                    <span aria-hidden="true">📅</span>
+                    <time datetime="{{ a.scheduled_for|date:'c' }}">
+                      {{ a.scheduled_for|date:"M j, Y · H:i" }}
+                    </time>
+                  </span>
+                  <span class="text-gray-300" aria-hidden="true">·</span>
+                  <span class="text-gray-400">
+                    {% if a.scheduled_for > now %}
+                      In {{ a.scheduled_for|timeuntil }}
+                    {% else %}
+                      {{ a.scheduled_for|timesince }} ago
+                    {% endif %}
+                  </span>
+                </div>
+              {% endif %}
+
+              <!-- Description -->
+              {% if a.description %}
+                <div class="mt-3">
+                  <p class="description-text text-[13px] text-gray-600 leading-relaxed line-clamp-2">
+                    {{ a.description }}
+                  </p>
+                  {% if a.description|length > 120 %}
+                    <button type="button"
+                            class="toggle-description mt-1 text-[11.5px] font-semibold text-mapgreen hover:underline">
+                      Read more
+                    </button>
+                  {% endif %}
+                </div>
+              {% endif %}
             </div>
-          {% elif a.status == 'accepted' %}
-            <a href="{% url 'volunteer_portal:respond_assignment' a.pk 'complete' %}" class="btn-secondary text-[11px] !py-1.5">Mark complete</a>
-          {% endif %}
-        </div>
+
+            <!-- Actions -->
+            <div class="flex flex-col items-end gap-1.5 shrink-0 ml-2">
+              {% if a.status == 'proposed' %}
+                <a href="{% url 'volunteer_portal:respond_assignment' a.pk 'accept' %}"
+                   class="btn-primary inline-flex items-center gap-1 h-8 px-3 text-[11.5px] font-semibold rounded-lg
+                          whitespace-nowrap">
+                  ✓ Accept
+                </a>
+                <form method="post" action="{% url 'volunteer_portal:respond_assignment' a.pk 'decline' %}" class="inline">
+                  {% csrf_token %}
+                  <button type="submit"
+                          onclick="return confirm('Decline this assignment? You can change your mind later if the coordinator reassigns it.')"
+                          class="inline-flex items-center gap-1 h-8 px-3 rounded-lg border border-red-200
+                                 bg-white text-red-700 text-[11.5px] font-semibold
+                                 hover:bg-red-50 transition whitespace-nowrap">
+                    ✗ Decline
+                  </button>
+                </form>
+              {% elif a.status == 'accepted' %}
+                <form method="post" action="{% url 'volunteer_portal:respond_assignment' a.pk 'complete' %}" class="inline">
+                  {% csrf_token %}
+                  <button type="submit"
+                          onclick="return confirm('Mark this assignment as completed?')"
+                          class="btn-secondary inline-flex items-center gap-1 h-8 px-3 text-[11.5px] font-semibold rounded-lg whitespace-nowrap">
+                    ✓ Mark complete
+                  </button>
+                </form>
+              {% endif %}
+            </div>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+
+    <!-- Filtered empty state (shown when filter yields 0 results) -->
+    <div id="filtered-empty" class="hidden card p-10 text-center max-w-lg mx-auto">
+      <p class="text-[13px] text-gray-500">No assignments with this status.</p>
+      <button type="button" onclick="document.querySelector('[data-filter=all]').click()"
+              class="mt-3 btn-secondary inline-flex items-center h-9 text-[12.5px]">
+        Show all
+      </button>
+    </div>
+
+  {% else %}
+    <!-- EMPTY STATE -->
+    <div class="card p-10 sm:p-14 text-center max-w-lg mx-auto">
+      <div class="mx-auto h-14 w-14 rounded-full bg-mapgreen-50 text-mapgreen flex items-center justify-center mb-4 text-2xl">
+        🤝
+      </div>
+      <h2 class="text-[16px] font-semibold text-mapnavy">No assignments yet</h2>
+      <p class="text-[13px] text-gray-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
+        Once a coordinator proposes work to you, it will appear here. You'll be able to accept or decline, then mark it complete when you're done.
+      </p>
+      <div class="mt-5 flex flex-wrap items-center justify-center gap-2">
+        <a href="{% url 'volunteer_portal:portal_hours' %}"
+           class="btn-secondary inline-flex items-center h-10 px-4 text-[13px]">
+          Log volunteer hours
+        </a>
+        <a href="/volunteer/" class="btn-secondary inline-flex items-center h-10 px-4 text-[13px]">
+          Back to volunteer page
+        </a>
       </div>
     </div>
-  {% empty %}
-    <div class="card p-10 text-center text-gray-500">No assignments yet.</div>
-  {% endfor %}
-</div>
+  {% endif %}
+</main>
+
+<script>
+(function () {
+  // ---- Status filter (client-side) ----
+  const filters = document.querySelectorAll('.assignment-filter');
+  const cards = document.querySelectorAll('.assignment-card');
+  const filteredEmpty = document.getElementById('filtered-empty');
+
+  filters.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const filter = btn.dataset.filter;
+
+      // Update tab state
+      filters.forEach(b => {
+        const active = b === btn;
+        b.setAttribute('aria-selected', String(active));
+        b.classList.toggle('bg-white', active);
+        b.classList.toggle('text-mapnavy', active);
+        b.classList.toggle('shadow-sm', active);
+        b.classList.toggle('text-gray-600', !active);
+      });
+
+      // Show/hide cards
+      let visibleCount = 0;
+      cards.forEach(card => {
+        const matches = filter === 'all' || card.dataset.status === filter;
+        card.style.display = matches ? '' : 'none';
+        if (matches) visibleCount++;
+      });
+
+      if (filteredEmpty) {
+        filteredEmpty.classList.toggle('hidden', visibleCount > 0 || cards.length === 0);
+      }
+    });
+  });
+
+  // ---- Read more toggle ----
+  document.querySelectorAll('.toggle-description').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const text = btn.previousElementSibling;
+      if (!text) return;
+      const isClamped = text.classList.contains('line-clamp-2');
+      if (isClamped) {
+        text.classList.remove('line-clamp-2');
+        btn.textContent = 'Show less';
+      } else {
+        text.classList.add('line-clamp-2');
+        btn.textContent = 'Read more';
+      }
+    });
+  });
+
+  // ---- Bulk actions ----
+  const selectAll = document.getElementById('select-all-proposed');
+  const bulkCheckboxes = document.querySelectorAll('.bulk-checkbox');
+  const bulkCount = document.getElementById('selected-count');
+  const bulkAcceptBtn = document.getElementById('bulk-accept-btn');
+  const bulkDeclineBtn = document.getElementById('bulk-decline-btn');
+  const bulkForm = document.getElementById('bulk-form');
+  const bulkActionInput = document.getElementById('bulk-action-input');
+  const bulkIdsInput = document.getElementById('bulk-ids-input');
+
+  function updateBulkState() {
+    const selected = Array.from(bulkCheckboxes).filter(c => c.checked);
+    if (bulkCount) bulkCount.textContent = selected.length + ' selected';
+    const disabled = selected.length === 0;
+    if (bulkAcceptBtn) bulkAcceptBtn.disabled = disabled;
+    if (bulkDeclineBtn) bulkDeclineBtn.disabled = disabled;
+
+    // Update select-all checkbox
+    if (selectAll) {
+      selectAll.checked = selected.length > 0 && selected.length === bulkCheckboxes.length;
+      selectAll.indeterminate = selected.length > 0 && selected.length < bulkCheckboxes.length;
+    }
+  }
+
+  bulkCheckboxes.forEach(cb => cb.addEventListener('change', updateBulkState));
+
+  selectAll?.addEventListener('change', () => {
+    bulkCheckboxes.forEach(cb => cb.checked = selectAll.checked);
+    updateBulkState();
+  });
+
+  window.submitBulk = function (action) {
+    const selected = Array.from(bulkCheckboxes).filter(c => c.checked).map(c => c.dataset.id);
+    if (!selected.length) return;
+    if (action === 'decline' && !confirm(`Decline ${selected.length} assignment(s)?`)) return;
+
+    if (bulkActionInput) bulkActionInput.value = action;
+    if (bulkIdsInput) bulkIdsInput.value = selected.join(',');
+    if (bulkForm) bulkForm.submit();
+  };
+})();
+</script>
+
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .assignment-card:hover {
+    box-shadow: 0 2px 8px rgba(16,24,40,0.06);
+  }
+  @media (max-width: 640px) {
+    .assignment-card .flex.items-start > .flex.flex-col.items-end {
+      align-items: stretch;
+      width: 100%;
+      margin-top: 12px;
+      margin-left: 0;
+    }
+    .assignment-card .flex.items-start {
+      flex-direction: column;
+    }
+  }
+</style>
+
 {% endblock %}

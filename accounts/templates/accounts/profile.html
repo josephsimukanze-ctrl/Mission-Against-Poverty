@@ -1,4 +1,5 @@
 {% extends "portal_base.html" %}
+{% load humanize %}
 {% block title %}Profile — {{ ORG_NAME }}{% endblock %}
 {% block breadcrumb %}My Profile{% endblock %}
 
@@ -7,10 +8,46 @@
 
   <!-- HEADER -->
   <div class="mb-6">
-    <h1 class="text-2xl font-bold text-mapnavy tracking-tight">My Profile</h1>
-    <p class="text-[13px] text-gray-500 mt-1">
-      Update your personal details, contact info, and photo.
-    </p>
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div class="flex items-center gap-4 min-w-0">
+        <!-- Large avatar -->
+        <div class="h-16 w-16 rounded-full bg-mapgreen-50 overflow-hidden ring-2 ring-white shadow-md shrink-0
+                    flex items-center justify-center">
+          {% if userprofile_form.instance.photo %}
+            <img id="header-photo" src="{{ userprofile_form.instance.photo.url }}"
+                 alt="{{ user.first_name|default:user.username }}"
+                 class="w-full h-full object-cover">
+          {% else %}
+            <span class="text-xl font-bold text-mapgreen" id="header-photo-initials">
+              {{ user.first_name|default:user.username|first|upper }}
+            </span>
+          {% endif %}
+        </div>
+
+        <div class="min-w-0">
+          <h1 class="text-2xl font-bold text-mapnavy tracking-tight truncate">
+            {{ user.get_full_name|default:user.username }}
+          </h1>
+          <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-gray-500">
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md
+                         bg-mapgreen-50 text-mapgreen text-[10.5px] uppercase tracking-wider font-semibold">
+              {{ user.get_role_display|default:"Member" }}
+            </span>
+            <span class="text-gray-300" aria-hidden="true">·</span>
+            <span>
+              Joined
+              <time datetime="{{ user.date_joined|date:'c' }}">{{ user.date_joined|date:"M Y" }}</time>
+            </span>
+            {% if user.email %}
+              <span class="text-gray-300" aria-hidden="true">·</span>
+              <a href="mailto:{{ user.email }}" class="text-mapgreen hover:underline truncate">
+                {{ user.email }}
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- MESSAGES -->
@@ -20,9 +57,7 @@
         <div role="alert"
              class="rounded-xl px-4 py-3 text-[13px] border flex items-start gap-2.5
                     {% if m.tags == 'error' %}bg-red-50 text-red-700 border-red-200{% else %}bg-green-50 text-green-700 border-green-200{% endif %}">
-          <span class="mt-0.5 shrink-0" aria-hidden="true">
-            {% if m.tags == 'error' %}⚠{% else %}✓{% endif %}
-          </span>
+          <span class="mt-0.5 shrink-0" aria-hidden="true">{% if m.tags == 'error' %}⚠{% else %}✓{% endif %}</span>
           <span class="flex-1">{{ m }}</span>
         </div>
       {% endfor %}
@@ -115,7 +150,8 @@
       </header>
 
       <div class="flex items-start gap-4">
-        <div class="h-20 w-20 rounded-full bg-mapbg border border-mapborder flex items-center justify-center overflow-hidden shrink-0">
+        <div class="h-20 w-20 rounded-full bg-mapbg border border-mapborder flex items-center justify-center overflow-hidden shrink-0"
+             id="photo-preview-circle">
           {% if userprofile_form.instance.photo %}
             <img id="current-photo" src="{{ userprofile_form.instance.photo.url }}"
                  alt="Current profile photo" class="w-full h-full object-cover">
@@ -195,6 +231,9 @@
         {% if userprofile_form.bio.errors %}
           <p class="mt-1.5 text-[12.5px] text-red-600">{{ userprofile_form.bio.errors|join:" " }}</p>
         {% endif %}
+        <p class="mt-1.5 text-[10.5px] text-gray-400 text-right">
+          <span id="bio-count">0</span> characters
+        </p>
       </div>
     </section>
 
@@ -250,6 +289,11 @@
     @apply h-4 w-4 rounded border-gray-300 text-mapgreen
            focus:outline-none focus:ring-2 focus:ring-mapgreen/40;
   }
+
+  @media print {
+    nav, button, .btn-primary, .btn-secondary, a[href*="password_reset"] { display: none !important; }
+    .card, section.bg-white { border: 1px solid #ccc !important; box-shadow: none !important; }
+  }
 </style>
 
 <script>
@@ -264,13 +308,15 @@
   // Live photo preview
   const photoInput = form.querySelector('input[type="file"]');
   const currentImg = document.getElementById('current-photo');
+  const headerImg = document.getElementById('header-photo');
+  const previewCircle = document.getElementById('photo-preview-circle');
   const placeholder = document.getElementById('current-photo-placeholder');
+  const headerInitials = document.getElementById('header-photo-initials');
 
   photoInput?.addEventListener('change', () => {
     const file = photoInput.files && photoInput.files[0];
     if (!file) return;
 
-    // Type + size check
     if (!file.type.startsWith('image/')) {
       alert('Please select an image file.');
       photoInput.value = '';
@@ -284,17 +330,33 @@
 
     const url = URL.createObjectURL(file);
 
+    // Update the small preview
     if (currentImg) {
-      // Existing photo — swap the src
       currentImg.src = url;
-    } else if (photoInput.closest('.flex.items-start')) {
-      // No photo yet — replace the placeholder with an <img>
-      const circle = photoInput.closest('.flex.items-start')?.querySelector('.h-20.w-20');
-      if (circle) {
-        circle.innerHTML = `<img id="current-photo" src="${url}" alt="New profile photo" class="w-full h-full object-cover">`;
+    } else if (previewCircle) {
+      previewCircle.innerHTML = `<img id="current-photo" src="${url}" alt="New profile photo" class="w-full h-full object-cover">`;
+    }
+
+    // Update the header avatar
+    if (headerImg) {
+      headerImg.src = url;
+    } else if (headerInitials) {
+      // Replace the initials span with an img
+      const wrapper = headerInitials.parentElement;
+      if (wrapper) {
+        wrapper.innerHTML = `<img id="header-photo" src="${url}" alt="" class="w-full h-full object-cover">`;
       }
     }
   });
+
+  // Bio character counter
+  const bio = form.querySelector('textarea[name="bio"]');
+  const bioCount = document.getElementById('bio-count');
+  if (bio && bioCount) {
+    const update = () => { bioCount.textContent = bio.value.length; };
+    bio.addEventListener('input', update);
+    update();
+  }
 
   // Unsaved changes guard
   let dirty = false;

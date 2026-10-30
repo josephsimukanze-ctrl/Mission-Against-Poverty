@@ -1,17 +1,330 @@
 {% extends "public_base.html" %}
+{% load humanize %}
 {% block title %}Success Stories — {{ ORG_NAME }}{% endblock %}
+{% block meta_description %}Real stories of lives transformed through {{ ORG_NAME }}'s work across Zambia — told by the people and communities we serve.{% endblock %}
+
+{% block head %}
+{{ block.super }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "{{ ORG_NAME }} Success Stories",
+  "url": "{{ request.build_absolute_uri|escapejs }}",
+  "numberOfItems": {{ page_obj.paginator.count|default:stories|length }},
+  "itemListElement": [
+    {% for s in stories %}{
+      "@type": "ListItem",
+      "position": {{ forloop.counter }},
+      "name": "{{ s.title|escapejs }}",
+      "url": "{{ request.scheme }}://{{ request.get_host }}{{ s.get_absolute_url }}"
+    }{% if not forloop.last %},{% endif %}{% endfor %}
+  ]
+}
+</script>
+{% endblock %}
+
 {% block content %}
-<section class="bg-mapnavy text-white"><div class="max-w-7xl mx-auto px-6 py-16"><h1 class="text-3xl font-bold">Success Stories</h1><p class="mt-2 text-gray-300">Lives transformed through your support.</p></div></section>
-<section class="max-w-7xl mx-auto px-6 py-12">
+
+<a href="#main-content"
+   class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100]
+          focus:px-4 focus:py-2.5 focus:rounded-lg focus:bg-mapnavy focus:text-white
+          focus:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen">
+  Skip to main content
+</a>
+
+<!-- HERO -->
+<section class="relative bg-mapnavy overflow-hidden text-white">
+  <div class="absolute inset-0 opacity-25 pointer-events-none"
+       style="background-image:
+         radial-gradient(circle at 20% 20%, #1e9e5f 0, transparent 40%),
+         radial-gradient(circle at 80% 80%, #1f3350 0, transparent 40%);"></div>
+
+  <div class="relative max-w-7xl mx-auto px-5 lg:px-8 py-16">
+
+    <nav aria-label="Breadcrumb" class="mb-5">
+      <ol class="flex items-center gap-2 text-[12.5px] text-white/50">
+        <li><a href="/" class="hover:text-white transition-colors">Home</a></li>
+        <li aria-hidden="true">/</li>
+        <li class="text-white/80" aria-current="page">Success Stories</li>
+      </ol>
+    </nav>
+
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full
+                bg-white/10 border border-white/15
+                text-[11px] uppercase tracking-[0.14em] text-white/80 font-semibold mb-4">
+      <span class="h-1.5 w-1.5 rounded-full bg-mapgreen" aria-hidden="true"></span>
+      Impact
+    </div>
+
+    <h1 class="text-3xl md:text-4xl lg:text-[42px] font-bold tracking-tight leading-tight">
+      Success Stories
+    </h1>
+    <p class="mt-4 text-gray-300 text-[15px] max-w-2xl leading-relaxed">
+      Lives transformed through your support. Real people, real change — from the
+      communities we serve across Zambia.
+    </p>
+
+    {% if page_obj.paginator.count %}
+      <p class="mt-5 text-[12.5px] text-white/50 uppercase tracking-[0.14em] font-semibold">
+        {{ page_obj.paginator.count }} story{{ page_obj.paginator.count|pluralize:"ies" }}
+      </p>
+    {% endif %}
+  </div>
+</section>
+
+<!-- CONTENT -->
+<main id="main-content" class="max-w-7xl mx-auto px-5 lg:px-8 py-12 lg:py-16">
+
   {% if stories %}
+
+    <!-- FEATURED STORY (only when no active filter) -->
+    {% if not filters.q and not filters.program %}
+      {% with featured=stories.0 %}
+        <a href="{{ featured.get_absolute_url }}"
+           class="group card card-hover overflow-hidden flex flex-col lg:flex-row mb-8
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40">
+          <div class="lg:w-1/2 aspect-[16/10] lg:aspect-auto bg-gray-100 overflow-hidden shrink-0">
+            {% if featured.cover_image %}
+              <img src="{{ featured.cover_image.url }}"
+                   alt="{{ featured.title }}"
+                   loading="lazy" decoding="async"
+                   class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500">
+            {% elif site.og_image %}
+              <img src="{{ site.og_image.url }}"
+                   alt="{{ featured.title }}"
+                   loading="lazy" decoding="async"
+                   class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500">
+            {% elif site.about_hero_image %}
+              <img src="{{ site.about_hero_image.url }}"
+                   alt="{{ featured.title }}"
+                   loading="lazy" decoding="async"
+                   class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500">
+            {% else %}
+              <div class="w-full h-full flex items-center justify-center bg-mapgreen-50 text-mapgreen text-5xl"
+                   aria-hidden="true">💚</div>
+            {% endif %}
+          </div>
+
+          <div class="p-7 lg:p-9 flex flex-col flex-1 justify-center">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                          bg-mapgreen-50 text-mapgreen text-[10.5px] uppercase tracking-[0.14em] font-semibold">
+                <span class="h-1.5 w-1.5 rounded-full bg-mapgreen" aria-hidden="true"></span>
+                Featured story
+              </span>
+              {% if featured.program %}
+                <span class="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">
+                  {{ featured.program.name }}
+                </span>
+              {% endif %}
+            </div>
+
+            <h2 class="font-bold text-[22px] lg:text-[26px] text-mapnavy leading-tight
+                       group-hover:text-mapgreen transition-colors">
+              {{ featured.title }}
+            </h2>
+
+            {% if featured.summary %}
+              <p class="text-[14px] text-gray-600 mt-3 leading-relaxed line-clamp-3">
+                {{ featured.summary }}
+              </p>
+            {% endif %}
+
+            <div class="mt-5 flex items-center gap-3 text-[12px] text-gray-500">
+              {% if featured.location %}
+                <span>📍 {{ featured.location }}</span>
+                <span aria-hidden="true">·</span>
+              {% endif %}
+              <span class="font-semibold text-mapgreen group-hover:underline underline-offset-2 inline-flex items-center gap-1">
+                Read full story
+                <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span>
+              </span>
+            </div>
+          </div>
+        </a>
+      {% endwith %}
+
+      <div class="mb-5">
+        <div class="text-[11px] uppercase tracking-[0.14em] font-semibold text-gray-500 mb-1">
+          All stories
+        </div>
+        <h2 class="text-[17px] font-semibold text-mapnavy">More transformations</h2>
+      </div>
+    {% endif %}
+
+    <!-- GRID -->
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
       {% for s in stories %}
-        <a href="{{ s.get_absolute_url }}" class="bg-white rounded-xl border border-[#e5e9f0] overflow-hidden hover:shadow-md">
-          {% if s.cover_image %}<img src="{{ s.cover_image.url }}" alt="{{ s.title }}" class="w-full h-48 object-cover">{% endif %}
-          <div class="p-5"><h2 class="font-semibold text-mapnavy">{{ s.title }}</h2><p class="text-sm text-gray-600 mt-2">{{ s.summary }}</p></div>
-        </a>
+        {% if filters.q or filters.program or not forloop.first %}
+          <article>
+            <a href="{{ s.get_absolute_url }}"
+               class="group card card-hover overflow-hidden flex flex-col h-full
+                      focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40">
+
+              <div class="aspect-[16/10] bg-gray-100 relative overflow-hidden shrink-0">
+                {% if s.cover_image %}
+                  <img src="{{ s.cover_image.url }}"
+                       alt="{{ s.title }}"
+                       loading="lazy" decoding="async"
+                       class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500">
+                {% elif site.og_image %}
+                  <img src="{{ site.og_image.url }}"
+                       alt="{{ s.title }}"
+                       loading="lazy" decoding="async"
+                       class="w-full h-full object-cover opacity-90 group-hover:scale-[1.03] transition-transform duration-500">
+                {% else %}
+                  <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-mapgreen-50 via-mapgreen/10 to-mapnavy/5 text-4xl text-mapgreen/60"
+                       aria-hidden="true">💚</div>
+                {% endif %}
+
+                {% if s.program %}
+                  <span class="absolute top-3 left-3 inline-flex items-center gap-1.5
+                               px-2 py-1 rounded-md bg-white/95 backdrop-blur-sm
+                               text-[10.5px] uppercase tracking-wider font-semibold
+                               text-mapnavy shadow-sm">
+                    {{ s.program.name }}
+                  </span>
+                {% endif %}
+              </div>
+
+              <div class="p-5 flex flex-col flex-1">
+                <h2 class="font-semibold text-[15.5px] text-mapnavy leading-snug clamp-2
+                           group-hover:text-mapgreen transition-colors">
+                  {{ s.title }}
+                </h2>
+
+                {% if s.summary %}
+                  <p class="text-[12.5px] text-gray-600 mt-1.5 leading-relaxed clamp-2">
+                    {{ s.summary }}
+                  </p>
+                {% endif %}
+
+                <div class="mt-auto pt-4 flex items-center justify-between text-[11.5px] text-gray-500">
+                  {% if s.location %}
+                    <span class="truncate">📍 {{ s.location }}</span>
+                  {% else %}
+                    <span></span>
+                  {% endif %}
+                  <span class="font-semibold text-mapgreen group-hover:underline underline-offset-2 inline-flex items-center gap-1 shrink-0 ml-2">
+                    Read
+                    <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span>
+                  </span>
+                </div>
+              </div>
+            </a>
+          </article>
+        {% endif %}
       {% endfor %}
     </div>
-  {% else %}<p class="text-gray-500 text-center py-12">No stories yet.</p>{% endif %}
-</section>
+
+    <!-- PAGINATION -->
+    {% if is_paginated %}
+      <nav aria-label="Pagination"
+            class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-10">
+        <p class="text-[12.5px] text-gray-500 order-2 sm:order-1">
+          Showing
+          <span class="font-semibold text-mapnavy">{{ page_obj.start_index }}</span>–
+          <span class="font-semibold text-mapnavy">{{ page_obj.end_index }}</span>
+          of <span class="font-semibold text-mapnavy">{{ page_obj.paginator.count }}</span>
+        </p>
+
+        <div class="flex items-center gap-1 order-1 sm:order-2">
+          {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if filters.q %}&q={{ filters.q }}{% endif %}{% if filters.program %}&program={{ filters.program }}{% endif %}"
+               class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-white
+                      text-[12.5px] font-medium text-gray-700 hover:bg-gray-50 transition">
+              ← Prev
+            </a>
+          {% else %}
+            <span class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-gray-50
+                         text-[12.5px] font-medium text-gray-400 cursor-not-allowed">← Prev</span>
+          {% endif %}
+
+          {% for num in page_obj.paginator.page_range %}
+            {% if num == page_obj.number %}
+              <span aria-current="page"
+                    class="inline-flex items-center justify-center h-9 w-9 rounded-lg
+                           bg-mapgreen text-white text-[12.5px] font-semibold">{{ num }}</span>
+            {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+              <a href="?page={{ num }}{% if filters.q %}&q={{ filters.q }}{% endif %}{% if filters.program %}&program={{ filters.program }}{% endif %}"
+                 class="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-mapborder
+                        bg-white text-[12.5px] font-medium text-gray-700 hover:bg-gray-50 transition">{{ num }}</a>
+            {% endif %}
+          {% endfor %}
+
+          {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if filters.q %}&q={{ filters.q }}{% endif %}{% if filters.program %}&program={{ filters.program }}{% endif %}"
+               class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-white
+                      text-[12.5px] font-medium text-gray-700 hover:bg-gray-50 transition">Next →</a>
+          {% else %}
+            <span class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-gray-50
+                         text-[12.5px] font-medium text-gray-400 cursor-not-allowed">Next →</span>
+          {% endif %}
+        </div>
+      </nav>
+    {% endif %}
+
+  {% else %}
+    <!-- EMPTY STATE -->
+    <div class="card p-10 sm:p-14 text-center max-w-xl mx-auto">
+      <div class="mx-auto h-14 w-14 rounded-full bg-mapgreen-50 overflow-hidden flex items-center justify-center mb-4">
+        {% if site.logo %}
+          <img src="{{ site.logo.url }}" alt="" class="w-full h-full object-contain p-2">
+        {% else %}
+          <span class="text-2xl" aria-hidden="true">💚</span>
+        {% endif %}
+      </div>
+      <h2 class="text-[16px] font-semibold text-mapnavy">Stories coming soon</h2>
+      <p class="text-[13px] text-gray-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
+        Every transformation begins with a single act of kindness. As we collect and publish stories from the field, they'll appear here.
+      </p>
+      <div class="mt-5 flex flex-wrap items-center justify-center gap-2">
+        <a href="/donate/"
+           class="btn-primary inline-flex items-center justify-center h-10 px-5 text-[13px]">
+          Support our work
+        </a>
+        <a href="/programs/"
+           class="btn-secondary inline-flex items-center justify-center h-10 px-4 text-[13px]">
+          Browse programs
+        </a>
+        {% if site.contact_email %}
+          <a href="mailto:{{ site.contact_email }}"
+             class="text-[12.5px] text-gray-500 hover:text-mapnavy underline">
+            Or email us
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+</main>
+
+<!-- Sticky mobile donate -->
+<div class="lg:hidden fixed bottom-0 inset-x-0 z-40 p-3 bg-white/95 backdrop-blur border-t border-mapborder">
+  <a href="/donate/"
+     class="btn-primary inline-flex items-center justify-center w-full h-11 text-[14px] font-semibold rounded-lg">
+    💚 Support our work
+  </a>
+</div>
+<div class="lg:hidden h-20" aria-hidden="true"></div>
+
+<style>
+  .clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  @media print {
+    .lg\:hidden, form, .card-hover { display: none !important; }
+    .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+  }
+</style>
+
 {% endblock %}

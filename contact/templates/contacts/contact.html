@@ -45,7 +45,8 @@
           </div>
         {% endif %}
 
-        <form method="post" class="space-y-5 px-5 sm:px-8 py-7">
+        {# ✅ FIXED: explicit action to the contact view #}
+        <form method="post" action="{% url 'contact' %}" class="space-y-5 px-5 sm:px-8 py-7">
           {% csrf_token %}
 
           <div class="grid sm:grid-cols-2 gap-5">
@@ -138,6 +139,19 @@
             </div>
           {% endif %}
         </dl>
+      </div>
+
+      <!-- ✅ NEW: Newsletter signup -->
+      <div class="card p-5">
+        <h3 class="font-semibold text-mapnavy mb-2 text-[14px]">Newsletter</h3>
+        <p class="text-[12.5px] text-gray-600 mb-3">
+          Get monthly updates on our work and impact — no spam, unsubscribe anytime.
+        </p>
+        <form method="post" action="/contact/newsletter/" class="space-y-3">
+          {% csrf_token %}
+          <input type="email" name="email" required class="form-input" placeholder="you@example.com">
+          <button type="submit" class="btn-primary w-full justify-center">Subscribe →</button>
+        </form>
       </div>
 
       <!-- Response time -->

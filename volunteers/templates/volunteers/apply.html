@@ -1,66 +1,356 @@
 {% extends "public_base.html" %}
 {% block title %}Volunteer — {{ ORG_NAME }}{% endblock %}
+{% block meta_description %}Give your time. Share your skills. Make a difference. Volunteer with {{ ORG_NAME }} across Zambia.{% endblock %}
+
+{% block head %}
+{{ block.super }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Volunteer — {{ ORG_NAME }}",
+  "url": "{{ request.build_absolute_uri|escapejs }}",
+  "description": "Give your time. Share your skills. Make a difference. Volunteer with {{ ORG_NAME }}.",
+  "isPartOf": {
+    "@type": "NGO",
+    "name": "{{ site.site_name|default:ORG_NAME|escapejs }}",
+    "url": "{{ request.scheme }}://{{ request.get_host }}/"
+  }
+}
+</script>
+{% endblock %}
+
 {% block content %}
-<section class="bg-mapnavy">
-  <div class="max-w-7xl mx-auto px-5 lg:px-8 py-14">
-    <h1 class="text-3xl md:text-4xl font-bold text-white">Volunteer With Us</h1>
-    <p class="mt-2.5 text-gray-300 text-[14.5px]">Give your time. Share your skills. Make a difference.</p>
+
+<a href="#main-content"
+   class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100]
+          focus:px-4 focus:py-2.5 focus:rounded-lg focus:bg-mapnavy focus:text-white
+          focus:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen">
+  Skip to main content
+</a>
+
+<!-- HERO -->
+<section class="relative bg-mapnavy overflow-hidden text-white">
+  <div class="absolute inset-0 opacity-25 pointer-events-none"
+       style="background-image:
+         radial-gradient(circle at 20% 20%, #1e9e5f 0, transparent 40%),
+         radial-gradient(circle at 80% 80%, #1f3350 0, transparent 40%);"></div>
+
+  <div class="relative max-w-7xl mx-auto px-5 lg:px-8 py-14">
+
+    <nav aria-label="Breadcrumb" class="mb-5">
+      <ol class="flex items-center gap-2 text-[12.5px] text-white/50">
+        <li><a href="/" class="hover:text-white transition-colors">Home</a></li>
+        <li aria-hidden="true">/</li>
+        <li class="text-white/80" aria-current="page">Volunteer</li>
+      </ol>
+    </nav>
+
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full
+                bg-white/10 border border-white/15
+                text-[11px] uppercase tracking-[0.14em] text-white/80 font-semibold mb-4">
+      <span class="h-1.5 w-1.5 rounded-full bg-mapgreen" aria-hidden="true"></span>
+      Get involved
+    </div>
+
+    <h1 class="text-3xl md:text-4xl lg:text-[42px] font-bold tracking-tight leading-tight">
+      Volunteer With Us
+    </h1>
+    <p class="mt-4 text-gray-300 text-[15px] max-w-2xl leading-relaxed">
+      Give your time. Share your skills. Make a difference.
+      Volunteers are the heart of our work in communities across Zambia.
+    </p>
   </div>
 </section>
 
-<section class="max-w-6xl mx-auto px-5 lg:px-8 py-12 grid lg:grid-cols-3 gap-8">
-  <div class="lg:col-span-2 order-2 lg:order-1">
-    <div class="card p-8">
-      <h2 class="text-lg font-semibold text-mapnavy mb-1">Apply to Volunteer</h2>
-      <p class="text-sm text-gray-500 mb-6">Fill in the form below and our team will get back to you.</p>
+<!-- CONTENT -->
+<main id="main-content" class="max-w-6xl mx-auto px-5 lg:px-8 py-12 lg:py-16">
+  <div class="grid lg:grid-cols-3 gap-8 items-start">
 
-      {% if form.errors %}
-        <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700 mb-4">
-          Please fix the errors below.
+    <!-- FORM (2/3) -->
+    <div class="lg:col-span-2 order-2 lg:order-1">
+
+      {% if messages %}
+        <div class="space-y-2 mb-6">
+          {% for m in messages %}
+            <div role="alert"
+                 class="rounded-xl px-4 py-3 text-[13px] border flex items-start gap-2.5
+                        {% if m.tags == 'error' %}bg-red-50 text-red-700 border-red-200{% else %}bg-green-50 text-green-700 border-green-200{% endif %}">
+              <span class="mt-0.5 shrink-0" aria-hidden="true">
+                {% if m.tags == 'error' %}⚠{% else %}✓{% endif %}
+              </span>
+              <span class="flex-1">{{ m }}</span>
+            </div>
+          {% endfor %}
         </div>
       {% endif %}
 
-      <form method="post" class="space-y-4">
-        {% csrf_token %}
-        <div class="grid md:grid-cols-2 gap-4">
-          <div><label class="form-label" for="{{ form.full_name.id_for_label }}">Full name *</label>{{ form.full_name }}</div>
-          <div><label class="form-label" for="{{ form.email.id_for_label }}">Email *</label>{{ form.email }}</div>
-        </div>
-        <div class="grid md:grid-cols-2 gap-4">
-          <div><label class="form-label" for="{{ form.phone.id_for_label }}">Phone</label>{{ form.phone }}</div>
-          <div><label class="form-label" for="{{ form.location.id_for_label }}">Location</label>{{ form.location }}</div>
-        </div>
-        <div><label class="form-label" for="{{ form.skills.id_for_label }}">Skills &amp; areas of interest</label>{{ form.skills }}</div>
-        <div class="grid md:grid-cols-2 gap-4">
-          <div><label class="form-label" for="{{ form.availability.id_for_label }}">Availability</label>{{ form.availability }}</div>
-          <div><label class="form-label" for="{{ form.areas_of_interest.id_for_label }}">Preferred activities</label>{{ form.areas_of_interest }}</div>
-        </div>
-        <div><label class="form-label" for="{{ form.experience.id_for_label }}">Relevant experience</label>{{ form.experience }}</div>
-        <div class="flex items-start gap-2">
-          {{ form.consent }}
-          <label class="text-[13px] text-gray-700">I agree to be contacted about volunteering opportunities.</label>
-        </div>
-        {% if form.consent.errors %}<p class="form-error">{{ form.consent.errors|join:", " }}</p>{% endif %}
-        <button class="btn-primary w-full justify-center">Submit Application</button>
-      </form>
-    </div>
-  </div>
+      <div class="card p-7 sm:p-8">
+        <header class="mb-6">
+          <h2 class="text-[18px] font-semibold text-mapnavy">Apply to Volunteer</h2>
+          <p class="text-[13px] text-gray-500 mt-1">
+            Fill in the form below and our team will get back to you within a few days.
+          </p>
+        </header>
 
-  <aside class="space-y-4 order-1 lg:order-2">
-    <div class="card p-6">
-      <h3 class="font-semibold text-mapnavy mb-3">Why Volunteer?</h3>
-      <ul class="space-y-2.5 text-[13.5px] text-gray-700">
-        <li class="flex items-start gap-2"><span class="text-mapgreen mt-0.5">✓</span> Help your community</li>
-        <li class="flex items-start gap-2"><span class="text-mapgreen mt-0.5">✓</span> Gain valuable experience</li>
-        <li class="flex items-start gap-2"><span class="text-mapgreen mt-0.5">✓</span> Build new skills</li>
-        <li class="flex items-start gap-2"><span class="text-mapgreen mt-0.5">✓</span> Be part of something bigger</li>
-      </ul>
+        {% if form.errors or form.non_field_errors %}
+          <div role="alert" class="error-summary mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-700" tabindex="-1">
+            <div class="font-semibold">Please fix the following:</div>
+            <ul class="mt-1.5 space-y-1 list-disc list-inside">
+              {% for e in form.non_field_errors %}<li>{{ e }}</li>{% endfor %}
+              {% for field in form %}
+                {% if field.errors %}
+                  <li>
+                    <a href="#{{ field.id_for_label }}" class="font-medium underline-offset-2 hover:underline">
+                      {{ field.label }}
+                    </a>: {{ field.errors|join:" " }}
+                  </li>
+                {% endif %}
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        <form method="post" id="volunteer-form" novalidate class="space-y-4">
+          {% csrf_token %}
+          {# Honeypot — invisible to humans, blocks simple bots #}
+          <div class="hidden" aria-hidden="true">
+            <label for="volunteer_website">Leave this empty</label>
+            <input type="text" name="website" id="volunteer_website" tabindex="-1" autocomplete="off">
+          </div>
+
+          <!-- Name + Email -->
+          <div class="grid md:grid-cols-2 gap-4">
+            <div>
+              <label for="{{ form.full_name.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                {{ form.full_name.label }} <span class="text-red-500">*</span>
+              </label>
+              {{ form.full_name }}
+              {% if form.full_name.errors %}
+                <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.full_name.errors|join:" " }}</p>
+              {% endif %}
+            </div>
+            <div>
+              <label for="{{ form.email.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                {{ form.email.label }} <span class="text-red-500">*</span>
+              </label>
+              {{ form.email }}
+              {% if form.email.errors %}
+                <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.email.errors|join:" " }}</p>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Phone + Location -->
+          <div class="grid md:grid-cols-2 gap-4">
+            <div>
+              <label for="{{ form.phone.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                {{ form.phone.label }}
+              </label>
+              {{ form.phone }}
+              {% if form.phone.errors %}
+                <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.phone.errors|join:" " }}</p>
+              {% endif %}
+            </div>
+            <div>
+              <label for="{{ form.location.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                {{ form.location.label }}
+              </label>
+              {{ form.location }}
+              {% if form.location.errors %}
+                <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.location.errors|join:" " }}</p>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Skills -->
+          <div>
+            <label for="{{ form.skills.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+              {{ form.skills.label }}
+            </label>
+            {{ form.skills }}
+            <p class="mt-1.5 text-[11.5px] text-gray-500">
+              What are you good at? Teaching, healthcare, admin, fundraising, media, construction, etc.
+            </p>
+            {% if form.skills.errors %}
+              <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.skills.errors|join:" " }}</p>
+            {% endif %}
+          </div>
+
+          <!-- Availability + Areas -->
+          <div class="grid md:grid-cols-2 gap-4">
+            <div>
+              <label for="{{ form.availability.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                {{ form.availability.label }}
+              </label>
+              {{ form.availability }}
+              {% if form.availability.errors %}
+                <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.availability.errors|join:" " }}</p>
+              {% endif %}
+            </div>
+            <div>
+              <label for="{{ form.areas_of_interest.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                {{ form.areas_of_interest.label }}
+              </label>
+              {{ form.areas_of_interest }}
+              {% if form.areas_of_interest.errors %}
+                <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.areas_of_interest.errors|join:" " }}</p>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Experience -->
+          <div>
+            <label for="{{ form.experience.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+              {{ form.experience.label }}
+            </label>
+            {{ form.experience }}
+            {% if form.experience.errors %}
+              <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.experience.errors|join:" " }}</p>
+            {% endif %}
+          </div>
+
+          <!-- Consent -->
+          <div class="pt-2">
+            <label for="{{ form.consent.id_for_label }}" class="flex items-start gap-2.5 cursor-pointer">
+              <span class="pt-0.5">{{ form.consent }}</span>
+              <span class="text-[12.5px] text-gray-700 leading-relaxed">
+                I agree to be contacted about volunteering opportunities.
+              </span>
+            </label>
+            {% if form.consent.errors %}
+              <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.consent.errors|join:" " }}</p>
+            {% endif %}
+          </div>
+
+          <!-- Submit -->
+          <div class="pt-2">
+            <button type="submit" id="volunteer-submit"
+                    class="btn-primary w-full justify-center h-11 text-[14px] font-semibold rounded-lg
+                           disabled:opacity-60 disabled:cursor-not-allowed">
+              <span id="submit-label">Submit Application</span>
+              <svg id="submit-spinner" class="hidden animate-spin ml-2" width="16" height="16" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+              </svg>
+            </button>
+            <p class="text-center text-[11.5px] text-gray-500 mt-3">
+              We usually respond within 3–5 working days.
+            </p>
+          </div>
+        </form>
+      </div>
     </div>
-    <div class="card p-6 bg-mapgreen-50 border-mapgreen-50">
-      <blockquote class="text-[13.5px] text-gray-700 italic leading-relaxed">
-        "Volunteers do not necessarily have the time; they just have the heart."
-      </blockquote>
-    </div>
-  </aside>
-</section>
+
+    <!-- SIDEBAR (1/3) -->
+    <aside class="space-y-4 order-1 lg:order-2">
+
+      <div class="card p-6">
+        <h3 class="font-semibold text-mapnavy mb-3 text-[14px]">Why Volunteer?</h3>
+        <ul class="space-y-2.5 text-[13px] text-gray-700">
+          <li class="flex items-start gap-2.5">
+            <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-mapgreen-50 text-mapgreen text-[10px] shrink-0 mt-0.5" aria-hidden="true">✓</span>
+            <span>Help your community directly</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-mapgreen-50 text-mapgreen text-[10px] shrink-0 mt-0.5" aria-hidden="true">✓</span>
+            <span>Gain valuable experience</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-mapgreen-50 text-mapgreen text-[10px] shrink-0 mt-0.5" aria-hidden="true">✓</span>
+            <span>Build new skills</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-mapgreen-50 text-mapgreen text-[10px] shrink-0 mt-0.5" aria-hidden="true">✓</span>
+            <span>Be part of something bigger</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-mapgreen-50 text-mapgreen text-[10px] shrink-0 mt-0.5" aria-hidden="true">✓</span>
+            <span>Meet like-minded people</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="card p-6 bg-mapgreen-50 border-mapgreen-50">
+        <blockquote class="text-[13.5px] text-gray-700 italic leading-relaxed">
+          "Volunteers do not necessarily have the time; they just have the heart."
+        </blockquote>
+        <footer class="mt-2 text-[11.5px] text-gray-500 not-italic">— Elizabeth Andrew</footer>
+      </div>
+
+      <!-- Upcoming opportunities (if any) -->
+      {% if opportunities %}
+        <div class="card p-6">
+          <h3 class="font-semibold text-mapnavy mb-3 text-[14px]">Upcoming opportunities</h3>
+          <ul class="space-y-3 text-[12.5px]">
+            {% for o in opportunities %}
+              <li class="flex items-start gap-2.5">
+                <span class="inline-flex items-center justify-center h-8 w-8 rounded-lg bg-mapgreen-50 text-mapgreen text-[11px] font-semibold shrink-0">
+                  {{ o.starts_at|date:"j" }}<br>{{ o.starts_at|date:"M" }}
+                </span>
+                <div class="min-w-0">
+                  <div class="font-semibold text-mapnavy truncate">{{ o.name }}</div>
+                  {% if o.location %}
+                    <div class="text-gray-500 truncate">📍 {{ o.location }}</div>
+                  {% endif %}
+                  <a href="{% url 'events:detail' o.pk %}"
+                     class="text-mapgreen hover:underline text-[11.5px] font-semibold">
+                    View →
+                  </a>
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+
+      <div class="card p-6">
+        <h3 class="font-semibold text-mapnavy mb-1.5 text-[14px]">Questions?</h3>
+        <p class="text-[12px] text-gray-600 leading-relaxed">
+          Email
+          <a href="mailto:{{ site.contact_email|default:'info@map.org' }}"
+             class="text-mapgreen hover:underline break-all">
+            {{ site.contact_email|default:"info@map.org" }}
+          </a>
+          {% if site.contact_phone %}
+            or call
+            <a href="tel:{{ site.contact_phone }}" class="text-mapgreen hover:underline">
+              {{ site.contact_phone }}
+            </a>
+          {% endif %}.
+        </p>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<style>
+  @media print {
+    .lg\:hidden, aside, .btn-primary, form > div:last-child button { display: none !important; }
+    .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+    section.bg-mapnavy { background: white !important; color: black !important; }
+    section.bg-mapnavy h1 { color: black !important; }
+  }
+</style>
+
+<script>
+(function () {
+  const form = document.getElementById('volunteer-form');
+  const submit = document.getElementById('volunteer-submit');
+  const label = document.getElementById('submit-label');
+  const spinner = document.getElementById('submit-spinner');
+  if (!form) return;
+
+  form.addEventListener('submit', () => {
+    if (submit) submit.disabled = true;
+    if (label) label.textContent = 'Submitting…';
+    spinner?.classList.remove('hidden');
+  });
+
+  // Autofocus first field
+  const first = form.querySelector('input[name="full_name"], input[type="text"]');
+  if (first) setTimeout(() => first.focus(), 100);
+})();
+</script>
+
 {% endblock %}

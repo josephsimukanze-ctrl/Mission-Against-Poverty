@@ -9,28 +9,36 @@
   <title>{% block title %}{{ ORG_NAME }}{% endblock %}</title>
   <meta name="description" content="{% block meta_description %}Mission Against Poverty is a community-driven organization working to reduce poverty through education, healthcare, skills development and sustainable community support in Zambia.{% endblock %}">
   <meta name="author" content="{{ ORG_NAME }}">
-  <meta name="robots" content="index, follow">
+  <meta name="robots" content="{% block robots %}index, follow{% endblock %}">
   <meta name="format-detection" content="telephone=no">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
 
   <!-- ============ Theme ============ -->
   <meta name="theme-color" content="#16253d" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#0f1e33" media="(prefers-color-scheme: dark)">
   <meta name="color-scheme" content="light">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
   <!-- ============ Open Graph ============ -->
-  <meta property="og:site_name" content="{{ ORG_NAME }}">
-  <meta property="og:title" content="{% block og_title %}{{ ORG_NAME }}{% endblock %}">
-  <meta property="og:description" content="{% block og_description %}Together we can end poverty.{% endblock %}">
-  <meta property="og:type" content="{% block og_type %}website{% endblock %}">
-  <meta property="og:url" content="{{ request.build_absolute_uri }}">
-  <meta property="og:image" content="{% block og_image %}{% if site.og_image %}{{ site.og_image.url }}{% else %}{% static 'img/og-default.png' %}{% endif %}{% endblock %}">
-  <meta property="og:image:alt" content="{{ ORG_NAME }}">
+  {% with og_url=request.build_absolute_uri %}
+    {% with og_img=site.og_image|default:None %}
+      <meta property="og:site_name" content="{{ ORG_NAME }}">
+      <meta property="og:title" content="{% block og_title %}{{ ORG_NAME }}{% endblock %}">
+      <meta property="og:description" content="{% block og_description %}Together we can end poverty.{% endblock %}">
+      <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+      <meta property="og:url" content="{{ og_url }}">
+      <meta property="og:image" content="{% block og_image %}{% if og_img %}{{ request.scheme }}://{{ request.get_host }}{{ og_img.url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-default.png' %}{% endif %}{% endblock %}">
+      <meta property="og:image:alt" content="{{ ORG_NAME }}">
+      <meta property="og:locale" content="en_US">
 
-  <!-- ============ Twitter ============ -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{% block tw_title %}{{ ORG_NAME }}{% endblock %}">
-  <meta name="twitter:description" content="{% block tw_description %}Together we can end poverty.{% endblock %}">
-  <meta name="twitter:image" content="{% block tw_image %}{% if site.og_image %}{{ site.og_image.url }}{% else %}{% static 'img/og-default.png' %}{% endif %}{% endblock %}">
+      <!-- ============ Twitter ============ -->
+      <meta name="twitter:card" content="summary_large_image">
+      <meta name="twitter:title" content="{% block tw_title %}{{ ORG_NAME }}{% endblock %}">
+      <meta name="twitter:description" content="{% block tw_description %}Together we can end poverty.{% endblock %}">
+      <meta name="twitter:image" content="{% block tw_image %}{% if og_img %}{{ request.scheme }}://{{ request.get_host }}{{ og_img.url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-default.png' %}{% endif %}{% endblock %}">
+    {% endwith %}
+  {% endwith %}
 
   <!-- ============ Canonical ============ -->
   {% block canonical %}<link rel="canonical" href="{{ request.build_absolute_uri }}">{% endblock %}
@@ -43,7 +51,8 @@
   <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
 
-  <!-- ============ Tailwind (CDN) ============ -->
+  <!-- ============ Tailwind (CDN) — preconnect + load ============ -->
+  <link rel="preconnect" href="https://cdn.tailwindcss.com">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -107,23 +116,27 @@
     }
   </script>
 
-  <!-- ============ Favicon (uses uploaded favicon, falls back to brand mark) ============ -->
+  <!-- ============ Favicon (uploaded → brand mark fallback) ============ -->
   {% if site.favicon %}
     <link rel="icon" href="{{ site.favicon.url }}">
   {% else %}
     <link rel="icon" type="image/svg+xml"
           href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%231e9e5f'/%3E%3Ctext x='16' y='22' font-size='16' text-anchor='middle' fill='white' font-family='system-ui'%3E%E2%99%A5%3C/text%3E%3C/svg%3E">
   {% endif %}
+
+  <!-- Optional static icons — omit silently if files don't exist -->
+  {% comment %}
+    These links assume the files exist under /static/img/. If not,
+    remove them or add them back when the files are ready.
+  {% endcomment %}
   <link rel="apple-touch-icon" sizes="180x180" href="{% static 'img/apple-touch-icon.png' %}">
-  <link rel="mask-icon" href="{% static 'img/mask-icon.svg' %}" color="#1e9e5f">
 
   <!-- ============ App CSS ============ -->
   <link rel="stylesheet" href="{% static 'css/theme.css' %}">
 
   {% block head %}{% endblock %}
 
-  <!-- Chart.js is only needed on report/chart pages; load conditionally to avoid
-       dragging a ~200KB library into the login and settings pages -->
+  <!-- Chart.js is only needed on pages that render charts -->
   {% block chart_scripts %}{% endblock %}
 </head>
 

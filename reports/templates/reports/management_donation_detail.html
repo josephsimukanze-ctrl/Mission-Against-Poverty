@@ -5,32 +5,30 @@
 
 {% block content %}
 
-<!-- ============================================================
-     HEADER
-     ============================================================ -->
+<!-- HEADER -->
 <div class="mb-6 print:mb-4">
-  <a href="/management/donations/"
+  {# ✅ FIXED: opening <a href=" was missing #}
+  <a href="{% url 'management:donations' %}"
      class="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-gray-500
             hover:text-mapnavy transition print:hidden">
     <span aria-hidden="true">←</span> All donations
   </a>
 
   <div class="mt-3 flex flex-wrap items-start justify-between gap-4">
-
-    <!-- Left: amount + reference + timestamps -->
     <div class="min-w-0">
       <div class="flex items-center gap-2.5 flex-wrap">
         <h1 class="text-[26px] font-bold text-mapnavy tracking-tight tabular-nums leading-none">
           K {{ donation.amount|floatformat:2|intcomma }}
         </h1>
-        <span class="text-[14px] text-gray-400">·</span>
+        <span class="text-[14px] text-gray-400" aria-hidden="true">·</span>
         <button type="button"
                 data-copy="{{ donation.reference }}"
                 class="copy-btn group inline-flex items-center gap-1.5 font-mono text-[13px] text-gray-600
-                       hover:text-mapgreen transition"
-                title="Copy reference">
+                       hover:text-mapgreen transition
+                       focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40 rounded"
+                aria-label="Copy reference {{ donation.reference }}">
           {{ donation.reference }}
-          <span class="copy-label text-[10.5px] text-gray-400 group-hover:text-mapgreen">copy</span>
+          <span class="copy-label text-[10.5px] text-gray-400 group-hover:text-mapgreen" aria-live="polite">copy</span>
         </button>
       </div>
 
@@ -40,7 +38,7 @@
           {{ donation.created_at|date:"M j, Y · H:i" }}
         </time>
         {% if donation.updated_at and donation.updated_at != donation.created_at %}
-          <span class="text-gray-300 mx-1.5">·</span>
+          <span class="text-gray-300 mx-1.5" aria-hidden="true">·</span>
           Updated
           <time datetime="{{ donation.updated_at|date:'c' }}">
             {{ donation.updated_at|date:"M j, Y" }}
@@ -49,7 +47,6 @@
       </p>
     </div>
 
-    <!-- Right: status + actions -->
     <div class="flex flex-wrap items-center gap-2 print:hidden">
       {% if donation.status == 'received' %}
         <span class="badge badge-success">{{ donation.get_status_display }}</span>
@@ -71,11 +68,11 @@
         </a>
       {% endif %}
 
-      <a href="/management/donations/{{ donation.pk }}/edit/"
+      <a href="{% url 'management:donation_edit' donation.pk %}"
          class="btn-secondary inline-flex items-center h-9 text-[12.5px] !px-3.5">
         Edit
       </a>
-      <a href="/management/donations/{{ donation.pk }}/delete/"
+      <a href="{% url 'management:donation_delete' donation.pk %}"
          class="inline-flex items-center h-9 px-3.5 rounded-lg border border-red-200 bg-white
                 text-[12.5px] font-semibold text-red-600 hover:bg-red-50 transition
                 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300">
@@ -85,14 +82,10 @@
   </div>
 </div>
 
-<!-- ============================================================
-     BODY
-     ============================================================ -->
+<!-- BODY -->
 <div class="grid lg:grid-cols-3 gap-5">
 
-  <!-- ==========================================
-       LEFT: Details column (2/3)
-       ========================================== -->
+  <!-- LEFT -->
   <div class="lg:col-span-2 space-y-5">
 
     <!-- Donation details -->
@@ -101,35 +94,23 @@
         Donation details
       </h2>
       <dl class="grid sm:grid-cols-2 gap-x-8 gap-y-5 text-[13.5px]">
-
         <div>
-          <dt class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-1">
-            Amount
-          </dt>
+          <dt class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-1">Amount</dt>
           <dd class="text-[18px] font-bold text-mapnavy tabular-nums">
             K {{ donation.amount|floatformat:2|intcomma }}
             <span class="text-[13px] font-normal text-gray-500 ml-0.5">{{ donation.currency }}</span>
           </dd>
         </div>
-
         <div>
-          <dt class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-1">
-            Type
-          </dt>
+          <dt class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-1">Type</dt>
           <dd class="text-[14px] text-mapnavy">{{ donation.get_kind_display }}</dd>
         </div>
-
         <div>
-          <dt class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-1">
-            Frequency
-          </dt>
+          <dt class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-1">Frequency</dt>
           <dd class="text-[14px] text-mapnavy">{{ donation.get_frequency_display }}</dd>
         </div>
-
         <div>
-          <dt class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-1">
-            Submitted
-          </dt>
+          <dt class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-1">Submitted</dt>
           <dd class="text-[14px] text-mapnavy tabular-nums">
             <time datetime="{{ donation.created_at|date:'c' }}">
               {{ donation.created_at|date:"Y-m-d H:i" }}
@@ -141,9 +122,7 @@
 
     <!-- Donor -->
     <section class="card p-6">
-      <h2 class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-4">
-        Donor
-      </h2>
+      <h2 class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-4">Donor</h2>
 
       <div class="flex items-start gap-4">
         <div class="h-12 w-12 rounded-full bg-mapgreen-50 text-mapgreen
@@ -162,7 +141,7 @@
             {% if donation.is_anonymous %}
               <span class="text-gray-500 italic">Anonymous donor</span>
             {% elif donation.donor %}
-              <a href="/management/users/{{ donation.donor.pk }}/"
+              <a href="{% url 'management:user_detail' donation.donor.pk %}"
                  class="hover:text-mapgreen transition">
                 {{ donation.donor_name|default:donation.donor.get_username }}
               </a>
@@ -175,8 +154,7 @@
             {% if donation.donor_email %}
               <div class="flex items-center gap-1.5 text-gray-600">
                 <span aria-hidden="true">✉</span>
-                <a href="mailto:{{ donation.donor_email }}"
-                   class="text-mapgreen hover:underline break-all">
+                <a href="mailto:{{ donation.donor_email }}" class="text-mapgreen hover:underline break-all">
                   {{ donation.donor_email }}
                 </a>
               </div>
@@ -184,9 +162,7 @@
             {% if donation.donor_phone %}
               <div class="flex items-center gap-1.5 text-gray-600">
                 <span aria-hidden="true">📞</span>
-                <a href="tel:{{ donation.donor_phone }}" class="hover:text-mapnavy">
-                  {{ donation.donor_phone }}
-                </a>
+                <a href="tel:{{ donation.donor_phone }}" class="hover:text-mapnavy">{{ donation.donor_phone }}</a>
               </div>
             {% endif %}
             {% if donation.donor %}
@@ -207,35 +183,25 @@
 
     <!-- Allocation -->
     <section class="card p-6">
-      <h2 class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-4">
-        Allocation
-      </h2>
+      <h2 class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-4">Allocation</h2>
       <dl class="grid sm:grid-cols-2 gap-x-8 gap-y-4 text-[13.5px]">
         <div>
-          <dt class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-1">
-            Campaign
-          </dt>
+          <dt class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-1">Campaign</dt>
           <dd class="text-[14px]">
             {% if donation.campaign %}
-              <a href="/management/campaigns/{{ donation.campaign.pk }}/edit/"
-                 class="text-mapgreen hover:underline">
-                {{ donation.campaign.name }}
-              </a>
+              <a href="{% url 'management:campaign_edit' donation.campaign.pk %}"
+                 class="text-mapgreen hover:underline">{{ donation.campaign.name }}</a>
             {% else %}
               <span class="text-gray-400">Not allocated</span>
             {% endif %}
           </dd>
         </div>
         <div>
-          <dt class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-1">
-            Project
-          </dt>
+          <dt class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-1">Project</dt>
           <dd class="text-[14px]">
             {% if donation.project %}
-              <a href="/management/projects/{{ donation.project.pk }}/edit/"
-                 class="text-mapgreen hover:underline">
-                {{ donation.project.name }}
-              </a>
+              <a href="{% url 'management:project_edit' donation.project.pk %}"
+                 class="text-mapgreen hover:underline">{{ donation.project.name }}</a>
             {% else %}
               <span class="text-gray-400">Not allocated</span>
             {% endif %}
@@ -246,7 +212,7 @@
 
     <!-- Proof of payment -->
     {% if donation.proof_of_payment or donation.proof_notes or donation.proof_submitted_at %}
-      <section class="card p-6">
+      <section class="card p-6" id="proof-section">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold">
             Proof of payment
@@ -267,7 +233,7 @@
               {{ donation.proof_submitted_at|date:"M j, Y · H:i" }}
             </time>
             {% if donation.proof_verified_at %}
-              <span class="text-gray-300 mx-1.5">·</span>
+              <span class="text-gray-300 mx-1.5" aria-hidden="true">·</span>
               Verified
               <time datetime="{{ donation.proof_verified_at|date:'c' }}">
                 {{ donation.proof_verified_at|date:"M j, Y" }}
@@ -281,12 +247,10 @@
             {% with ext=donation.proof_of_payment.name|lower|slice:"-4:" %}
               {% if ext == ".jpg" or ext == "jpeg" or ext == ".png" or ext == "webp" %}
                 <a href="{{ donation.proof_of_payment.url }}"
-                   target="_blank" rel="noopener noreferrer"
-                   class="inline-block">
+                   target="_blank" rel="noopener noreferrer" class="inline-block">
                   <img src="{{ donation.proof_of_payment.url }}"
                        alt="Proof of payment"
-                       class="max-h-64 rounded-lg border border-mapborder
-                              hover:opacity-90 transition">
+                       class="max-h-64 rounded-lg border border-mapborder hover:opacity-90 transition">
                 </a>
               {% else %}
                 <a href="{{ donation.proof_of_payment.url }}"
@@ -322,32 +286,40 @@
 
         {% if donation.proof_submitted_at and not donation.proof_verified_at and not donation.proof_rejected %}
           <div class="mt-4 pt-4 border-t border-mapborder flex flex-wrap gap-2">
-            <form method="post" class="inline">
+
+            {# ✅ Approve — explicit POST action #}
+            <form method="post"
+                  action="{% url 'management:approve_proof' donation.pk %}"
+                  class="inline">
               {% csrf_token %}
-              <input type="hidden" name="action" value="approve_proof">
               <button type="submit"
                       class="inline-flex items-center h-9 px-3.5 rounded-lg
                              bg-mapgreen text-white text-[12.5px] font-semibold
                              hover:bg-mapgreen-600 transition shadow-sm
-                             focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/50">
+                             focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/50"
+                      onclick="return confirm('Approve this proof of payment?');">
                 ✓ Approve proof
               </button>
             </form>
-            <form method="post" class="inline" id="reject-proof-form">
+
+            {# ✅ Reject — explicit POST action, reason captured in hidden field #}
+            <form method="post"
+                  action="{% url 'management:reject_proof' donation.pk %}"
+                  class="inline" id="reject-proof-form">
               {% csrf_token %}
-              <input type="hidden" name="action" value="reject_proof">
-              <input type="hidden" name="reason" value="">
+              <input type="hidden" name="reason" value="" id="reject-reason">
               <button type="button"
                       onclick="
-                        const r = prompt('Reason for rejecting this proof?');
-                        if (r) {
-                          this.previousElementSibling.value = r;
-                          this.form.submit();
+                        var r = prompt('Reason for rejecting this proof?');
+                        if (r && r.trim()) {
+                          document.getElementById('reject-reason').value = r.trim();
+                          document.getElementById('reject-proof-form').submit();
                         }
                       "
                       class="inline-flex items-center h-9 px-3.5 rounded-lg
                              border border-red-200 bg-white text-[12.5px] font-semibold text-red-600
-                             hover:bg-red-50 transition">
+                             hover:bg-red-50 transition
+                             focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300">
                 ✕ Reject
               </button>
             </form>
@@ -357,12 +329,9 @@
     {% endif %}
   </div>
 
-  <!-- ==========================================
-       RIGHT: Side panel (1/3)
-       ========================================== -->
+  <!-- RIGHT -->
   <aside class="space-y-5 print:hidden">
 
-    <!-- Pending state action -->
     {% if donation.status == 'pending' %}
       <div class="card p-5 border-amber-200 bg-amber-50">
         <div class="flex items-start gap-2.5 mb-3">
@@ -394,15 +363,12 @@
       </div>
     {% endif %}
 
-    <!-- ✅ Receipt card (auto-generated on mark as received) -->
     {% if receipt %}
       <div class="card p-5 bg-mapgreen-50 border-mapgreen-50">
         <div class="flex items-center gap-2 mb-3">
-          <span class="inline-flex h-7 w-7 items-center justify-center rounded-full
-                       bg-white text-mapgreen shrink-0">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-                 stroke-linejoin="round" aria-hidden="true">
+          <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white text-mapgreen shrink-0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
               <polyline points="14 2 14 8 20 8"/>
               <line x1="9" y1="15" x2="15" y2="15"/>
@@ -416,12 +382,9 @@
             <span class="text-gray-500">Number</span>
             <div class="flex items-center gap-1.5">
               <span class="font-mono font-semibold text-mapnavy">{{ receipt.number }}</span>
-              <button type="button"
-                      data-copy="{{ receipt.number }}"
+              <button type="button" data-copy="{{ receipt.number }}"
                       class="copy-btn text-[10px] text-gray-400 hover:text-mapgreen transition"
-                      aria-label="Copy receipt number">
-                copy
-              </button>
+                      aria-label="Copy receipt number">copy</button>
             </div>
           </div>
           <div class="flex justify-between items-center gap-2 mt-1.5">
@@ -445,26 +408,18 @@
       </div>
     {% endif %}
 
-    <!-- Transactions -->
     <div class="card p-5">
       <div class="flex items-center justify-between mb-3">
-        <h2 class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold">
-          Transactions
-        </h2>
-        <span class="text-[11px] text-gray-400">
-          {{ donation.transactions.count }} total
-        </span>
+        <h2 class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold">Transactions</h2>
+        <span class="text-[11px] text-gray-400">{{ donation.transactions.count }} total</span>
       </div>
 
       {% if donation.transactions.exists %}
         <div class="space-y-2">
           {% for t in donation.transactions.all %}
-            <div class="border border-mapborder rounded-lg p-3
-                        hover:border-gray-300 transition-colors">
+            <div class="border border-mapborder rounded-lg p-3 hover:border-gray-300 transition-colors">
               <div class="flex items-center justify-between gap-2 mb-1">
-                <span class="font-semibold text-mapnavy text-[12.5px] capitalize">
-                  {{ t.provider }}
-                </span>
+                <span class="font-semibold text-mapnavy text-[12.5px] capitalize">{{ t.provider }}</span>
                 {% if t.status == 'success' %}
                   <span class="badge badge-success">{{ t.get_status_display }}</span>
                 {% elif t.status == 'pending' %}
@@ -492,54 +447,38 @@
       {% else %}
         <div class="text-center py-6 rounded-lg border border-dashed border-mapborder">
           <div class="mx-auto h-9 w-9 rounded-full bg-gray-100 text-gray-500
-                      flex items-center justify-center mb-2 text-base">
-            💳
-          </div>
+                      flex items-center justify-center mb-2 text-base" aria-hidden="true">💳</div>
           <p class="text-[12px] text-gray-500 leading-relaxed">
             No transactions yet.<br>
-            <span class="text-[11.5px] text-gray-400">
-              They appear once processed.
-            </span>
+            <span class="text-[11.5px] text-gray-400">They appear once processed.</span>
           </p>
         </div>
       {% endif %}
     </div>
 
-    <!-- Metadata -->
     <div class="card p-5">
-      <h2 class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-3">
-        Metadata
-      </h2>
+      <h2 class="text-[11px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-3">Metadata</h2>
       <dl class="space-y-2.5 text-[12.5px]">
-
         <div class="flex items-center justify-between gap-3">
           <dt class="text-gray-500">Reference</dt>
           <dd class="flex items-center gap-1.5">
             <span class="font-mono text-mapnavy">{{ donation.reference }}</span>
-            <button type="button"
-                    data-copy="{{ donation.reference }}"
+            <button type="button" data-copy="{{ donation.reference }}"
                     class="copy-btn text-[10px] text-gray-400 hover:text-mapgreen transition"
-                    aria-label="Copy reference">
-              copy
-            </button>
+                    aria-label="Copy reference">copy</button>
           </dd>
         </div>
-
         {% if donation.bank_reference %}
           <div class="flex items-center justify-between gap-3">
             <dt class="text-gray-500">Bank ref</dt>
             <dd class="flex items-center gap-1.5">
               <span class="font-mono text-mapnavy">{{ donation.bank_reference }}</span>
-              <button type="button"
-                      data-copy="{{ donation.bank_reference }}"
+              <button type="button" data-copy="{{ donation.bank_reference }}"
                       class="copy-btn text-[10px] text-gray-400 hover:text-mapgreen transition"
-                      aria-label="Copy bank reference">
-                copy
-              </button>
+                      aria-label="Copy bank reference">copy</button>
             </dd>
           </div>
         {% endif %}
-
         <div class="flex justify-between gap-3">
           <dt class="text-gray-500">Created</dt>
           <dd class="text-mapnavy tabular-nums">
@@ -548,7 +487,6 @@
             </time>
           </dd>
         </div>
-
         {% if donation.updated_at %}
           <div class="flex justify-between gap-3">
             <dt class="text-gray-500">Updated</dt>
@@ -561,31 +499,24 @@
         {% endif %}
       </dl>
     </div>
-
   </aside>
 </div>
 
-<!-- ============================================================
-     MODAL: Mark as received
-     ============================================================ -->
+<!-- MODAL: Mark as received -->
 {% if donation.status == 'pending' %}
   <div id="mark-received-modal"
        class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
        role="dialog" aria-modal="true" aria-labelledby="mark-received-title">
-
     <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" data-modal-close></div>
 
     <div class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
       <div class="mx-auto h-11 w-11 rounded-full bg-mapgreen-50 text-mapgreen
                   flex items-center justify-center mb-4">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-          <path d="M20 6L9 17l-5-5"/>
-        </svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
       </div>
 
-      <h2 id="mark-received-title"
-          class="text-center text-[17px] font-semibold text-mapnavy">
+      <h2 id="mark-received-title" class="text-center text-[17px] font-semibold text-mapnavy">
         Mark donation as received?
       </h2>
 
@@ -604,9 +535,11 @@
         </span>
       </div>
 
-      <form method="post" class="mt-5 flex gap-2 justify-end">
+      {# ✅ Explicit action #}
+      <form method="post"
+            action="{% url 'management:mark_received' donation.pk %}"
+            class="mt-5 flex gap-2 justify-end">
         {% csrf_token %}
-        <input type="hidden" name="action" value="mark_received">
         <button type="button" data-modal-close
                 class="inline-flex items-center h-9 px-3.5 rounded-lg
                        border border-mapborder bg-white text-[12.5px] font-medium text-gray-700
@@ -627,12 +560,11 @@
 
 <script>
 (function () {
-  /* ---------- Copy to clipboard ---------- */
+  /* Copy to clipboard */
   document.querySelectorAll('.copy-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       const value = btn.dataset.copy || '';
       if (!value) return;
-
       navigator.clipboard.writeText(value).then(() => {
         const label = btn.querySelector('.copy-label') || btn;
         const original = label.textContent;
@@ -642,7 +574,7 @@
     });
   });
 
-  /* ---------- Mark-received modal ---------- */
+  /* Mark-received modal */
   const modal   = document.getElementById('mark-received-modal');
   const openBtn = document.getElementById('open-mark-received');
   if (!modal || !openBtn) return;
@@ -676,13 +608,9 @@
         modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
       ).filter((el) => !el.disabled && el.offsetParent !== null);
       if (!list.length) return;
-      const first = list[0];
-      const last = list[list.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault(); last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault(); first.focus();
-      }
+      const first = list[0], last = list[list.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     }
   });
 })();

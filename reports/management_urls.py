@@ -87,6 +87,9 @@ urlpatterns = [
     path("volunteers/applications/", VolunteerApplicationListView.as_view(), name="volunteer_applications"),
     path("volunteers/applications/<uuid:pk>/", VolunteerApplicationDetailView.as_view(), name="volunteer_application_detail"),
 
+    # Partnership list and partnership-applications list are the SAME view.
+    # /partnerships/ is the public-facing management entry;
+    # /partnerships/applications/ is kept for backward compatibility.
     path("partnerships/", PartnershipApplicationListView.as_view(), name="partnerships"),
     path("partnerships/applications/", PartnershipApplicationListView.as_view(), name="partnership_applications"),
     path("partnerships/applications/<uuid:pk>/", PartnershipApplicationDetailView.as_view(), name="partnership_application_detail"),
@@ -110,6 +113,23 @@ urlpatterns = [
     path("donations/<uuid:pk>/edit/", views.DonationUpdateView.as_view(), name="donation_edit"),
     path("donations/<uuid:pk>/delete/", views.DonationDeleteView.as_view(), name="donation_delete"),
 
+    # Proof-of-payment workflow endpoints
+    path(
+        "donations/<uuid:pk>/proof/approve/",
+        views.DonationApproveProofView.as_view(),
+        name="approve_proof",
+    ),
+    path(
+        "donations/<uuid:pk>/proof/reject/",
+        views.DonationRejectProofView.as_view(),
+        name="reject_proof",
+    ),
+    path(
+        "donations/<uuid:pk>/mark-received/",
+        views.DonationMarkReceivedView.as_view(),
+        name="mark_received",
+    ),
+
     path("campaigns/", views.CampaignListView.as_view(), name="campaigns"),
     path("campaigns/new/", views.CampaignCreateView.as_view(), name="campaign_create"),
     path("campaigns/<uuid:pk>/edit/", views.CampaignUpdateView.as_view(), name="campaign_edit"),
@@ -120,13 +140,22 @@ urlpatterns = [
     # ============================================================
     path("reports/", views.ReportsView.as_view(), name="reports"),
     path("reports/export/donations/", views.ReportsExportCSVView.as_view(), name="reports_export_donations"),
-    # Beneficiaries
+
+    # Beneficiaries / Assistance Requests
     path("beneficiaries/", views.AssistanceRequestListView.as_view(), name="assistance_requests"),
     path("beneficiaries/<uuid:pk>/", views.AssistanceRequestDetailView.as_view(), name="assistance_request_detail"),
 
+    # ✅ FIXED: Audit list + detail (list added once here; detail added below)
     path("audit/", views.AuditListView.as_view(), name="audit"),
+    path("audit/<uuid:pk>/", views.AuditLogDetailView.as_view(), name="audit_detail"),
+
     path("settings/", SiteSettingsView.as_view(), name="settings"),
 
     path("contacts/", ContactMessageListView.as_view(), name="contacts"),
     path("contacts/<uuid:pk>/", ContactMessageDetailView.as_view(), name="contact_detail"),
+
+    # ✅ FIXED: Removed duplicate `path("donations/", ...)` that was here.
+    # ✅ FIXED: Removed broken `management/audit/` lines that referenced
+    #           non-existent `views.audit_list` / `views.audit_detail`,
+    #           and doubled the `management/` prefix.
 ]

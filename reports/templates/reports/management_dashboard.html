@@ -173,7 +173,7 @@
         Last 6 months
       </span>
     </div>
-    <div style="height: 240px;">
+    <div class="relative w-full" style="height: 240px;">
       <canvas id="donationsChart" aria-label="Bar chart of donations over the last 6 months"
               role="img"></canvas>
     </div>
@@ -183,7 +183,7 @@
   <div class="card p-5">
     <h2 class="font-semibold text-mapnavy text-[15px] mb-1">Donations by Status</h2>
     <p class="text-[11.5px] text-gray-500 mb-3">Distribution across payment states</p>
-    <div class="relative" style="height: 240px;">
+    <div class="relative w-full" style="height: 240px;">
       <canvas id="statusChart" aria-label="Doughnut chart of donations by status"
               role="img"></canvas>
     </div>
@@ -352,14 +352,27 @@
 
 {% endblock %}
 
+{# ⬇️ THE FIX — load Chart.js before the page script runs ⬇️ #}
+{% block vendor_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"
+        crossorigin="anonymous"></script>
+{% endblock %}
+
 {% block scripts %}
 {{ block.super }}
 {{ chart_donation_data|json_script:"donation-data" }}
 {{ chart_status_data|json_script:"status-data" }}
 <script>
 (function () {
+  /* Bail out gracefully if Chart.js still isn't available */
+  if (typeof Chart === "undefined") {
+    console.warn("[dashboard] Chart.js failed to load — charts will not render.");
+    return;
+  }
+
   /* ---------- Bar chart: donations over time ---------- */
-  const donationData = JSON.parse(document.getElementById("donation-data").textContent);
+  const donationDataEl = document.getElementById("donation-data");
+  const donationData = donationDataEl ? JSON.parse(donationDataEl.textContent || "[]") : [];
 
   const barCanvas = document.getElementById("donationsChart");
   if (barCanvas && donationData.length) {
@@ -389,8 +402,7 @@
             titleFont: { size: 12, weight: "600" },
             bodyFont: { size: 12 },
             callbacks: {
-              label: (ctx) =>
-                " K " + Number(ctx.parsed.y).toLocaleString(),
+              label: (ctx) => " K " + Number(ctx.parsed.y).toLocaleString(),
             },
           },
         },
@@ -414,7 +426,9 @@
   }
 
   /* ---------- Doughnut: donations by status ---------- */
-  const statusData = JSON.parse(document.getElementById("status-data").textContent);
+  const statusDataEl = document.getElementById("status-data");
+  const statusData = statusDataEl ? JSON.parse(statusDataEl.textContent || "[]") : [];
+
   const statusLabels = { pending: "Pending", received: "Received", failed: "Failed", refunded: "Refunded", cancelled: "Cancelled" };
   const statusColors = { pending: "#f59e0b", received: "#1e9e5f", failed: "#dc2626", refunded: "#6366f1", cancelled: "#9ca3af" };
 

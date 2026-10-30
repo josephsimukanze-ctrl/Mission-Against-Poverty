@@ -1,24 +1,310 @@
 {% extends "portal_base.html" %}
+{% load humanize %}
 {% block title %}My Applications — {{ ORG_NAME }}{% endblock %}
-{% block nav %}<a href="{% url 'partner_portal:applications' %}" class="sidebar-link active">My Applications</a>{% endblock %}
+{% block nav %}
+  <a href="{% url 'partner_portal:applications' %}" class="sidebar-link active">My Applications</a>
+{% endblock %}
 {% block breadcrumb %}Partnership Applications{% endblock %}
+
 {% block content %}
-<h1 class="text-2xl font-bold text-mapnavy mb-6">My Partnership Applications</h1>
-<div class="space-y-3">
-  {% for a in applications %}
-    <div class="card p-5">
-      <div class="flex items-start justify-between">
-        <div>
-          <div class="font-semibold text-mapnavy">{{ a.organization_name }}</div>
-          <div class="text-[12px] text-gray-500 mt-0.5">{{ a.get_partnership_type_display }} · Applied {{ a.created_at|date:"M d, Y" }}</div>
+
+<a href="#main-content"
+   class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100]
+          focus:px-4 focus:py-2.5 focus:rounded-lg focus:bg-mapnavy focus:text-white
+          focus:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen">
+  Skip to main content
+</a>
+
+<!-- HEADER -->
+<div class="mb-6">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-bold text-mapnavy tracking-tight">My Partnership Applications</h1>
+      <p class="text-[13px] text-gray-500 mt-1">
+        {% if applications %}
+          {{ applications|length }} application{{ applications|length|pluralize }} — track their status below.
+        {% else %}
+          Submit your first partnership application.
+        {% endif %}
+      </p>
+    </div>
+
+    <a href="/partnerships/"
+       class="btn-primary inline-flex items-center gap-1.5 h-9 text-[12.5px] !px-3.5">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+      New application
+    </a>
+  </div>
+
+  {% if messages %}
+    <div class="space-y-2 mt-4">
+      {% for m in messages %}
+        <div role="alert"
+             class="rounded-xl px-4 py-3 text-[13px] border flex items-start gap-2.5
+                    {% if m.tags == 'error' %}bg-red-50 text-red-700 border-red-200
+                    {% elif m.tags == 'warning' %}bg-amber-50 text-amber-700 border-amber-200
+                    {% else %}bg-green-50 text-green-700 border-green-200{% endif %}">
+          <span class="mt-0.5 shrink-0" aria-hidden="true">
+            {% if m.tags == 'error' %}⚠{% elif m.tags == 'warning' %}⚠{% else %}✓{% endif %}
+          </span>
+          <span class="flex-1">{{ m }}</span>
         </div>
-        {% if a.status == 'approved' or a.status == 'active' %}<span class="badge badge-success">{{ a.get_status_display }}</span>
-        {% elif a.status == 'rejected' %}<span class="badge badge-danger">{{ a.get_status_display }}</span>
-        {% else %}<span class="badge badge-muted">{{ a.get_status_display }}</span>{% endif %}
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+
+<main id="main-content">
+
+  {% if applications %}
+
+    <!-- Status filter tabs (client-side filter) -->
+    <div class="flex flex-wrap items-center gap-1 p-1 rounded-xl bg-mapbg border border-mapborder max-w-fit mb-5"
+         role="tablist" aria-label="Filter applications by status">
+      <button type="button" data-filter="all" role="tab" aria-selected="true"
+              class="app-filter inline-flex items-center h-8 px-3 rounded-lg text-[12.5px] font-semibold
+                     bg-white text-mapnavy shadow-sm transition">
+        All
+        <span class="ml-1.5 inline-flex items-center justify-center min-w-[20px] h-4 px-1 rounded text-[10.5px] font-bold bg-mapgreen-50 text-mapgreen">
+          {{ applications|length }}
+        </span>
+      </button>
+      {% if approved_count %}
+        <button type="button" data-filter="approved" role="tab" aria-selected="false"
+                class="app-filter inline-flex items-center h-8 px-3 rounded-lg text-[12.5px] font-semibold
+                       text-gray-600 hover:text-mapnavy transition">
+          Approved
+          <span class="ml-1.5 inline-flex items-center justify-center min-w-[20px] h-4 px-1 rounded text-[10.5px] font-bold bg-green-100 text-green-700">
+            {{ approved_count }}
+          </span>
+        </button>
+      {% endif %}
+      {% if submitted_count %}
+        <button type="button" data-filter="submitted" role="tab" aria-selected="false"
+                class="app-filter inline-flex items-center h-8 px-3 rounded-lg text-[12.5px] font-semibold
+                       text-gray-600 hover:text-mapnavy transition">
+          Under review
+          <span class="ml-1.5 inline-flex items-center justify-center min-w-[20px] h-4 px-1 rounded text-[10.5px] font-bold bg-amber-100 text-amber-700">
+            {{ submitted_count }}
+          </span>
+        </button>
+      {% endif %}
+      {% if rejected_count %}
+        <button type="button" data-filter="rejected" role="tab" aria-selected="false"
+                class="app-filter inline-flex items-center h-8 px-3 rounded-lg text-[12.5px] font-semibold
+                       text-gray-600 hover:text-mapnavy transition">
+          Rejected
+          <span class="ml-1.5 inline-flex items-center justify-center min-w-[20px] h-4 px-1 rounded text-[10.5px] font-bold bg-red-100 text-red-700">
+            {{ rejected_count }}
+          </span>
+        </button>
+      {% endif %}
+    </div>
+
+    <!-- Applications list -->
+    <div class="space-y-3" id="applications-list">
+      {% for a in applications %}
+        <article class="app-card card p-5 border-l-4"
+                 data-status="{{ a.status }}"
+                 data-app-id="{{ a.pk }}"
+                 style="border-left-color:
+                   {% if a.status == 'approved' or a.status == 'active' %}#1e9e5f
+                   {% elif a.status == 'rejected' %}#ef4444
+                   {% elif a.status == 'submitted' or a.status == 'pending' %}#f59e0b
+                   {% else %}#9ca3af{% endif %};">
+
+          <div class="flex flex-wrap items-start justify-between gap-3 mb-3">
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h2 class="text-[15px] font-semibold text-mapnavy truncate">
+                  {{ a.organization_name }}
+                </h2>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-md
+                             bg-mapgreen-50 text-mapgreen text-[10px] font-semibold
+                             uppercase tracking-wider whitespace-nowrap">
+                  {{ a.get_partnership_type_display }}
+                </span>
+              </div>
+              <div class="mt-1.5 text-[12px] text-gray-500 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span>
+                  Applied
+                  <time datetime="{{ a.created_at|date:'c' }}" title="{{ a.created_at|date:'F j, Y · H:i' }}">
+                    {{ a.created_at|date:"M j, Y" }}
+                  </time>
+                </span>
+                <span class="text-gray-300" aria-hidden="true">·</span>
+                <span class="text-gray-400">{{ a.created_at|timesince }} ago</span>
+              </div>
+            </div>
+
+            {% if a.status == 'approved' or a.status == 'active' %}
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full
+                           bg-green-50 text-green-700 border border-green-200
+                           text-[10.5px] uppercase tracking-wider font-semibold shrink-0">
+                <span class="h-1.5 w-1.5 rounded-full bg-green-500"></span>
+                {{ a.get_status_display }}
+              </span>
+            {% elif a.status == 'rejected' %}
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full
+                           bg-red-50 text-red-700 border border-red-200
+                           text-[10.5px] uppercase tracking-wider font-semibold shrink-0">
+                <span class="h-1.5 w-1.5 rounded-full bg-red-500"></span>
+                {{ a.get_status_display }}
+              </span>
+            {% elif a.status == 'submitted' or a.status == 'pending' %}
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full
+                           bg-amber-50 text-amber-700 border border-amber-200
+                           text-[10.5px] uppercase tracking-wider font-semibold shrink-0">
+                <span class="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                {{ a.get_status_display }}
+              </span>
+            {% else %}
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full
+                           bg-gray-100 text-gray-600 border border-gray-200
+                           text-[10.5px] uppercase tracking-wider font-semibold shrink-0">
+                {{ a.get_status_display }}
+              </span>
+            {% endif %}
+          </div>
+
+          <!-- Summary preview -->
+          {% if a.proposed_project %}
+            <p class="text-[13px] text-gray-600 leading-relaxed line-clamp-2 mb-3">
+              {{ a.proposed_project }}
+            </p>
+          {% endif %}
+
+          <!-- Reviewer notes (if provided, this is what the team said back) -->
+          {% if a.reviewer_notes %}
+            <div class="mb-3 rounded-lg bg-mapbg border border-mapborder p-3">
+              <div class="text-[10.5px] uppercase tracking-wider font-semibold text-gray-500 mb-1">
+                {% if a.status == 'rejected' %}Reason{% else %}Notes from our team{% endif %}
+              </div>
+              <p class="text-[12.5px] text-gray-700 leading-relaxed whitespace-pre-line">
+                {{ a.reviewer_notes }}
+              </p>
+            </div>
+          {% endif %}
+
+          <!-- Actions -->
+          <div class="pt-3 border-t border-mapborder flex flex-wrap items-center justify-between gap-2">
+            <div class="text-[11.5px] text-gray-500">
+              {% if a.supporting_document %}
+                <a href="{{ a.supporting_document.url }}" target="_blank" rel="noopener noreferrer"
+                   class="inline-flex items-center gap-1 text-mapgreen hover:underline">
+                  📎 Supporting document
+                </a>
+              {% endif %}
+            </div>
+            <div class="flex items-center gap-2">
+              {% if a.status == 'rejected' %}
+                <a href="/partnerships/"
+                   class="text-[12px] font-semibold text-mapgreen hover:underline">
+                  Reapply →
+                </a>
+              {% endif %}
+              <a href="mailto:{{ site.contact_email|default:'info@map.org' }}?subject=Partnership%20application%20-%20{{ a.organization_name|urlencode }}"
+                 class="inline-flex items-center h-8 px-3 rounded-lg
+                        border border-mapborder bg-white text-gray-700 text-[12px] font-medium
+                        hover:bg-gray-50 transition">
+                Contact us
+              </a>
+            </div>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+
+    <!-- Filtered empty -->
+    <div id="filtered-empty" class="hidden card p-10 text-center max-w-lg mx-auto">
+      <p class="text-[13px] text-gray-500">No applications with this status.</p>
+      <button type="button" onclick="document.querySelector('[data-filter=all]').click()"
+              class="mt-3 btn-secondary inline-flex items-center h-9 text-[12.5px]">
+        Show all
+      </button>
+    </div>
+
+  {% else %}
+    <!-- EMPTY STATE -->
+    <div class="card p-10 sm:p-14 text-center max-w-lg mx-auto">
+      <div class="mx-auto h-14 w-14 rounded-full bg-mapgreen-50 text-mapgreen flex items-center justify-center mb-4 text-2xl">
+        🤝
+      </div>
+      <h2 class="text-[16px] font-semibold text-mapnavy">No partnership applications yet</h2>
+      <p class="text-[13px] text-gray-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
+        Ready to work together? Submit a partnership application and our team
+        will review it within 3–5 working days.
+      </p>
+      <div class="mt-5 flex flex-wrap items-center justify-center gap-2">
+        <a href="/partnerships/"
+           class="btn-primary inline-flex items-center h-10 px-5 text-[13px]">
+          Apply to partner
+        </a>
+        {% if site.contact_email %}
+          <a href="mailto:{{ site.contact_email }}"
+             class="btn-secondary inline-flex items-center h-10 px-4 text-[13px]">
+            Ask a question
+          </a>
+        {% endif %}
       </div>
     </div>
-  {% empty %}
-    <div class="card p-10 text-center text-gray-500">No applications yet. <a href="/partnerships/" class="text-mapgreen">Submit one →</a></div>
-  {% endfor %}
-</div>
+  {% endif %}
+
+</main>
+
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  @media print {
+    .btn-primary, .btn-secondary, button { display: none !important; }
+    .card { border: 1px solid #ccc !important; box-shadow: none !important; break-inside: avoid; }
+  }
+</style>
+
+<script>
+(function () {
+  const filters = document.querySelectorAll('.app-filter');
+  const cards = document.querySelectorAll('.app-card');
+  const filteredEmpty = document.getElementById('filtered-empty');
+
+  filters.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const filter = btn.dataset.filter;
+
+      // Update tabs
+      filters.forEach(b => {
+        const active = b === btn;
+        b.setAttribute('aria-selected', String(active));
+        b.classList.toggle('bg-white', active);
+        b.classList.toggle('text-mapnavy', active);
+        b.classList.toggle('shadow-sm', active);
+        b.classList.toggle('text-gray-600', !active);
+      });
+
+      // Show/hide cards
+      let visible = 0;
+      cards.forEach(card => {
+        const matches =
+          filter === 'all' ||
+          card.dataset.status === filter ||
+          (filter === 'submitted' && card.dataset.status === 'pending') ||
+          (filter === 'approved' && card.dataset.status === 'active');
+        card.style.display = matches ? '' : 'none';
+        if (matches) visible++;
+      });
+
+      if (filteredEmpty) {
+        filteredEmpty.classList.toggle('hidden', visible > 0 || cards.length === 0);
+      }
+    });
+  });
+})();
+</script>
+
 {% endblock %}

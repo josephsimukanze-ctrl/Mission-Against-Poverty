@@ -1,0 +1,150 @@
+{% comment %}
+  Management sidebar nav links. Reused in both the desktop sidebar and
+  the mobile drawer. Expects `path` in the context (request.path).
+{% endcomment %}
+
+<a href="/management/"
+   class="sidebar-link {% if path == '/management/' %}active{% endif %}"
+   {% if path == '/management/' %}aria-current="page"{% endif %}>
+  <span class="w-5 text-center opacity-80" aria-hidden="true">◧</span> Dashboard
+</a>
+
+<a href="/management/reports/"
+   class="sidebar-link {% if '/management/reports/' in path %}active{% endif %}"
+   {% if '/management/reports/' in path %}aria-current="page"{% endif %}>
+  <span class="w-5 text-center opacity-80" aria-hidden="true">📈</span> Reports &amp; Analytics
+</a>
+
+<div class="sidebar-section">Website</div>
+
+<a href="/management/pages/"
+   class="sidebar-link {% if '/management/pages/' in path %}active{% endif %}"
+   {% if '/management/pages/' in path %}aria-current="page"{% endif %}>
+  <span class="w-5 text-center opacity-80" aria-hidden="true">📄</span> Pages
+</a>
+
+<a href="/management/hero-slides/"
+   class="sidebar-link {% if '/management/hero-slides/' in path %}active{% endif %}"
+   {% if '/management/hero-slides/' in path %}aria-current="page"{% endif %}>
+  <span class="w-5 text-center opacity-80" aria-hidden="true">🖼</span> Hero Slides
+</a>
+
+<a href="/management/programs/"
+   class="sidebar-link {% if '/management/programs/' in path %}active{% endif %}"
+   {% if '/management/programs/' in path %}aria-current="page"{% endif %}>
+  <span class="w-5 text-center opacity-80" aria-hidden="true">🎯</span> Programs
+</a>
+
+<a href="/management/projects/"
+   class="sidebar-link {% if path == '/management/projects/' or '/management/projects/' in path and 'categories' not in path %}active{% endif %}"
+   {% if path == '/management/projects/' or '/management/projects/' in path and 'categories' not in path %}aria-current="page"{% endif %}>
+  <span class="w-5 text-center opacity-80" aria-hidden="true">📁</span> Projects
+</a>
+
+<a href="/management/project-categories/"
+   class="sidebar-link {% if '/management/project-categories/' in path %}active{% endif %}"
+   {% if '/management/project-categories/' in path %}aria-current="page"{% endif %}>
+  <span class="w-5 text-center opacity-80" aria-hidden="true">🏷</span> Project Categories
+</a>
+
+<a href="/management/news/"
+   class="sidebar-link {% if path == '/management/news/' or '/management/news/' in path and 'categories' not in path %}active{% endif %}"
+   {% if path == '/management/news/' or '/management/news/' in path and 'categories' not in path %}aria-current="page"{% endif %}>
+  <span class="w-5 text-center opacity-80" aria-hidden="true">📰</span> News
+</a>
+
+<a href="/management/news-categories/"
+   class="sidebar-link {% if '/management/news-categories/' in path %}active{% endif %}"
+   {% if '/management/news-categories/' in path %}aria-current="page"{% endif %}>
+  <span class="w-5 text-center opacity-80" aria-hidden="true">🏷</span> News Categories
+</a>
+
+<a href="/management/events/"
+   class="sidebar-link {% if '/management/events/' in path %}active{% endif %}"
+   {% if '/management/events/' in path %}aria-current="page"{% endif %}>
+  <span class="w-5 text-center opacity-80" aria-hidden="true">📅</span> Events
+</a>
+
+<a href="/management/leadership/"
+   class="sidebar-link {% if '/management/leadership/' in path or '/management/founders/' in path %}active{% endif %}"
+   {% if '/management/leadership/' in path or '/management/founders/' in path %}aria-current="page"{% endif %}>
+  <span class="w-5 text-center opacity-80" aria-hidden="true">⭐</span> Leadership &amp; Founders
+</a>
+
+<div class="sidebar-section">People</div>
+
+<a href="/management/users/"
+   class="sidebar-link {% if '/management/users/' in path %}active{% endif %}"
+   {% if '/management/users/' in path %}aria-current="page"{% endif %}>
+  <span class="w-5 text-center opacity-80" aria-hidden="true">👥</span> Users &amp; Roles
+</a>
+
+<a href="/management/volunteers/"
+   class="sidebar-link {% if path == '/management/volunteers/' or '/management/volunteers/applications' in path %}active{% endif %}"
+   {% if path == '/management/volunteers/' or '/management/volunteers/applications' in path %}aria-current="page"{% endif %}>
+  <span class="w-5 text-center opacity-80" aria-hidden="true">🤝</span> Volunteers
+</a>
+
+<a href="/management/partnerships/applications/"
+   class="sidebar-link {% if '/management/partnerships' in path %}active{% endif %}"
+   {% if '/management/partnerships' in path %}aria-current="page"{% endif %}>
+  <span class="w-5 text-center opacity-80" aria-hidden="true">🏢</span> Partnerships
+</a>
+
+<a href="/management/beneficiaries/"
+   class="sidebar-link {% if '/management/beneficiaries' in path %}active{% endif %}"
+   {% if '/management/beneficiaries' in path %}aria-current="page"{% endif %}>
+  <span class="w-5 text-center opacity-80" aria-hidden="true">💚</span> Assistance Requests
+</a>
+
+<div class="sidebar-section">Communication</div>
+
+<a href="/management/newsletter/"
+   class="sidebar-link {% if path == '/management/newsletter/' or '/management/newsletter/' in path and 'campaigns' not in path and 'delete' not in path %}active{% endif %}"
+   {% if path == '/management/newsletter/' or '/management/newsletter/' in path and 'campaigns' not in path and 'delete' not in path %}aria-current="page"{% endif %}>
+  <span class="w-5 text-center opacity-80" aria-hidden="true">✉</span> Subscribers
+</a>
+
+<a href="/management/newsletter/campaigns/"
+   class="sidebar-link {% if '/management/newsletter/campaigns/' in path %}active{% endif %}"
+   {% if '/management/newsletter/campaigns/' in path %}aria-current="page"{% endif %}>
+  <span class="w-5 text-center opacity-80" aria-hidden="true">📧</span> Newsletters
+</a>
+
+<a href="/management/contacts/"
+   class="sidebar-link {% if '/management/contacts/' in path %}active{% endif %}"
+   {% if '/management/contacts/' in path %}aria-current="page"{% endif %}>
+  <span class="w-5 text-center opacity-80" aria-hidden="true">💬</span> Contact Messages
+</a>
+
+<div class="sidebar-section">Finance</div>
+
+<a href="/management/donations/"
+   class="sidebar-link {% if '/management/donations/' in path %}active{% endif %}"
+   {% if '/management/donations/' in path %}aria-current="page"{% endif %}>
+  <span class="w-5 text-center opacity-80" aria-hidden="true">💚</span> Donations
+</a>
+
+<a href="/management/campaigns/"
+   class="sidebar-link {% if '/management/campaigns/' in path %}active{% endif %}"
+   {% if '/management/campaigns/' in path %}aria-current="page"{% endif %}>
+  <span class="w-5 text-center opacity-80" aria-hidden="true">🎗</span> Campaigns
+</a>
+
+<div class="sidebar-section">System</div>
+
+<a href="/management/audit/"
+   class="sidebar-link {% if '/management/audit/' in path %}active{% endif %}"
+   {% if '/management/audit/' in path %}aria-current="page"{% endif %}>
+  <span class="w-5 text-center opacity-80" aria-hidden="true">📊</span> Audit Logs
+</a>
+
+<a href="/management/settings/"
+   class="sidebar-link {% if '/management/settings/' in path %}active{% endif %}"
+   {% if '/management/settings/' in path %}aria-current="page"{% endif %}>
+  <span class="w-5 text-center opacity-80" aria-hidden="true">⚙</span> Site Settings
+</a>
+
+<a href="/" class="sidebar-link">
+  <span class="w-5 text-center opacity-80" aria-hidden="true">🏠</span> Back to Website
+</a>

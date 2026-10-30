@@ -3,11 +3,37 @@
 {% block title %}Projects — {{ ORG_NAME }}{% endblock %}
 {% block meta_description %}Explore our field projects in Zambia. Every project is tracked transparently with real progress and impact.{% endblock %}
 
+{% block head %}
+{{ block.super }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "{{ ORG_NAME }} Projects",
+  "url": "{{ request.build_absolute_uri|escapejs }}",
+  "numberOfItems": {{ page_obj.paginator.count|default:projects|length }},
+  "itemListElement": [
+    {% for p in projects %}{
+      "@type": "ListItem",
+      "position": {{ forloop.counter }},
+      "name": "{{ p.name|escapejs }}",
+      "url": "{{ request.scheme }}://{{ request.get_host }}{{ p.get_absolute_url }}"
+    }{% if not forloop.last %},{% endif %}{% endfor %}
+  ]
+}
+</script>
+{% endblock %}
+
 {% block content %}
 
-<!-- ============================================================
-     HERO
-     ============================================================ -->
+<a href="#main-content"
+   class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100]
+          focus:px-4 focus:py-2.5 focus:rounded-lg focus:bg-mapnavy focus:text-white
+          focus:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen">
+  Skip to main content
+</a>
+
+<!-- HERO -->
 <section class="relative bg-mapnavy overflow-hidden">
   <div class="absolute inset-0 opacity-25 pointer-events-none"
        style="background-image:
@@ -16,16 +42,14 @@
 
   <div class="relative max-w-7xl mx-auto px-5 lg:px-8 py-16">
 
-    <!-- Breadcrumb -->
     <nav aria-label="Breadcrumb" class="mb-5">
       <ol class="flex items-center gap-2 text-[12.5px] text-white/50">
         <li><a href="/" class="hover:text-white transition-colors">Home</a></li>
         <li aria-hidden="true">/</li>
-        <li class="text-white/80">Projects</li>
+        <li class="text-white/80" aria-current="page">Projects</li>
       </ol>
     </nav>
 
-    <!-- Eyebrow -->
     <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full
                 bg-white/10 border border-white/15
                 text-[11px] uppercase tracking-[0.14em] text-white/80 font-semibold mb-4">
@@ -50,47 +74,36 @@
   </div>
 </section>
 
-<!-- ============================================================
-     CONTENT
-     ============================================================ -->
-<section class="max-w-7xl mx-auto px-5 lg:px-8 py-12 lg:py-16">
+<!-- CONTENT -->
+<main id="main-content" class="max-w-7xl mx-auto px-5 lg:px-8 py-12 lg:py-16">
 
-  <!-- ==========================================
-       FILTER BAR
-       ========================================== -->
-  <form method="get" role="search" class="card p-4 mb-6">
+  <!-- FILTER BAR -->
+  <form method="get" role="search" class="card p-4 mb-6 lg:sticky lg:top-20 z-20">
     <div class="flex flex-wrap items-center gap-2">
 
-      <!-- Search -->
       <div class="relative flex-1 min-w-[220px]">
-        <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400"
-              aria-hidden="true">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/>
-            <path d="M21 21l-4.35-4.35"/>
+        <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
           </svg>
         </span>
         <input type="text"
                name="q"
                value="{{ filters.q }}"
                placeholder="Search projects…"
-               aria-label="Search projects"
+               aria-label="Search projects by name or summary"
                class="form-input w-full pl-9 pr-9 text-[13px]">
         {% if filters.q %}
-          <a href="?{% if filters.category %}category={{ filters.category }}{% endif %}{% if filters.status %}{% if filters.category %}&{% endif %}status={{ filters.status }}{% endif %}"
+          <a href="?{% if filters.category %}category={{ filters.category }}{% endif %}{% if filters.status %}&status={{ filters.status }}{% endif %}{% if filters.sort %}&sort={{ filters.sort }}{% endif %}"
              aria-label="Clear search"
-             class="absolute inset-y-0 right-2 flex items-center px-1 text-gray-400
-                    hover:text-gray-600 transition">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2">
+             class="absolute inset-y-0 right-2 flex items-center px-1 text-gray-400 hover:text-gray-600 transition">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M18 6L6 18M6 6l12 12"/>
             </svg>
           </a>
         {% endif %}
       </div>
 
-      <!-- Category -->
       <select name="category"
               aria-label="Filter by category"
               onchange="this.form.submit()"
@@ -103,33 +116,39 @@
         {% endfor %}
       </select>
 
-      <!-- Status -->
       <select name="status"
               aria-label="Filter by status"
               onchange="this.form.submit()"
               class="form-input min-w-[160px] max-w-[220px] text-[13px]">
         <option value="">All statuses</option>
         {% for value, label in statuses %}
-          <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>
-            {{ label }}
-          </option>
+          <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
         {% endfor %}
+      </select>
+
+      <select name="sort"
+              aria-label="Sort projects"
+              onchange="this.form.submit()"
+              class="form-input min-w-[160px] max-w-[220px] text-[13px]">
+        <option value="">Newest first</option>
+        <option value="most-funded" {% if filters.sort == 'most-funded' %}selected{% endif %}>Most funded</option>
+        <option value="almost-there" {% if filters.sort == 'almost-there' %}selected{% endif %}>Almost there</option>
+        <option value="newest" {% if filters.sort == 'newest' %}selected{% endif %}>Just launched</option>
       </select>
 
       <button type="submit"
               class="btn-primary inline-flex items-center h-9 text-[12.5px] !px-3.5">
-        Filter
+        Apply
       </button>
 
-      {% if filters.q or filters.category or filters.status %}
-        <a href="?"
-           class="text-[12.5px] text-gray-500 hover:text-mapnavy underline-offset-2 hover:underline">
+      {% if filters.q or filters.category or filters.status or filters.sort %}
+        <a href="?" class="text-[12.5px] text-gray-500 hover:text-mapnavy underline-offset-2 hover:underline">
           Clear all
         </a>
       {% endif %}
     </div>
 
-    <!-- Active filter chips -->
+    <!-- Active filter chips (clickable to remove) -->
     {% if filters.q or filters.category or filters.status %}
       <div class="mt-3 pt-3 border-t border-mapborder flex flex-wrap items-center gap-2 text-[11.5px]">
         <span class="text-gray-500">
@@ -140,42 +159,57 @@
         </span>
 
         {% if filters.q %}
-          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md
-                       bg-mapbg border border-mapborder text-gray-700">
+          <a href="?{% if filters.category %}category={{ filters.category }}{% endif %}{% if filters.status %}&status={{ filters.status }}{% endif %}{% if filters.sort %}&sort={{ filters.sort }}{% endif %}"
+             class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md
+                    bg-mapbg border border-mapborder text-gray-700 hover:border-gray-400 transition"
+             aria-label="Remove search filter">
             <span class="text-gray-400 text-[10px] uppercase tracking-wider font-semibold">Search</span>
             <span class="font-medium">"{{ filters.q }}"</span>
-          </span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </a>
         {% endif %}
 
         {% if filters.category %}
-          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md
-                       bg-mapbg border border-mapborder text-gray-700">
+          <a href="?{% if filters.q %}q={{ filters.q }}{% endif %}{% if filters.status %}&status={{ filters.status }}{% endif %}{% if filters.sort %}&sort={{ filters.sort }}{% endif %}"
+             class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md
+                    bg-mapbg border border-mapborder text-gray-700 hover:border-gray-400 transition"
+             aria-label="Remove category filter">
             <span class="text-gray-400 text-[10px] uppercase tracking-wider font-semibold">Category</span>
-            <span class="font-medium">{{ filters.category }}</span>
-          </span>
+            <span class="font-medium">
+              {% for c in categories %}{% if c.slug == filters.category %}{{ c.name }}{% endif %}{% endfor %}
+            </span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </a>
         {% endif %}
 
         {% if filters.status %}
-          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md
-                       bg-mapbg border border-mapborder text-gray-700">
+          <a href="?{% if filters.q %}q={{ filters.q }}{% endif %}{% if filters.category %}&category={{ filters.category }}{% endif %}{% if filters.sort %}&sort={{ filters.sort }}{% endif %}"
+             class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md
+                    bg-mapbg border border-mapborder text-gray-700 hover:border-gray-400 transition"
+             aria-label="Remove status filter">
             <span class="text-gray-400 text-[10px] uppercase tracking-wider font-semibold">Status</span>
             <span class="font-medium">{{ filters.status|title }}</span>
-          </span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </a>
         {% endif %}
       </div>
     {% endif %}
   </form>
 
-  <!-- ==========================================
-       GRID
-       ========================================== -->
+  <!-- GRID -->
   {% if projects %}
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 
       {% for p in projects %}
         <article>
           <a href="{{ p.get_absolute_url }}"
-             class="group card card-hover overflow-hidden flex flex-col
+             class="group card card-hover overflow-hidden flex flex-col h-full
                     focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40">
 
             <!-- Cover -->
@@ -206,6 +240,15 @@
                   aria-hidden="true"></span>
                 {{ p.get_status_display }}
               </span>
+
+              <!-- Hover affordance -->
+              <span class="absolute bottom-3 right-3 inline-flex items-center gap-1
+                           px-2 py-1 rounded-md bg-white/95 backdrop-blur-sm
+                           text-[10.5px] font-semibold text-mapnavy shadow-sm
+                           opacity-0 group-hover:opacity-100 transition-opacity">
+                View
+                <span aria-hidden="true">→</span>
+              </span>
             </div>
 
             <!-- Body -->
@@ -215,6 +258,12 @@
                          group-hover:text-mapgreen transition-colors">
                 {{ p.name }}
               </h2>
+
+              {% if p.category %}
+                <p class="text-[11px] uppercase tracking-wider text-gray-500 font-semibold mt-1.5">
+                  {{ p.category.name }}
+                </p>
+              {% endif %}
 
               {% if p.summary %}
                 <p class="text-[12.5px] text-gray-600 mt-1.5 leading-relaxed clamp-2">
@@ -228,6 +277,7 @@
                        role="progressbar"
                        aria-valuenow="{{ p.progress_percent|default:0 }}"
                        aria-valuemin="0" aria-valuemax="100"
+                       aria-valuetext="{{ p.progress_percent|default:0 }}% funded"
                        aria-label="{{ p.name }} fundraising progress">
                     <div class="h-full rounded-full bg-mapgreen transition-all duration-500"
                          style="width: {{ p.progress_percent|default:0 }}%"></div>
@@ -255,126 +305,136 @@
 
     </div>
 
-    <!-- ==========================================
-         PAGINATION
-         ========================================== -->
+    <!-- PAGINATION -->
     {% if is_paginated %}
       <nav aria-label="Pagination"
             class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-10">
 
         <p class="text-[12.5px] text-gray-500 order-2 sm:order-1">
           Showing
-          <span class="font-semibold text-mapnavy">{{ page_obj.start_index }}</span>–<span class="font-semibold text-mapnavy">{{ page_obj.end_index }}</span>
+          <span class="font-semibold text-mapnavy">{{ page_obj.start_index }}</span>–
+          <span class="font-semibold text-mapnavy">{{ page_obj.end_index }}</span>
           of <span class="font-semibold text-mapnavy">{{ page_obj.paginator.count }}</span>
         </p>
 
         <div class="flex items-center gap-1 order-1 sm:order-2">
+          {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if filters.q %}&q={{ filters.q }}{% endif %}{% if filters.category %}&category={{ filters.category }}{% endif %}{% if filters.status %}&status={{ filters.status }}{% endif %}{% if filters.sort %}&sort={{ filters.sort }}{% endif %}"
+               class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-white
+                      text-[12.5px] font-medium text-gray-700 hover:bg-gray-50 transition">
+              ← Prev
+            </a>
+          {% else %}
+            <span class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-gray-50
+                         text-[12.5px] font-medium text-gray-400 cursor-not-allowed">
+              ← Prev
+            </span>
+          {% endif %}
 
-          {% with qs=filters.q|default:'' %}
-            {% if page_obj.has_previous %}
-              <a href="?page={{ page_obj.previous_page_number }}{% if qs %}&q={{ qs }}{% endif %}{% if filters.category %}&category={{ filters.category }}{% endif %}{% if filters.status %}&status={{ filters.status }}{% endif %}"
-                 class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-white
-                        text-[12.5px] font-medium text-gray-700 hover:bg-gray-50 transition">
-                ← Prev
-              </a>
-            {% else %}
-              <span class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-gray-50
-                           text-[12.5px] font-medium text-gray-400 cursor-not-allowed">
-                ← Prev
+          {% for num in page_obj.paginator.page_range %}
+            {% if num == page_obj.number %}
+              <span aria-current="page"
+                    class="inline-flex items-center justify-center h-9 w-9 rounded-lg
+                           bg-mapgreen text-white text-[12.5px] font-semibold">
+                {{ num }}
               </span>
-            {% endif %}
-
-            {% for num in page_obj.paginator.page_range %}
-              {% if num == page_obj.number %}
-                <span aria-current="page"
-                      class="inline-flex items-center justify-center h-9 w-9 rounded-lg
-                             bg-mapgreen text-white text-[12.5px] font-semibold">
-                  {{ num }}
-                </span>
-              {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
-                <a href="?page={{ num }}{% if qs %}&q={{ qs }}{% endif %}{% if filters.category %}&category={{ filters.category }}{% endif %}{% if filters.status %}&status={{ filters.status }}{% endif %}"
-                   class="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-mapborder
-                          bg-white text-[12.5px] font-medium text-gray-700 hover:bg-gray-50 transition">
-                  {{ num }}
-                </a>
-              {% endif %}
-            {% endfor %}
-
-            {% if page_obj.has_next %}
-              <a href="?page={{ page_obj.next_page_number }}{% if qs %}&q={{ qs }}{% endif %}{% if filters.category %}&category={{ filters.category }}{% endif %}{% if filters.status %}&status={{ filters.status }}{% endif %}"
-                 class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-white
-                        text-[12.5px] font-medium text-gray-700 hover:bg-gray-50 transition">
-                Next →
+            {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+              <a href="?page={{ num }}{% if filters.q %}&q={{ filters.q }}{% endif %}{% if filters.category %}&category={{ filters.category }}{% endif %}{% if filters.status %}&status={{ filters.status }}{% endif %}{% if filters.sort %}&sort={{ filters.sort }}{% endif %}"
+                 class="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-mapborder
+                        bg-white text-[12.5px] font-medium text-gray-700 hover:bg-gray-50 transition">
+                {{ num }}
               </a>
-            {% else %}
-              <span class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-gray-50
-                           text-[12.5px] font-medium text-gray-400 cursor-not-allowed">
-                Next →
-              </span>
             {% endif %}
-          {% endwith %}
+          {% endfor %}
+
+          {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if filters.q %}&q={{ filters.q }}{% endif %}{% if filters.category %}&category={{ filters.category }}{% endif %}{% if filters.status %}&status={{ filters.status }}{% endif %}{% if filters.sort %}&sort={{ filters.sort }}{% endif %}"
+               class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-white
+                      text-[12.5px] font-medium text-gray-700 hover:bg-gray-50 transition">
+              Next →
+            </a>
+          {% else %}
+            <span class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-gray-50
+                         text-[12.5px] font-medium text-gray-400 cursor-not-allowed">
+              Next →
+            </span>
+          {% endif %}
         </div>
       </nav>
     {% endif %}
 
   {% else %}
-    <!-- ==========================================
-         EMPTY STATE
-         ========================================== -->
+    <!-- EMPTY STATE -->
     <div class="card p-10 sm:p-14 text-center max-w-xl mx-auto">
       {% if filters.q or filters.category or filters.status %}
-        <div class="mx-auto h-12 w-12 rounded-full bg-gray-100 text-gray-500
-                    flex items-center justify-center mb-3">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/>
-            <path d="M21 21l-4.35-4.35"/>
+        <div class="mx-auto h-12 w-12 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center mb-3">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
           </svg>
         </div>
         <h2 class="text-[16px] font-semibold text-mapnavy">No matches</h2>
         <p class="text-[13px] text-gray-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
           No projects match
           {% if filters.q %}<span class="font-medium text-mapnavy">"{{ filters.q }}"</span>{% endif %}
-          {% if filters.q and filters.category or filters.q and filters.status %}with{% endif %}
-          the selected filters.
+          with the selected filters.
         </p>
-        <a href="?"
-           class="inline-flex mt-4 text-[12.5px] font-semibold text-mapgreen hover:underline">
-          Clear all filters
-        </a>
+        <div class="mt-5 flex flex-wrap items-center justify-center gap-2">
+          <a href="?" class="btn-primary inline-flex items-center justify-center h-10 px-5 text-[13px]">
+            Clear all filters
+          </a>
+          {% if filters.q %}
+            <a href="{% url 'programs:list' %}?q={{ filters.q }}"
+               class="btn-secondary inline-flex items-center justify-center h-10 px-4 text-[13px]">
+              Search programs instead
+            </a>
+          {% endif %}
+        </div>
       {% else %}
-        <div class="mx-auto h-12 w-12 rounded-full bg-mapgreen-50 text-mapgreen
-                    flex items-center justify-center mb-3 text-lg">
-          📁
+        <div class="mx-auto h-12 w-12 rounded-full bg-mapgreen-50 overflow-hidden flex items-center justify-center mb-3">
+          {% if site.logo %}
+            <img src="{{ site.logo.url }}" alt="" class="w-full h-full object-contain p-1.5">
+          {% else %}
+            <span class="text-lg" aria-hidden="true">📁</span>
+          {% endif %}
         </div>
         <h2 class="text-[16px] font-semibold text-mapnavy">No projects yet</h2>
         <p class="text-[13px] text-gray-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
           Check back soon — we're preparing new field work in the communities we serve.
         </p>
         <div class="mt-5 flex flex-wrap items-center justify-center gap-2">
-          <a href="/donate/"
-             class="btn-primary inline-flex items-center justify-center h-10 px-5 text-[13px]">
+          <a href="/donate/" class="btn-primary inline-flex items-center justify-center h-10 px-5 text-[13px]">
             Support our work
           </a>
-          <a href="/programs/"
-             class="btn-secondary inline-flex items-center justify-center h-10 px-4 text-[13px]">
+          <a href="{% url 'programs:list' %}" class="btn-secondary inline-flex items-center justify-center h-10 px-4 text-[13px]">
             Browse programs
           </a>
         </div>
       {% endif %}
     </div>
   {% endif %}
-</section>
+</main>
 
-<!-- ============================================================
-     Local utilities
-     ============================================================ -->
+<!-- Sticky mobile donate -->
+{% if projects %}
+  <div class="lg:hidden fixed bottom-0 inset-x-0 z-40 p-3 bg-white/95 backdrop-blur border-t border-mapborder">
+    <a href="/donate/"
+       class="btn-primary inline-flex items-center justify-center w-full h-11 text-[14px] font-semibold rounded-lg">
+      💚 Support our work
+    </a>
+  </div>
+  <div class="lg:hidden h-20" aria-hidden="true"></div>
+{% endif %}
+
 <style>
   .clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+  @media print {
+    .lg\:hidden, form, .card-hover { display: none !important; }
+    .card { border: 1px solid #ccc !important; box-shadow: none !important; }
   }
 </style>
 

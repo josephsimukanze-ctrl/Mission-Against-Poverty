@@ -4,6 +4,8 @@
 
 {% block content %}
 
+{% url 'management:assistance_requests' as clear_url %}
+
 <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
   <div>
     <h1 class="text-2xl font-bold text-mapnavy">Assistance Requests</h1>
@@ -34,33 +36,44 @@
 
 <!-- Filters + search -->
 <div class="card p-4 flex flex-wrap gap-3 items-center mb-5">
-  <form method="get" class="flex flex-wrap gap-3 items-center">
-    <input type="text" name="q" value="{{ q }}" placeholder="Search reference, name, email…"
+  <form method="get" class="flex flex-wrap gap-3 items-center" role="search">
+    <label for="filter-q" class="sr-only">Search requests</label>
+    <input id="filter-q" type="text" name="q" value="{{ q }}"
+           placeholder="Search reference, name, email…"
            class="form-input max-w-xs">
-    <select name="status" class="form-input max-w-[180px]" onchange="this.form.submit()">
+
+    <label for="filter-status" class="sr-only">Filter by status</label>
+    <select id="filter-status" name="status" class="form-input max-w-[180px]">
       {% for value, label in statuses %}
         <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
       {% endfor %}
     </select>
-    <button class="btn-secondary text-[13px]">Search</button>
+
+    <button type="submit" class="btn-secondary text-[13px]">Search</button>
+
     {% if q or status_filter %}
-      <a href="/management/beneficiaries/" class="text-[12.5px] text-gray-500 hover:text-mapnavy underline">Clear</a>
+      <a href="{{ clear_url }}" class="text-[12.5px] text-gray-500 hover:text-mapnavy underline">Clear</a>
     {% endif %}
   </form>
-  <div class="ml-auto text-[12.5px] text-gray-500">
+
+  <div class="ml-auto text-[12.5px] text-gray-500" aria-live="polite">
     Showing <strong>{{ total }}</strong> request{{ total|pluralize }}
+    {% if q or status_filter %}<span class="text-gray-400">(filtered)</span>{% endif %}
   </div>
 </div>
 
 <!-- Table -->
 <div class="table-wrapper">
-  <table class="table-base w-full">
+  <table class="table-base w-full" aria-label="Assistance requests">
     <thead>
       <tr>
         {% for col in columns %}
-          <th class="{% if col.align == 'right' %}text-right{% elif col.align == 'center' %}text-center{% endif %}">{{ col.label }}</th>
+          <th scope="col"
+              class="{% if col.align == 'right' %}text-right{% elif col.align == 'center' %}text-center{% endif %}">
+            {{ col.label }}
+          </th>
         {% endfor %}
-        <th class="text-right" style="width: 120px;">Actions</th>
+        <th scope="col" class="text-right" style="width: 120px;">Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -82,33 +95,55 @@
             </td>
           {% endfor %}
           <td class="text-right align-middle">
-            {% if row_data.view_url %}
-              <a href="{{ row_data.view_url }}" class="text-mapgreen text-[12.5px] font-medium hover:underline">Review →</a>
-            {% else %}
-              <a href="/management/beneficiaries/{{ row_data.pk }}/" class="text-mapgreen text-[12.5px] font-medium hover:underline">Review →</a>
-            {% endif %}
+            <a href="{{ row_data.view_url }}"
+               class="text-mapgreen text-[12.5px] font-medium hover:underline
+                      focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40 rounded">
+              Review →
+            </a>
           </td>
         </tr>
       {% empty %}
-        <tr><td colspan="{{ columns|length|add:1 }}" class="text-center py-10">
-          <div class="text-3xl mb-2 text-gray-300">🙏</div>
-          <div class="text-[14px] font-medium text-mapnavy">No requests found</div>
-          <p class="text-[12.5px] text-gray-500 mt-1">Requests submitted via the public form will appear here.</p>
-          {% if q or status_filter %}
-            <a href="/management/beneficiaries/" class="text-mapgreen text-[12.5px] mt-3 inline-block hover:underline">Clear filters</a>
-          {% endif %}
-        </td></tr>
+        <tr>
+          <td colspan="{{ columns|length|default:0|add:1 }}" class="text-center py-10">
+            <div class="text-3xl mb-2 text-gray-300" aria-hidden="true">🙏</div>
+            <div class="text-[14px] font-medium text-mapnavy">No requests found</div>
+            <p class="text-[12.5px] text-gray-500 mt-1">
+              Requests submitted via the public form will appear here.
+            </p>
+            {% if q or status_filter %}
+              <a href="{{ clear_url }}" class="text-mapgreen text-[12.5px] mt-3 inline-block hover:underline">
+                Clear filters
+              </a>
+            {% endif %}
+          </td>
+        </tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
 
 {% if is_paginated %}
-  <div class="flex justify-center gap-2 mt-6 text-sm">
-    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn-secondary text-[13px]">← Previous</a>{% endif %}
-    <span class="px-3 py-2 text-gray-500 text-[13px]">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn-secondary text-[13px]">Next →</a>{% endif %}
-  </div>
+  <nav class="flex justify-center items-center gap-2 mt-6 text-sm" aria-label="Pagination">
+    {% if page_obj.has_previous %}
+      <a rel="prev"
+         href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q|urlencode }}{% endif %}{% if status_filter %}&status={{ status_filter|urlencode }}{% endif %}"
+         class="btn-secondary text-[13px] focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40">
+        ← Previous
+      </a>
+    {% endif %}
+
+    <span class="px-3 py-2 text-gray-500 text-[13px]" aria-current="page">
+      Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    </span>
+
+    {% if page_obj.has_next %}
+      <a rel="next"
+         href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q|urlencode }}{% endif %}{% if status_filter %}&status={{ status_filter|urlencode }}{% endif %}"
+         class="btn-secondary text-[13px] focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40">
+        Next →
+      </a>
+    {% endif %}
+  </nav>
 {% endif %}
 
 {% endblock %}

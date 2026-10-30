@@ -228,7 +228,8 @@
       </p>
     </div>
   </div>
-  <div style="height: 280px;">
+  {# Explicit position:relative + w-full so Chart.js can measure the parent. #}
+  <div class="relative w-full" style="height: 280px;">
     <canvas id="dailyChart"
             aria-label="Line chart of daily donation totals"
             role="img"></canvas>
@@ -505,16 +506,50 @@
 
 {% endblock %}
 
+{# ─────────────────────────────────────────────────────────────
+   Load Chart.js before the page script runs.
+   If your base template already loads Chart.js globally, you can
+   remove this block — but keep the order: vendor_js → scripts.
+   ───────────────────────────────────────────────────────────── #}
+{% block vendor_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"
+        crossorigin="anonymous"></script>
+{% endblock %}
+
 {% block scripts %}
 {{ block.super }}
 {{ chart_daily|json_script:"daily-chart-data" }}
 <script>
 (function () {
-  const raw = document.getElementById("daily-chart-data");
-  if (!raw || typeof Chart === "undefined") return;
-  const data = JSON.parse(raw.textContent);
+  const canvas = document.getElementById("dailyChart");
+  const raw    = document.getElementById("daily-chart-data");
+  if (!canvas || !raw) return;
 
-  new Chart(document.getElementById("dailyChart"), {
+  // Friendly fallback if the library failed to load (CDN blocked, CSP, etc.)
+  if (typeof Chart === "undefined") {
+    console.warn("[reports] Chart.js is not loaded — showing fallback.");
+    canvas.parentElement.innerHTML =
+      '<div class="h-full flex items-center justify-center text-[12.5px] text-gray-500">'
+      + 'Chart library failed to load.</div>';
+    return;
+  }
+
+  let data;
+  try {
+    data = JSON.parse(raw.textContent);
+  } catch (e) {
+    data = [];
+  }
+
+  // Friendly fallback when the selected range has no donations.
+  if (!Array.isArray(data) || data.length === 0) {
+    canvas.parentElement.innerHTML =
+      '<div class="h-full flex items-center justify-center text-[12.5px] text-gray-500">'
+      + 'No daily donation data for this period.</div>';
+    return;
+  }
+
+  const chart = new Chart(canvas, {
     type: "line",
     data: {
       labels: data.map(d => d.label),
@@ -523,7 +558,7 @@
         data: data.map(d => d.value),
         borderColor: "#1e9e5f",
         backgroundColor: (ctx) => {
-          const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 260);
+          const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 280);
           g.addColorStop(0, "rgba(30, 158, 95, 0.30)");
           g.addColorStop(1, "rgba(30, 158, 95, 0)");
           return g;
@@ -536,12 +571,14 @@
         pointHoverBackgroundColor: "#1e9e5f",
         pointHoverBorderColor: "#fff",
         pointHoverBorderWidth: 2,
+        spanGaps: true,          // continuous line across zero-donation days
       }],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       interaction: { mode: "index", intersect: false },
+      animation: { duration: 400 },
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -568,12 +605,21 @@
           grid: { color: "#f1f5f9", drawBorder: false },
         },
         x: {
-          ticks: { color: "#64748b", font: { size: 11 }, padding: 6 },
+          ticks: {
+            color: "#64748b",
+            font: { size: 11 },
+            padding: 6,
+            autoSkip: true,
+            maxTicksLimit: 10,
+          },
           grid: { display: false },
         },
       },
     },
   });
+
+  // Some browsers report 0 width on the very first paint.
+  requestAnimationFrame(() => chart.resize());
 })();
 </script>
 {% endblock %}

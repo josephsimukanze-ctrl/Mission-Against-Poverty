@@ -4,9 +4,14 @@
 
 {% block content %}
 
-<!-- ============================================================
-     HEADER
-     ============================================================ -->
+<a href="#main-content"
+   class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100]
+          focus:px-4 focus:py-2.5 focus:rounded-lg focus:bg-mapnavy focus:text-white
+          focus:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen">
+  Skip to main content
+</a>
+
+<!-- HEADER -->
 <div class="mb-6">
   <a href="/management/volunteers/applications/"
      class="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-gray-500
@@ -15,63 +20,121 @@
   </a>
 
   <div class="mt-3 flex flex-wrap items-start justify-between gap-4">
-    <div class="min-w-0">
+    <div class="min-w-0 flex-1">
       <div class="flex items-center gap-2.5 flex-wrap">
         <h1 class="text-2xl font-bold text-mapnavy tracking-tight">
           {{ app.full_name }}
         </h1>
 
         {% if app.status == 'approved' %}
-          <span class="badge badge-success">{{ app.get_status_display }}</span>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full
+                       bg-green-50 text-green-700 border border-green-200
+                       text-[11px] uppercase tracking-wider font-semibold">
+            <span class="h-1.5 w-1.5 rounded-full bg-green-500"></span>
+            {{ app.get_status_display }}
+          </span>
         {% elif app.status == 'submitted' %}
-          <span class="badge badge-warning">{{ app.get_status_display }}</span>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full
+                       bg-amber-50 text-amber-700 border border-amber-200
+                       text-[11px] uppercase tracking-wider font-semibold">
+            <span class="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+            {{ app.get_status_display }}
+          </span>
         {% elif app.status == 'rejected' %}
-          <span class="badge badge-danger">{{ app.get_status_display }}</span>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full
+                       bg-red-50 text-red-700 border border-red-200
+                       text-[11px] uppercase tracking-wider font-semibold">
+            <span class="h-1.5 w-1.5 rounded-full bg-red-500"></span>
+            {{ app.get_status_display }}
+          </span>
         {% else %}
-          <span class="badge badge-muted">{{ app.get_status_display }}</span>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full
+                       bg-gray-100 text-gray-600 border border-gray-200
+                       text-[11px] uppercase tracking-wider font-semibold">
+            {{ app.get_status_display }}
+          </span>
         {% endif %}
       </div>
 
-      <div class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-gray-500">
+      <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12.5px] text-gray-500">
         <a href="mailto:{{ app.email }}"
-           class="text-mapgreen hover:underline">
+           class="inline-flex items-center gap-1 text-mapgreen hover:underline">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
           {{ app.email }}
         </a>
-        <span class="text-gray-300">·</span>
+        {% if app.phone %}
+          <span class="text-gray-300" aria-hidden="true">·</span>
+          <a href="tel:{{ app.phone }}" class="inline-flex items-center gap-1 hover:text-mapnavy">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            {{ app.phone }}
+          </a>
+        {% endif %}
+        {% if app.location %}
+          <span class="text-gray-300" aria-hidden="true">·</span>
+          <span class="inline-flex items-center gap-1">
+            <span aria-hidden="true">📍</span> {{ app.location }}
+          </span>
+        {% endif %}
+        <span class="text-gray-300" aria-hidden="true">·</span>
         <span>
-          Applied
-          <time datetime="{{ app.created_at|date:'c' }}">
+          Submitted
+          <time datetime="{{ app.created_at|date:'c' }}" title="{{ app.created_at|date:'F j, Y · H:i' }}">
             {{ app.created_at|date:"M j, Y" }}
           </time>
         </span>
       </div>
     </div>
 
-    {% if app.user %}
-      <a href="/management/users/{{ app.user.pk }}/"
-         class="btn-secondary inline-flex items-center h-9 text-[12.5px] !px-3.5">
-        View user profile →
-      </a>
-    {% endif %}
+    <div class="flex flex-wrap items-center gap-2 shrink-0">
+      {% if app.user %}
+        <a href="/management/users/{{ app.user.pk }}/"
+           class="btn-secondary inline-flex items-center gap-1.5 h-9 text-[12.5px] !px-3.5">
+          View user profile
+          <span aria-hidden="true">→</span>
+        </a>
+      {% endif %}
+    </div>
   </div>
 </div>
 
-<!-- ============================================================
-     BODY
-     ============================================================ -->
-<div class="grid lg:grid-cols-3 gap-5 items-start">
+<!-- MESSAGES -->
+{% if messages %}
+  <div class="space-y-2 mb-5">
+    {% for m in messages %}
+      <div role="alert"
+           class="rounded-xl px-4 py-3 text-[13px] border flex items-start gap-2.5
+                  {% if m.tags == 'error' %}bg-red-50 text-red-700 border-red-200
+                  {% elif m.tags == 'warning' %}bg-amber-50 text-amber-700 border-amber-200
+                  {% else %}bg-green-50 text-green-700 border-green-200{% endif %}">
+        <span class="mt-0.5 shrink-0" aria-hidden="true">
+          {% if m.tags == 'error' %}⚠{% elif m.tags == 'warning' %}⚠{% else %}✓{% endif %}
+        </span>
+        <span class="flex-1">{{ m }}</span>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
 
-  <!-- ==========================================
-       MAIN COLUMN (2/3) — Details
-       ========================================== -->
+<!-- BODY -->
+<main id="main-content" class="grid lg:grid-cols-3 gap-5 items-start">
+
+  <!-- MAIN COLUMN -->
   <div class="lg:col-span-2 space-y-5">
 
-    <!-- Details card -->
+    <!-- Application details -->
     <section class="card p-6">
       <div class="flex items-center justify-between mb-5">
-        <h2 class="text-[15px] font-semibold text-mapnavy">Application details</h2>
+        <div>
+          <h2 class="text-[15px] font-semibold text-mapnavy">Application details</h2>
+          <p class="text-[11.5px] text-gray-500 mt-0.5">Submitted by the applicant</p>
+        </div>
         <span class="text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-400">
-          Submitted application
+          {{ app.created_at|date:"M j, Y" }}
         </span>
       </div>
 
@@ -94,9 +157,7 @@
           <dt class="text-[10.5px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-1">
             Location
           </dt>
-          <dd class="text-mapnavy">
-            {{ app.location|default:"—" }}
-          </dd>
+          <dd class="text-mapnavy">{{ app.location|default:"—" }}</dd>
         </div>
 
         <div class="sm:col-span-2">
@@ -112,23 +173,19 @@
           <dt class="text-[10.5px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-1">
             Availability
           </dt>
-          <dd class="text-mapnavy leading-relaxed">
-            {{ app.availability|default:"—" }}
-          </dd>
+          <dd class="text-mapnavy leading-relaxed">{{ app.availability|default:"—" }}</dd>
         </div>
 
         <div class="sm:col-span-2">
           <dt class="text-[10.5px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-1">
             Preferred activities
           </dt>
-          <dd class="text-mapnavy leading-relaxed">
-            {{ app.areas_of_interest|default:"—" }}
-          </dd>
+          <dd class="text-mapnavy leading-relaxed">{{ app.areas_of_interest|default:"—" }}</dd>
         </div>
 
         <div class="sm:col-span-2">
           <dt class="text-[10.5px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-1">
-            Experience
+            Relevant experience
           </dt>
           <dd class="text-mapnavy leading-relaxed whitespace-pre-line">
             {{ app.experience|default:"—" }}
@@ -138,7 +195,7 @@
       </dl>
     </section>
 
-    <!-- Assign form (only if linked to a user) -->
+    <!-- Assign form -->
     {% if app.user %}
       <section class="card p-6">
         <div class="flex items-start justify-between gap-3 mb-5">
@@ -156,7 +213,7 @@
           </span>
         </div>
 
-        <form method="post" class="space-y-4">
+        <form method="post" class="space-y-4" id="assign-form">
           {% csrf_token %}
           <input type="hidden" name="action" value="assign">
 
@@ -166,28 +223,44 @@
             </label>
             <input name="title" id="title" type="text"
                    placeholder="e.g., Community food distribution — Saturday"
-                   required
+                   required maxlength="200"
                    class="form-input w-full text-[13px]">
+            <p class="mt-1 text-[11px] text-gray-500">
+              <span id="title-count">0</span>/200 characters
+            </p>
           </div>
 
           <div>
             <label for="description" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
               Description <span class="text-gray-400 font-normal">(optional)</span>
             </label>
-            <textarea name="description" id="description" rows="2"
+            <textarea name="description" id="description" rows="3"
+                      maxlength="1000"
                       placeholder="What will they do? Where? Any prep needed?"
                       class="form-input w-full text-[13px]"></textarea>
+            <p class="mt-1 text-[11px] text-gray-500">
+              <span id="desc-count">0</span>/1000 characters
+            </p>
           </div>
 
-          <div class="flex justify-end">
-            <button class="btn-primary inline-flex items-center h-10 text-[13px] !px-5">
+          <div class="flex items-center justify-between gap-3 flex-wrap">
+            <p class="text-[11.5px] text-gray-500">
+              The volunteer will receive a proposal they can accept or decline.
+            </p>
+            <button type="submit"
+                    class="btn-primary inline-flex items-center h-10 text-[13px] !px-5
+                           disabled:opacity-60 disabled:cursor-not-allowed">
+              <svg id="assign-spinner" class="hidden animate-spin mr-2" width="14" height="14"
+                   viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+              </svg>
               Create assignment
             </button>
           </div>
         </form>
       </section>
     {% else %}
-      <div class="card p-5 bg-mapbg border-mapborder">
+      <div class="card p-5 bg-amber-50 border-amber-200">
         <div class="flex items-start gap-2.5">
           <span class="text-amber-600 shrink-0 mt-0.5" aria-hidden="true">⚠</span>
           <div>
@@ -196,8 +269,14 @@
             </div>
             <p class="text-[12px] text-gray-600 mt-1 leading-relaxed">
               This application was submitted without a user account — the applicant
-              isn't logged in. You can't create assignments until they register
+              wasn't logged in. You can't create assignments until they register
               and the account is linked.
+              {% if app.email %}
+                <a href="mailto:{{ app.email }}?subject=Create an account to volunteer"
+                   class="text-mapgreen hover:underline font-medium">
+                  Email them to sign up →
+                </a>
+              {% endif %}
             </p>
           </div>
         </div>
@@ -206,18 +285,17 @@
 
   </div>
 
-  <!-- ==========================================
-       SIDEBAR (1/3) — Decision panel
-       ========================================== -->
+  <!-- SIDEBAR -->
   <aside class="lg:sticky lg:top-24 space-y-4">
 
+    <!-- Decision panel -->
     <div class="card p-5">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-[15px] font-semibold text-mapnavy">Decision</h2>
         {% if app.status == 'approved' %}
           <span class="h-2 w-2 rounded-full bg-mapgreen" aria-hidden="true"></span>
         {% elif app.status == 'submitted' %}
-          <span class="h-2 w-2 rounded-full bg-amber-500" aria-hidden="true"></span>
+          <span class="h-2 w-2 rounded-full bg-amber-500 animate-pulse" aria-hidden="true"></span>
         {% elif app.status == 'rejected' %}
           <span class="h-2 w-2 rounded-full bg-red-500" aria-hidden="true"></span>
         {% else %}
@@ -225,52 +303,100 @@
         {% endif %}
       </div>
 
-      <form method="post" class="space-y-4">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="set_status">
-
-        <div>
-          <label for="status"
-                 class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
-            Application status
-          </label>
-          <select name="status" id="status" class="form-input w-full text-[13px]">
-            {% for value, label in statuses %}
-              <option value="{{ value }}" {% if app.status == value %}selected{% endif %}>
-                {{ label }}
-              </option>
-            {% endfor %}
-          </select>
-          <p class="text-[11px] text-gray-500 mt-1.5">
-            {% if app.status == 'approved' %}
-              Approved — the volunteer has portal access.
-            {% elif app.status == 'rejected' %}
-              Rejected — you can change back to Submitted if needed.
-            {% elif app.status == 'submitted' %}
-              Set to <strong>Approved</strong> to grant portal access.
-            {% else %}
-              Update the status and save.
-            {% endif %}
-          </p>
+      <!-- Quick action buttons -->
+      {% if app.status == 'submitted' or app.status == 'under_review' %}
+        <div class="grid grid-cols-2 gap-2 mb-4">
+          <form method="post" class="contents">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="set_status">
+            <input type="hidden" name="status" value="approved">
+            <button type="submit"
+                    class="inline-flex items-center justify-center h-9 rounded-lg
+                           bg-mapgreen text-white text-[12.5px] font-semibold
+                           hover:bg-mapgreen-600 transition">
+              ✓ Approve
+            </button>
+          </form>
+          <form method="post" class="contents" onsubmit="return confirm('Reject this application? The applicant will not be able to apply again with the same email.')">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="set_status">
+            <input type="hidden" name="status" value="rejected">
+            <button type="submit"
+                    class="inline-flex items-center justify-center h-9 rounded-lg
+                           border border-red-200 bg-red-50 text-red-700 text-[12.5px] font-semibold
+                           hover:bg-red-100 transition">
+              ✗ Reject
+            </button>
+          </form>
         </div>
-
-        <div>
-          <label for="reviewer_notes"
-                 class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
-            Reviewer notes
-          </label>
-          <textarea name="reviewer_notes" id="reviewer_notes" rows="3"
-                    placeholder="Internal notes — not visible to the applicant"
-                    class="form-input w-full text-[13px]">{{ app.reviewer_notes }}</textarea>
+      {% elif app.status == 'approved' %}
+        <div class="mb-4">
+          <form method="post" onsubmit="return confirm('Revert this approval? The volunteer will lose portal access.')">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="set_status">
+            <input type="hidden" name="status" value="submitted">
+            <button type="submit"
+                    class="w-full inline-flex items-center justify-center h-9 rounded-lg
+                           border border-mapborder bg-white text-gray-700 text-[12.5px] font-semibold
+                           hover:bg-gray-50 transition">
+              ↩ Undo approval
+            </button>
+          </form>
         </div>
+      {% endif %}
 
-        <button class="btn-primary inline-flex items-center justify-center w-full h-10 text-[13px]">
-          Save changes
-        </button>
-      </form>
+      <div class="border-t border-mapborder pt-4">
+        <form method="post" class="space-y-4">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="set_status">
+
+          <div>
+            <label for="status"
+                   class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+              Change status
+            </label>
+            <select name="status" id="status" class="form-input w-full text-[13px]">
+              {% for value, label in statuses %}
+                <option value="{{ value }}" {% if app.status == value %}selected{% endif %}>
+                  {{ label }}
+                </option>
+              {% endfor %}
+            </select>
+            <p class="text-[11px] text-gray-500 mt-1.5 leading-relaxed">
+              {% if app.status == 'approved' %}
+                Approved — the volunteer has portal access.
+              {% elif app.status == 'rejected' %}
+                Rejected — you can change back to Submitted if needed.
+              {% elif app.status == 'submitted' %}
+                Set to <strong>Approved</strong> to grant portal access.
+              {% else %}
+                Update the status and save.
+              {% endif %}
+            </p>
+          </div>
+
+          <div>
+            <label for="reviewer_notes"
+                   class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+              Reviewer notes <span class="text-gray-400 font-normal">(internal)</span>
+            </label>
+            <textarea name="reviewer_notes" id="reviewer_notes" rows="3"
+                      maxlength="2000"
+                      placeholder="Internal notes — not visible to the applicant"
+                      class="form-input w-full text-[13px]">{{ app.reviewer_notes }}</textarea>
+            <p class="mt-1 text-[11px] text-gray-500">
+              <span id="notes-count">0</span>/2000 characters
+            </p>
+          </div>
+
+          <button class="btn-primary inline-flex items-center justify-center w-full h-10 text-[13px]">
+            Save changes
+          </button>
+        </form>
+      </div>
     </div>
 
-    <!-- Quick info -->
+    <!-- Reference -->
     <div class="card p-5">
       <h3 class="text-[10.5px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-3">
         Reference
@@ -278,7 +404,7 @@
       <dl class="space-y-2 text-[12px]">
         <div class="flex justify-between gap-3">
           <dt class="text-gray-500">Application ID</dt>
-          <dd class="font-mono text-mapnavy text-[11.5px] truncate">
+          <dd class="font-mono text-mapnavy text-[11.5px] truncate" title="{{ app.pk }}">
             {{ app.pk|truncatechars:13 }}
           </dd>
         </div>
@@ -314,7 +440,76 @@
       </dl>
     </div>
 
+    <!-- Quick actions -->
+    <div class="card p-5">
+      <h3 class="text-[10.5px] uppercase tracking-[0.12em] text-gray-500 font-semibold mb-3">
+        Quick actions
+      </h3>
+      <div class="space-y-1.5">
+        <a href="mailto:{{ app.email }}?subject=Your volunteer application with {{ ORG_NAME }}"
+           class="flex items-center gap-2 px-3 py-2 rounded-lg text-[12.5px] text-gray-700
+                  hover:bg-mapbg transition">
+          <span aria-hidden="true">✉</span> Email applicant
+        </a>
+        <button type="button"
+                onclick="navigator.clipboard.writeText('{{ app.email|escapejs }}').then(()=>{this.textContent='✓ Copied'; setTimeout(()=>{this.textContent='📋 Copy email'},1500)})"
+                class="w-full text-left flex items-center gap-2 px-3 py-2 rounded-lg text-[12.5px] text-gray-700
+                       hover:bg-mapbg transition">
+          <span aria-hidden="true">📋</span> Copy email
+        </button>
+        {% if app.phone %}
+          <a href="tel:{{ app.phone }}"
+             class="flex items-center gap-2 px-3 py-2 rounded-lg text-[12.5px] text-gray-700
+                    hover:bg-mapbg transition">
+            <span aria-hidden="true">📞</span> Call applicant
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
   </aside>
-</div>
+</main>
+
+<style>
+  @media print {
+    nav[aria-label="Breadcrumb"], .btn-primary, .btn-secondary, button,
+    aside, header a[href^="/management/users"] { display: none !important; }
+    .card { border: 1px solid #ccc !important; box-shadow: none !important; break-inside: avoid; }
+    main { display: block !important; padding: 0 !important; }
+  }
+</style>
+
+<script>
+(function () {
+  // Character counters
+  const title = document.getElementById('title');
+  const titleCount = document.getElementById('title-count');
+  title?.addEventListener('input', () => {
+    titleCount.textContent = title.value.length;
+  });
+
+  const desc = document.getElementById('description');
+  const descCount = document.getElementById('desc-count');
+  desc?.addEventListener('input', () => {
+    descCount.textContent = desc.value.length;
+  });
+
+  const notes = document.getElementById('reviewer_notes');
+  const notesCount = document.getElementById('notes-count');
+  if (notes && notesCount) {
+    notesCount.textContent = notes.value.length;
+    notes.addEventListener('input', () => {
+      notesCount.textContent = notes.value.length;
+    });
+  }
+
+  // Assign form submit guard
+  const assignForm = document.getElementById('assign-form');
+  const assignSpinner = document.getElementById('assign-spinner');
+  assignForm?.addEventListener('submit', () => {
+    assignSpinner?.classList.remove('hidden');
+  });
+})();
+</script>
 
 {% endblock %}

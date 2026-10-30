@@ -1,4 +1,5 @@
 {% extends "portal_base.html" %}
+{% load humanize %}
 {% block title %}Certificates — {{ ORG_NAME }}{% endblock %}
 {% block nav %}
   <a href="{% url 'volunteer_portal:portal_assignments' %}" class="sidebar-link">My Assignments</a>
@@ -6,20 +7,237 @@
   <a href="{% url 'volunteer_portal:portal_certificates' %}" class="sidebar-link active">Certificates</a>
 {% endblock %}
 {% block breadcrumb %}Certificates{% endblock %}
+
 {% block content %}
-<h1 class="text-2xl font-bold text-mapnavy mb-6">Certificates</h1>
-{% if certificates %}
-  <div class="grid md:grid-cols-2 gap-4">
-    {% for c in certificates %}
-      <div class="card p-5">
-        <div class="text-[11px] uppercase text-gray-500 tracking-wider">Certificate</div>
-        <div class="font-semibold text-mapnavy text-[15px] mt-1">{{ c.title }}</div>
-        <div class="text-[12px] text-gray-500 mt-1">Issued {{ c.issued_on|date:"M d, Y" }}</div>
-        {% if c.description %}<p class="text-[13px] text-gray-600 mt-2">{{ c.description }}</p>{% endif %}
+
+<a href="#main-content"
+   class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100]
+          focus:px-4 focus:py-2.5 focus:rounded-lg focus:bg-mapnavy focus:text-white
+          focus:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen">
+  Skip to main content
+</a>
+
+<!-- HEADER -->
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-mapnavy tracking-tight">Certificates</h1>
+  <p class="text-[13px] text-gray-500 mt-1">
+    {% if certificates %}
+      {{ certificates|length }} certificate{{ certificates|length|pluralize }} earned.
+    {% else %}
+      Your earned certificates will appear here.
+    {% endif %}
+  </p>
+</div>
+
+<!-- SUMMARY CARD -->
+{% if certificates or profile %}
+  <div class="grid grid-cols-3 gap-4 mb-6">
+    <div class="card p-5">
+      <div class="text-[10.5px] uppercase tracking-wider font-semibold text-gray-500">
+        Certificates
       </div>
-    {% endfor %}
+      <div class="mt-1 text-[26px] font-bold text-mapnavy tabular-nums leading-none">
+        {{ certificates|length }}
+      </div>
+    </div>
+    <div class="card p-5">
+      <div class="text-[10.5px] uppercase tracking-wider font-semibold text-gray-500">
+        Hours logged
+      </div>
+      <div class="mt-1 text-[26px] font-bold text-mapnavy tabular-nums leading-none">
+        {% if profile and profile.total_hours %}{{ profile.total_hours|floatformat:"-2"|intcomma }}{% else %}0{% endif %}
+      </div>
+    </div>
+    <div class="card p-5">
+      <div class="text-[10.5px] uppercase tracking-wider font-semibold text-gray-500">
+        Completed
+      </div>
+      <div class="mt-1 text-[26px] font-bold text-mapnavy tabular-nums leading-none">
+        {% if profile and profile.completed_assignments_count %}{{ profile.completed_assignments_count }}{% else %}0{% endif %}
+      </div>
+    </div>
   </div>
-{% else %}
-  <div class="card p-10 text-center text-gray-500">No certificates issued yet.</div>
 {% endif %}
+
+<!-- CONTENT -->
+<main id="main-content">
+  {% if certificates %}
+    <div class="grid md:grid-cols-2 gap-5">
+      {% for c in certificates %}
+        <article class="card overflow-hidden flex flex-col" id="cert-{{ c.pk }}">
+
+          <!-- Certificate header / preview -->
+          <div class="relative bg-mapnavy text-white px-6 py-8 text-center overflow-hidden">
+            <!-- Gradient decoration -->
+            <div class="absolute inset-0 opacity-20 pointer-events-none"
+                 style="background-image:
+                   radial-gradient(circle at 20% 20%, #1e9e5f 0, transparent 40%),
+                   radial-gradient(circle at 80% 80%, #1f3350 0, transparent 40%);"></div>
+
+            <!-- Ribbon icon -->
+            <div class="relative inline-flex h-14 w-14 rounded-full bg-mapgreen text-white items-center justify-center mb-3 shadow-lg">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="8" r="6"/>
+                <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>
+              </svg>
+            </div>
+
+            <div class="relative">
+              <div class="text-[10px] uppercase tracking-[0.18em] font-semibold text-white/60">
+                Certificate of
+              </div>
+              <div class="text-[13px] font-semibold text-white/80 uppercase tracking-wider mt-0.5">
+                Volunteer Service
+              </div>
+            </div>
+          </div>
+
+          <!-- Body -->
+          <div class="p-5 flex flex-col flex-1">
+            <h2 class="font-semibold text-mapnavy text-[15.5px] leading-snug">
+              {{ c.title }}
+            </h2>
+
+            {% if c.description %}
+              <p class="text-[12.5px] text-gray-600 mt-2 leading-relaxed line-clamp-3">
+                {{ c.description }}
+              </p>
+            {% endif %}
+
+            <!-- Meta -->
+            <dl class="mt-4 space-y-1.5 text-[12px]">
+              <div class="flex items-start justify-between gap-3">
+                <dt class="text-gray-500">Issued</dt>
+                <dd class="text-mapnavy text-right tabular-nums">
+                  <time datetime="{{ c.issued_on|date:'c' }}">
+                    {{ c.issued_on|date:"M j, Y" }}
+                  </time>
+                </dd>
+              </div>
+              {% if c.issued_by %}
+                <div class="flex items-start justify-between gap-3">
+                  <dt class="text-gray-500">Issued by</dt>
+                  <dd class="text-mapnavy text-right truncate">{{ c.issued_by }}</dd>
+                </div>
+              {% endif %}
+              {% if c.verification_code %}
+                <div class="flex items-start justify-between gap-3">
+                  <dt class="text-gray-500">Verification</dt>
+                  <dd class="text-mapnavy text-right font-mono text-[11px] truncate"
+                      title="{{ c.verification_code }}">
+                    {{ c.verification_code|truncatechars:14 }}
+                  </dd>
+                </div>
+              {% endif %}
+            </dl>
+
+            <!-- Actions -->
+            <div class="mt-auto pt-4 flex flex-wrap items-center gap-2 border-t border-mapborder">
+              {% if c.file %}
+                <a href="{{ c.file.url }}"
+                   download
+                   class="btn-primary inline-flex items-center gap-1.5 h-9 px-3.5 text-[12px] font-semibold rounded-lg">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                  </svg>
+                  Download
+                </a>
+                <a href="{{ c.file.url }}"
+                   target="_blank" rel="noopener"
+                   class="btn-secondary inline-flex items-center gap-1.5 h-9 px-3.5 text-[12px] font-semibold rounded-lg">
+                  View
+                </a>
+              {% else %}
+                <span class="text-[11.5px] text-gray-400 italic">
+                  File not yet available — contact us to request a copy.
+                </span>
+              {% endif %}
+
+              <button type="button"
+                      data-cert-title="{{ c.title|escapejs }}"
+                      data-cert-link="{% if c.file %}{{ request.scheme }}://{{ request.get_host }}{{ c.file.url }}{% else %}{{ request.build_absolute_uri }}{% endif %}"
+                      class="share-cert ml-auto inline-flex items-center justify-center h-8 w-8 rounded-lg
+                             border border-mapborder text-gray-500 hover:text-mapnavy hover:border-gray-300 transition"
+                      title="Copy link"
+                      aria-label="Copy certificate link">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+
+  {% else %}
+    <!-- EMPTY STATE -->
+    <div class="card p-10 sm:p-14 text-center max-w-lg mx-auto">
+      <div class="mx-auto h-16 w-16 rounded-full bg-mapgreen-50 text-mapgreen flex items-center justify-center mb-4">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="8" r="6"/>
+          <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>
+        </svg>
+      </div>
+      <h2 class="text-[16px] font-semibold text-mapnavy">No certificates yet</h2>
+      <p class="text-[13px] text-gray-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
+        Certificates are awarded for completed assignments, milestone hour totals,
+        and recognition of your contribution. Keep volunteering — yours will appear here.
+      </p>
+      <div class="mt-5 flex flex-wrap items-center justify-center gap-2">
+        <a href="{% url 'volunteer_portal:portal_assignments' %}"
+           class="btn-primary inline-flex items-center h-10 px-5 text-[13px]">
+          View assignments
+        </a>
+        <a href="{% url 'volunteer_portal:portal_hours' %}"
+           class="btn-secondary inline-flex items-center h-10 px-4 text-[13px]">
+          Log hours
+        </a>
+      </div>
+    </div>
+  {% endif %}
+</main>
+
+<style>
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  @media print {
+    nav[aria-label="Breadcrumb"], .share-cert, .btn-primary, .btn-secondary,
+    .grid.grid-cols-3, header { display: none !important; }
+    .card { border: 1px solid #ccc !important; box-shadow: none !important; break-inside: avoid; }
+    .card > div:first-child { background: white !important; color: black !important; }
+    .card > div:first-child .text-white\/60,
+    .card > div:first-child .text-white\/80 { color: #666 !important; }
+  }
+</style>
+
+<script>
+(function () {
+  // Copy certificate link
+  document.querySelectorAll('.share-cert').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const link = btn.dataset.certLink;
+      const title = btn.dataset.certTitle || 'certificate';
+      if (!link) return;
+      try {
+        await navigator.clipboard.writeText(link);
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="color:#1e9e5f"><path d="M20 6L9 17l-5-5"/></svg>';
+        setTimeout(() => { btn.innerHTML = originalHTML; }, 1500);
+      } catch (e) {
+        console.warn('Clipboard failed', e);
+      }
+    });
+  });
+})();
+</script>
+
 {% endblock %}

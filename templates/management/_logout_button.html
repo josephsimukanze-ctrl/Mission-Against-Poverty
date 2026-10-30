@@ -1,0 +1,6 @@
+<form method="post" action="{% url 'accounts:logout' %}">
+  {% csrf_token %}
+  <button class="sidebar-link w-full text-left text-red-300/90 hover:text-red-200 hover:bg-red-500/10">
+    <span class="w-5 text-center opacity-80" aria-hidden="true">⏻</span> Logout
+  </button>
+</form>

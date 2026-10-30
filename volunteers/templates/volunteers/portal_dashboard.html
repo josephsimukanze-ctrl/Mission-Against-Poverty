@@ -8,59 +8,339 @@
   <a href="{% url 'accounts:profile' %}" class="sidebar-link">Profile</a>
 {% endblock %}
 {% block breadcrumb %}Volunteer Dashboard{% endblock %}
-{% block content %}
-<h1 class="text-2xl font-bold text-mapnavy">Welcome, {{ user.first_name|default:user.username }}</h1>
-<p class="text-sm text-gray-500 mt-1">Thank you for giving your time to our mission.</p>
 
-<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-  <div class="stat-card"><div class="stat-value">{{ total_hours }}</div><div class="stat-label">Hours Logged</div></div>
-  <div class="stat-card"><div class="stat-value">{{ completed_assignments }}</div><div class="stat-label">Completed</div></div>
-  <div class="stat-card"><div class="stat-value">{{ pending_assignments }}</div><div class="stat-label">Pending</div></div>
-  <div class="stat-card"><div class="stat-value">{{ certificates_count }}</div><div class="stat-label">Certificates</div></div>
+{% block content %}
+
+<!-- HERO / GREETING -->
+<div class="mb-6">
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div class="min-w-0">
+      {% now "H" as hour %}
+      <div class="text-[11px] uppercase tracking-[0.14em] font-semibold text-mapgreen mb-1">
+        {% if hour|add:0 < 12 %}Good morning{% elif hour|add:0 < 18 %}Good afternoon{% else %}Good evening{% endif %}
+      </div>
+      <h1 class="text-2xl font-bold text-mapnavy tracking-tight">
+        {{ user.first_name|default:user.username }}
+      </h1>
+      <p class="text-[13px] text-gray-500 mt-1">
+        Thank you for giving your time to our mission.
+        {% if total_hours %}
+          You've contributed <strong class="text-mapnavy">{{ total_hours|floatformat:"-1"|intcomma }} hours</strong> so far.
+        {% endif %}
+      </p>
+    </div>
+
+    <div class="flex items-center gap-2 shrink-0">
+      <a href="{% url 'volunteer_portal:portal_hours' %}"
+         class="btn-secondary inline-flex items-center gap-1.5 h-9 text-[12.5px] !px-3.5">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+        </svg>
+        Log hours
+      </a>
+      <a href="{% url 'volunteer_portal:portal_assignments' %}"
+         class="btn-primary inline-flex items-center gap-1.5 h-9 text-[12.5px] !px-3.5">
+        View assignments
+      </a>
+    </div>
+  </div>
+
+  {% if pending_assignments %}
+    <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 flex items-start gap-2.5">
+      <span class="text-amber-600 shrink-0 mt-0.5" aria-hidden="true">⚠</span>
+      <div class="flex-1 text-[12.5px] text-amber-900 leading-relaxed">
+        <strong>{{ pending_assignments }} new assignment{{ pending_assignments|pluralize }}</strong>
+        {{ pending_assignments|pluralize:"is,are" }} waiting for your response.
+        <a href="{% url 'volunteer_portal:portal_assignments' %}"
+           class="font-semibold underline underline-offset-2 hover:no-underline">
+          Review now →
+        </a>
+      </div>
+    </div>
+  {% endif %}
 </div>
 
-<div class="mt-8 grid lg:grid-cols-2 gap-5">
-  <div class="card p-5">
-    <div class="flex items-center justify-between mb-3">
-      <h2 class="font-semibold text-mapnavy">My Assignments</h2>
-      <a href="{% url 'volunteer_portal:portal_assignments' %}" class="text-[12px] text-mapgreen hover:underline">View all →</a>
+<!-- KPI CARDS -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+  <a href="{% url 'volunteer_portal:portal_hours' %}"
+     class="card p-5 hover:shadow-md hover:border-mapgreen/30 transition group">
+    <div class="flex items-start justify-between mb-2">
+      <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-mapgreen-50 text-mapgreen group-hover:bg-mapgreen group-hover:text-white transition">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+        </svg>
+      </span>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           class="text-gray-300 group-hover:text-mapgreen transition" aria-hidden="true">
+        <path d="M5 12h14M13 6l6 6-6 6"/>
+      </svg>
     </div>
+    <div class="text-[26px] font-bold text-mapnavy tabular-nums leading-none">
+      {{ total_hours|floatformat:"-1"|intcomma|default:"0" }}
+    </div>
+    <div class="text-[11.5px] text-gray-500 mt-1.5">Hours logged</div>
+  </a>
+
+  <a href="{% url 'volunteer_portal:portal_assignments' %}"
+     class="card p-5 hover:shadow-md hover:border-mapgreen/30 transition group">
+    <div class="flex items-start justify-between mb-2">
+      <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-mapgreen-50 text-mapgreen group-hover:bg-mapgreen group-hover:text-white transition">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M20 6L9 17l-5-5"/>
+        </svg>
+      </span>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           class="text-gray-300 group-hover:text-mapgreen transition" aria-hidden="true">
+        <path d="M5 12h14M13 6l6 6-6 6"/>
+      </svg>
+    </div>
+    <div class="text-[26px] font-bold text-mapnavy tabular-nums leading-none">
+      {{ completed_assignments|default:"0" }}
+    </div>
+    <div class="text-[11.5px] text-gray-500 mt-1.5">Completed</div>
+  </a>
+
+  <a href="{% url 'volunteer_portal:portal_assignments' %}"
+     class="card p-5 hover:shadow-md hover:border-amber-300/40 transition group">
+    <div class="flex items-start justify-between mb-2">
+      <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+        </svg>
+      </span>
+      {% if pending_assignments %}
+        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9.5px] uppercase tracking-wider font-bold bg-amber-100 text-amber-700">
+          Act now
+        </span>
+      {% endif %}
+    </div>
+    <div class="text-[26px] font-bold text-mapnavy tabular-nums leading-none">
+      {{ pending_assignments|default:"0" }}
+    </div>
+    <div class="text-[11.5px] text-gray-500 mt-1.5">Pending</div>
+  </a>
+
+  <a href="{% url 'volunteer_portal:portal_certificates' %}"
+     class="card p-5 hover:shadow-md hover:border-mapgreen/30 transition group">
+    <div class="flex items-start justify-between mb-2">
+      <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-mapgreen-50 text-mapgreen group-hover:bg-mapgreen group-hover:text-white transition">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>
+        </svg>
+      </span>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           class="text-gray-300 group-hover:text-mapgreen transition" aria-hidden="true">
+        <path d="M5 12h14M13 6l6 6-6 6"/>
+      </svg>
+    </div>
+    <div class="text-[26px] font-bold text-mapnavy tabular-nums leading-none">
+      {{ certificates_count|default:"0" }}
+    </div>
+    <div class="text-[11.5px] text-gray-500 mt-1.5">Certificates</div>
+  </a>
+</div>
+
+<!-- MILESTONE -->
+{% if total_hours and next_milestone %}
+  <div class="mt-4 card p-5">
+    <div class="flex items-center justify-between gap-3 mb-3">
+      <div>
+        <div class="text-[11px] uppercase tracking-[0.14em] font-semibold text-gray-500 mb-1">
+          Next milestone
+        </div>
+        <div class="text-[14px] font-semibold text-mapnavy">
+          {{ next_milestone }} hours certificate
+        </div>
+      </div>
+      <div class="text-right">
+        <div class="text-[20px] font-bold text-mapgreen tabular-nums leading-none">
+          {{ milestone_progress|default:0 }}%
+        </div>
+        <div class="text-[11px] text-gray-500 mt-1">
+          {{ milestone_remaining|default:0 }} h to go
+        </div>
+      </div>
+    </div>
+    <div class="h-2 rounded-full bg-mapbg overflow-hidden">
+      <div class="h-full rounded-full bg-mapgreen transition-all duration-700"
+           style="width: {{ milestone_progress|default:0 }}%"></div>
+    </div>
+  </div>
+{% endif %}
+
+<!-- GRID: Assignments + Hours -->
+<div class="mt-6 grid lg:grid-cols-2 gap-5">
+
+  <section class="card p-5">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="font-semibold text-mapnavy text-[15px]">My assignments</h2>
+      <a href="{% url 'volunteer_portal:portal_assignments' %}"
+         class="text-[12px] text-mapgreen hover:underline font-medium">
+        View all →
+      </a>
+    </div>
+
     {% if assignments %}
-      <div class="space-y-3">
-        {% for a in assignments %}
-          <div class="border border-[#e5e9f0] rounded-lg p-3">
+      <div class="space-y-2.5">
+        {% for a in assignments|slice:":5" %}
+          <div class="border border-mapborder rounded-lg p-3 hover:border-mapgreen/40 transition
+                      {% if a.status == 'proposed' %}bg-amber-50/40{% endif %}">
             <div class="flex items-start justify-between gap-3">
               <div class="flex-1 min-w-0">
-                <div class="font-medium text-mapnavy text-[14px]">{{ a.title }}</div>
-                {% if a.scheduled_for %}<div class="text-[11.5px] text-gray-500 mt-0.5">{{ a.scheduled_for|date:"M d, Y H:i" }}</div>{% endif %}
+                <div class="font-medium text-mapnavy text-[13.5px] truncate">{{ a.title }}</div>
+                {% if a.scheduled_for %}
+                  <div class="text-[11px] text-gray-500 mt-0.5 flex items-center gap-1">
+                    <span aria-hidden="true">📅</span>
+                    <time datetime="{{ a.scheduled_for|date:'c' }}">{{ a.scheduled_for|date:"M j, Y · H:i" }}</time>
+                  </div>
+                {% endif %}
               </div>
-              {% if a.status == 'accepted' %}<span class="badge badge-success">Accepted</span>
-              {% elif a.status == 'proposed' %}<span class="badge badge-warning">Proposed</span>
-              {% elif a.status == 'completed' %}<span class="badge badge-muted">Completed</span>
-              {% else %}<span class="badge badge-muted">{{ a.get_status_display }}</span>{% endif %}
+
+              {% if a.status == 'accepted' %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200 text-[10px] uppercase tracking-wider font-semibold shrink-0">
+                  <span class="h-1.5 w-1.5 rounded-full bg-green-500"></span> Accepted
+                </span>
+              {% elif a.status == 'proposed' %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[10px] uppercase tracking-wider font-semibold shrink-0">
+                  <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span> Proposed
+                </span>
+              {% elif a.status == 'completed' %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200 text-[10px] uppercase tracking-wider font-semibold shrink-0">
+                  Completed
+                </span>
+              {% else %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200 text-[10px] uppercase tracking-wider font-semibold shrink-0">
+                  {{ a.get_status_display }}
+                </span>
+              {% endif %}
+            </div>
+
+            {% if a.status == 'proposed' %}
+              <div class="mt-2.5 pt-2.5 border-t border-amber-200/60 flex items-center gap-2">
+                <a href="{% url 'volunteer_portal:respond_assignment' a.pk 'accept' %}"
+                   class="inline-flex items-center justify-center h-7 px-2.5 rounded-md
+                          bg-mapgreen text-white text-[11px] font-semibold
+                          hover:bg-mapgreen-600 transition">
+                  ✓ Accept
+                </a>
+                <a href="{% url 'volunteer_portal:respond_assignment' a.pk 'decline' %}"
+                   onclick="return confirm('Decline this assignment?')"
+                   class="inline-flex items-center justify-center h-7 px-2.5 rounded-md
+                          border border-mapborder bg-white text-gray-700 text-[11px] font-semibold
+                          hover:bg-gray-50 transition">
+                  Decline
+                </a>
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-center py-8">
+        <div class="mx-auto h-10 w-10 rounded-full bg-mapbg text-gray-400 flex items-center justify-center mb-2 text-lg">
+          🤝
+        </div>
+        <p class="text-[13px] text-gray-500">No assignments yet.</p>
+        <p class="text-[11.5px] text-gray-400 mt-1">Check back soon — coordinators will propose work to you.</p>
+      </div>
+    {% endif %}
+  </section>
+
+  <section class="card p-5">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="font-semibold text-mapnavy text-[15px]">Recent hours</h2>
+      <a href="{% url 'volunteer_portal:portal_hours' %}"
+         class="text-[12px] text-mapgreen hover:underline font-medium">
+        Log hours →
+      </a>
+    </div>
+
+    {% if hours %}
+      <div class="space-y-1 text-[13px]">
+        {% for h in hours|slice:":5" %}
+          <div class="flex items-center justify-between py-2 border-b border-mapborder last:border-0">
+            <div class="min-w-0 flex items-center gap-2">
+              <div class="h-7 w-7 rounded-full bg-mapgreen-50 text-mapgreen flex items-center justify-center text-[10px] font-semibold shrink-0">
+                {{ h.date|date:"j" }}
+              </div>
+              <div class="min-w-0">
+                <div class="text-[12.5px] text-mapnavy font-medium truncate">
+                  <time datetime="{{ h.date|date:'c' }}">{{ h.date|date:"M j, Y" }}</time>
+                </div>
+                {% if h.notes %}
+                  <div class="text-[11px] text-gray-500 truncate">{{ h.notes|truncatechars:40 }}</div>
+                {% endif %}
+              </div>
+            </div>
+            <span class="font-semibold text-mapnavy tabular-nums text-[13px] shrink-0 ml-2">
+              {{ h.hours }}<span class="text-gray-400 text-[10.5px] ml-0.5">h</span>
+            </span>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-center py-8">
+        <div class="mx-auto h-10 w-10 rounded-full bg-mapbg text-gray-400 flex items-center justify-center mb-2 text-lg">
+          ⏱
+        </div>
+        <p class="text-[13px] text-gray-500">No hours logged yet.</p>
+        <a href="{% url 'volunteer_portal:portal_hours' %}"
+           class="inline-flex mt-2 text-[12px] font-semibold text-mapgreen hover:underline">
+          Log your first hour →
+        </a>
+      </div>
+    {% endif %}
+  </section>
+</div>
+
+<!-- UPCOMING EVENTS -->
+{% if upcoming_events %}
+  <section class="mt-6 card p-5">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="font-semibold text-mapnavy text-[15px]">Upcoming events</h2>
+      <a href="{% url 'events:list' %}" class="text-[12px] text-mapgreen hover:underline font-medium">
+        View all →
+      </a>
+    </div>
+    <div class="grid sm:grid-cols-2 gap-3">
+      {% for e in upcoming_events %}
+        <a href="{% url 'events:detail' e.pk %}"
+           class="group border border-mapborder rounded-lg p-3 hover:border-mapgreen/40 transition">
+          <div class="flex items-start gap-3">
+            <div class="inline-flex flex-col items-center justify-center w-12 h-14 rounded-lg bg-mapgreen-50 text-mapnavy shrink-0">
+              <span class="text-[9.5px] uppercase tracking-wider font-bold text-mapgreen">
+                {{ e.starts_at|date:"M" }}
+              </span>
+              <span class="text-[18px] font-bold leading-none tabular-nums">
+                {{ e.starts_at|date:"j" }}
+              </span>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="font-semibold text-mapnavy text-[13px] leading-snug group-hover:text-mapgreen transition line-clamp-2">
+                {{ e.name }}
+              </div>
+              {% if e.location %}
+                <div class="text-[11.5px] text-gray-500 mt-1 truncate">📍 {{ e.location }}</div>
+              {% endif %}
             </div>
           </div>
-        {% endfor %}
-      </div>
-    {% else %}
-      <p class="text-sm text-gray-500 py-4">No assignments yet. Check back soon.</p>
-    {% endif %}
-  </div>
+        </a>
+      {% endfor %}
+    </div>
+  </section>
+{% endif %}
 
-  <div class="card p-5">
-    <h2 class="font-semibold text-mapnavy mb-3">Recent Hours</h2>
-    {% if hours %}
-      <div class="divide-y divide-gray-100 text-[13px]">
-        {% for h in hours %}
-          <div class="py-2 flex items-center justify-between">
-            <span>{{ h.date|date:"M d, Y" }}</span>
-            <span class="font-semibold text-mapnavy">{{ h.hours }} h</span>
-          </div>
-        {% endfor %}
-      </div>
-    {% else %}
-      <p class="text-sm text-gray-500 py-4">No hours logged yet. <a href="{% url 'volunteer_portal:portal_hours' %}" class="text-mapgreen">Log hours →</a></p>
-    {% endif %}
-  </div>
-</div>
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  @media print {
+    nav, .btn-primary, .btn-secondary, header, a[href*="respond"] { display: none !important; }
+    .card { border: 1px solid #ccc !important; box-shadow: none !important; break-inside: avoid; }
+  }
+</style>
+
 {% endblock %}

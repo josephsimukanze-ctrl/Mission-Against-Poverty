@@ -1,32 +1,454 @@
 {% extends "public_base.html" %}
-{% block title %}Events — {{ ORG_NAME }}{% endblock %}
+{% load humanize %}
+{% block title %}Events & Activities — {{ ORG_NAME }}{% endblock %}
+{% block meta_description %}Charity events, fundraisers, volunteer activities and community outreach across Zambia with {{ ORG_NAME }}.{% endblock %}
+
+{% block head %}
+{{ block.super }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "{{ ORG_NAME }} Events",
+  "url": "{{ request.build_absolute_uri|escapejs }}",
+  "numberOfItems": {{ page_obj.paginator.count|default:events|length }},
+  "itemListElement": [
+    {% for e in events %}{
+      "@type": "ListItem",
+      "position": {{ forloop.counter }},
+      "item": {
+        "@type": "Event",
+        "name": "{{ e.name|escapejs }}",
+        {% if e.starts_at %}"startDate": "{{ e.starts_at|date:'c' }}",{% endif %}
+        {% if e.ends_at %}"endDate": "{{ e.ends_at|date:'c' }}",{% endif %}
+        {% if e.location %}
+        "location": {
+          "@type": "Place",
+          "name": "{{ e.location|escapejs }}"
+        },
+        {% endif %}
+        "eventStatus": "https://schema.org/EventScheduled",
+        "organizer": {
+          "@type": "NGO",
+          "name": "{{ site.site_name|default:ORG_NAME|escapejs }}",
+          "url": "{{ request.scheme }}://{{ request.get_host }}/"
+        },
+        "url": "{{ request.scheme }}://{{ request.get_host }}{% url 'events:detail' e.pk %}"
+      }
+    }{% if not forloop.last %},{% endif %}{% endfor %}
+  ]
+}
+</script>
+{% endblock %}
+
 {% block content %}
-<section class="bg-mapnavy text-white">
-  <div class="max-w-7xl mx-auto px-6 py-16">
-    <h1 class="text-3xl md:text-4xl font-bold">Events &amp; Activities</h1>
-    <p class="mt-2 text-gray-300">Charity events, fundraisers, volunteer activities and community outreach.</p>
+
+<a href="#main-content"
+   class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100]
+          focus:px-4 focus:py-2.5 focus:rounded-lg focus:bg-mapnavy focus:text-white
+          focus:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen">
+  Skip to main content
+</a>
+
+<!-- HERO -->
+<section class="relative bg-mapnavy overflow-hidden text-white">
+  <div class="absolute inset-0 opacity-25 pointer-events-none"
+       style="background-image:
+         radial-gradient(circle at 20% 20%, #1e9e5f 0, transparent 40%),
+         radial-gradient(circle at 80% 80%, #1f3350 0, transparent 40%);"></div>
+
+  <div class="relative max-w-7xl mx-auto px-5 lg:px-8 py-16">
+
+    <nav aria-label="Breadcrumb" class="mb-5">
+      <ol class="flex items-center gap-2 text-[12.5px] text-white/50">
+        <li><a href="/" class="hover:text-white transition-colors">Home</a></li>
+        <li aria-hidden="true">/</li>
+        <li class="text-white/80" aria-current="page">Events</li>
+      </ol>
+    </nav>
+
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full
+                bg-white/10 border border-white/15
+                text-[11px] uppercase tracking-[0.14em] text-white/80 font-semibold mb-4">
+      <span class="h-1.5 w-1.5 rounded-full bg-mapgreen" aria-hidden="true"></span>
+      Community
+    </div>
+
+    <h1 class="text-3xl md:text-4xl lg:text-[42px] font-bold tracking-tight leading-tight">
+      Events &amp; Activities
+    </h1>
+    <p class="mt-4 text-gray-300 text-[15px] max-w-2xl leading-relaxed">
+      Charity events, fundraisers, volunteer activities and community outreach.
+      Come join us — everyone is welcome.
+    </p>
+
+    {% if page_obj.paginator.count %}
+      <p class="mt-5 text-[12.5px] text-white/50 uppercase tracking-[0.14em] font-semibold">
+        {{ page_obj.paginator.count }} event{{ page_obj.paginator.count|pluralize }}
+      </p>
+    {% endif %}
   </div>
 </section>
-<section class="max-w-7xl mx-auto px-6 py-12">
+
+<!-- CONTENT -->
+<main id="main-content" class="max-w-7xl mx-auto px-5 lg:px-8 py-12 lg:py-16">
+
   {% if events %}
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {% for e in events %}
-      <a href="{% url 'events:detail' e.pk %}" class="bg-white rounded-xl border border-[#e5e9f0] overflow-hidden hover:shadow-md transition group">
-        <div class="aspect-video bg-gray-100">
-          {% if e.cover_image %}<img src="{{ e.cover_image.url }}" alt="{{ e.name }}" class="w-full h-full object-cover">
-          {% else %}<div class="w-full h-full flex items-center justify-center text-gray-300 text-5xl">📅</div>{% endif %}
+
+    <!-- UPCOMING EVENTS -->
+    {% if upcoming_events %}
+      <section class="mb-14">
+        <div class="flex items-end justify-between gap-3 mb-6">
+          <div>
+            <div class="text-[11px] uppercase tracking-[0.14em] font-semibold text-mapgreen mb-1">
+              Coming up
+            </div>
+            <h2 class="text-[20px] md:text-[24px] font-bold text-mapnavy tracking-tight">
+              Upcoming events
+            </h2>
+          </div>
+          <span class="text-[12px] text-gray-500">
+            {{ upcoming_events|length }} scheduled
+          </span>
         </div>
-        <div class="p-5">
-          {% if e.starts_at %}<span class="badge-warning">{{ e.starts_at|date:"M d, Y · H:i" }}</span>{% endif %}
-          <h2 class="font-semibold text-lg text-mapnavy mt-2 group-hover:text-mapgreen">{{ e.name }}</h2>
-          {% if e.location %}<p class="text-sm text-gray-500 mt-1">📍 {{ e.location }}</p>{% endif %}
-          {% if e.description %}<p class="text-sm text-gray-600 mt-2 line-clamp-2">{{ e.description }}</p>{% endif %}
+
+        <!-- Featured (next event) -->
+        {% with next_event=upcoming_events.0 %}
+          <a href="{% url 'events:detail' next_event.pk %}"
+             class="group card card-hover overflow-hidden flex flex-col lg:flex-row mb-8
+                    focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40">
+            <div class="lg:w-1/2 aspect-[16/10] lg:aspect-auto bg-gray-100 overflow-hidden shrink-0 relative">
+              {% if next_event.cover_image %}
+                <img src="{{ next_event.cover_image.url }}"
+                     alt="{{ next_event.name }}"
+                     loading="lazy" decoding="async"
+                     class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500">
+              {% elif site.about_hero_image %}
+                <img src="{{ site.about_hero_image.url }}"
+                     alt="{{ next_event.name }}"
+                     loading="lazy" decoding="async"
+                     class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500">
+              {% else %}
+                <div class="w-full h-full flex items-center justify-center bg-mapgreen-50 text-mapgreen text-5xl"
+                     aria-hidden="true">📅</div>
+              {% endif %}
+
+              {% if next_event.starts_at %}
+                <div class="absolute top-4 left-4 inline-flex flex-col items-center justify-center
+                            px-3.5 py-2.5 rounded-xl bg-white/95 backdrop-blur-sm shadow-md">
+                  <span class="text-[10.5px] uppercase tracking-wider font-semibold text-mapgreen">
+                    {{ next_event.starts_at|date:"M" }}
+                  </span>
+                  <span class="text-[24px] font-bold text-mapnavy leading-none tabular-nums">
+                    {{ next_event.starts_at|date:"j" }}
+                  </span>
+                  <span class="text-[10px] text-gray-500 mt-0.5">
+                    {{ next_event.starts_at|date:"D" }}
+                  </span>
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="p-7 lg:p-9 flex flex-col flex-1 justify-center">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                            bg-mapgreen-50 text-mapgreen text-[10.5px] uppercase tracking-[0.14em] font-semibold">
+                  <span class="h-1.5 w-1.5 rounded-full bg-mapgreen animate-pulse" aria-hidden="true"></span>
+                  Next event
+                </span>
+                {% if next_event.starts_at %}
+                  <span class="text-[11.5px] font-semibold text-mapgreen">
+                    {{ next_event.starts_at|timeuntil }}
+                  </span>
+                {% endif %}
+              </div>
+
+              <h2 class="font-bold text-[22px] lg:text-[26px] text-mapnavy leading-tight
+                         group-hover:text-mapgreen transition-colors">
+                {{ next_event.name }}
+              </h2>
+
+              {% if next_event.description %}
+                <p class="text-[14px] text-gray-600 mt-3 leading-relaxed line-clamp-3">
+                  {{ next_event.description }}
+                </p>
+              {% endif %}
+
+              <div class="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] text-gray-500">
+                {% if next_event.starts_at %}
+                  <span>📅 {{ next_event.starts_at|date:"l, F j · H:i" }}</span>
+                {% endif %}
+                {% if next_event.location %}
+                  <span>📍 {{ next_event.location }}</span>
+                {% endif %}
+              </div>
+
+              <div class="mt-5 flex items-center gap-3">
+                <span class="font-semibold text-mapgreen group-hover:underline underline-offset-2 inline-flex items-center gap-1">
+                  Learn more &amp; RSVP
+                  <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span>
+                </span>
+                {% if next_event.is_free %}
+                  <span class="text-[11.5px] text-gray-500">Free entry</span>
+                {% elif next_event.ticket_price %}
+                  <span class="text-[11.5px] text-gray-500">
+                    K {{ next_event.ticket_price|floatformat:0 }} entry
+                  </span>
+                {% endif %}
+              </div>
+            </div>
+          </a>
+        {% endwith %}
+
+        <!-- Remaining upcoming (skip the featured one) -->
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {% for e in upcoming_events|slice:"1:" %}
+            <article>
+              <a href="{% url 'events:detail' e.pk %}"
+                 class="group card card-hover overflow-hidden flex flex-col h-full
+                        focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40">
+
+                <div class="aspect-[16/10] bg-gray-100 relative overflow-hidden shrink-0">
+                  {% if e.cover_image %}
+                    <img src="{{ e.cover_image.url }}"
+                         alt="{{ e.name }}"
+                         loading="lazy" decoding="async"
+                         class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500">
+                  {% elif site.about_hero_image %}
+                    <img src="{{ site.about_hero_image.url }}"
+                         alt="{{ e.name }}"
+                         loading="lazy" decoding="async"
+                         class="w-full h-full object-cover opacity-90 group-hover:scale-[1.03] transition-transform duration-500">
+                  {% else %}
+                    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-mapgreen-50 via-mapgreen/10 to-mapnavy/5 text-4xl text-mapgreen/60"
+                         aria-hidden="true">📅</div>
+                  {% endif %}
+
+                  {% if e.starts_at %}
+                    <div class="absolute top-3 left-3 inline-flex flex-col items-center justify-center
+                                px-3 py-2 rounded-lg bg-white/95 backdrop-blur-sm shadow-sm">
+                      <span class="text-[9.5px] uppercase tracking-wider font-semibold text-mapgreen">
+                        {{ e.starts_at|date:"M" }}
+                      </span>
+                      <span class="text-[20px] font-bold text-mapnavy leading-none tabular-nums">
+                        {{ e.starts_at|date:"j" }}
+                      </span>
+                    </div>
+                  {% endif %}
+                </div>
+
+                <div class="p-5 flex flex-col flex-1">
+                  <div class="flex items-center gap-2 mb-1.5 text-[11px] text-gray-500">
+                    {% if e.starts_at %}
+                      <time datetime="{{ e.starts_at|date:'c' }}" class="font-semibold text-mapgreen">
+                        {{ e.starts_at|date:"D, M j · H:i" }}
+                      </time>
+                    {% endif %}
+                  </div>
+
+                  <h3 class="font-semibold text-[15.5px] text-mapnavy leading-snug clamp-2
+                             group-hover:text-mapgreen transition-colors">
+                    {{ e.name }}
+                  </h3>
+
+                  {% if e.location %}
+                    <p class="text-[12px] text-gray-500 mt-1.5 flex items-center gap-1">
+                      <span aria-hidden="true">📍</span> {{ e.location }}
+                    </p>
+                  {% endif %}
+
+                  {% if e.description %}
+                    <p class="text-[12.5px] text-gray-600 mt-2 leading-relaxed clamp-2">
+                      {{ e.description }}
+                    </p>
+                  {% endif %}
+
+                  <div class="mt-auto pt-4 flex items-center justify-between text-[11.5px]">
+                    <span class="text-gray-500">
+                      {% if e.is_free %}Free{% elif e.ticket_price %}K {{ e.ticket_price|floatformat:0 }}{% endif %}
+                    </span>
+                    <span class="font-semibold text-mapgreen group-hover:underline underline-offset-2 inline-flex items-center gap-1">
+                      RSVP
+                      <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span>
+                    </span>
+                  </div>
+                </div>
+              </a>
+            </article>
+          {% endfor %}
         </div>
-      </a>
-      {% endfor %}
-    </div>
+      </section>
+    {% endif %}
+
+    <!-- PAST EVENTS -->
+    {% if past_events %}
+      <section>
+        <div class="flex items-end justify-between gap-3 mb-6 pt-6 border-t border-mapborder">
+          <div>
+            <div class="text-[11px] uppercase tracking-[0.14em] font-semibold text-gray-500 mb-1">
+              Archive
+            </div>
+            <h2 class="text-[20px] md:text-[24px] font-bold text-mapnavy tracking-tight">
+              Past events
+            </h2>
+          </div>
+          <span class="text-[12px] text-gray-500">
+            {{ past_events|length }} held
+          </span>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {% for e in past_events %}
+            <article>
+              <a href="{% url 'events:detail' e.pk %}"
+                 class="group card overflow-hidden flex flex-col h-full opacity-90 hover:opacity-100
+                        focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40">
+                <div class="aspect-[16/10] bg-gray-100 overflow-hidden shrink-0 relative">
+                  {% if e.cover_image %}
+                    <img src="{{ e.cover_image.url }}"
+                         alt="{{ e.name }}"
+                         loading="lazy" decoding="async"
+                         class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500">
+                  {% else %}
+                    <div class="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400 text-4xl"
+                         aria-hidden="true">📅</div>
+                  {% endif %}
+
+                  <span class="absolute top-3 left-3 inline-flex items-center gap-1.5
+                               px-2 py-1 rounded-md bg-white/90 backdrop-blur-sm
+                               text-[10.5px] uppercase tracking-wider font-semibold text-gray-600 shadow-sm">
+                    <span class="h-1.5 w-1.5 rounded-full bg-gray-400" aria-hidden="true"></span>
+                    Past
+                  </span>
+                </div>
+
+                <div class="p-5 flex flex-col flex-1">
+                  {% if e.starts_at %}
+                    <time datetime="{{ e.starts_at|date:'c' }}"
+                          class="text-[11.5px] font-semibold text-gray-500 mb-1">
+                      {{ e.starts_at|date:"M j, Y" }}
+                    </time>
+                  {% endif %}
+                  <h3 class="font-semibold text-[14.5px] text-mapnavy leading-snug clamp-2">
+                    {{ e.name }}
+                  </h3>
+                  {% if e.location %}
+                    <p class="text-[11.5px] text-gray-500 mt-1">📍 {{ e.location }}</p>
+                  {% endif %}
+                  <div class="mt-auto pt-3">
+                    <span class="text-[12px] font-semibold text-gray-500 inline-flex items-center gap-1
+                                 group-hover:text-mapgreen transition-colors">
+                      View recap
+                      <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span>
+                    </span>
+                  </div>
+                </div>
+              </a>
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    <!-- PAGINATION -->
+    {% if is_paginated %}
+      <nav aria-label="Pagination"
+            class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-12 pt-6 border-t border-mapborder">
+        <p class="text-[12.5px] text-gray-500 order-2 sm:order-1">
+          Showing
+          <span class="font-semibold text-mapnavy">{{ page_obj.start_index }}</span>–
+          <span class="font-semibold text-mapnavy">{{ page_obj.end_index }}</span>
+          of <span class="font-semibold text-mapnavy">{{ page_obj.paginator.count }}</span>
+        </p>
+        <div class="flex items-center gap-1 order-1 sm:order-2">
+          {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}"
+               class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-white
+                      text-[12.5px] font-medium text-gray-700 hover:bg-gray-50 transition">← Prev</a>
+          {% else %}
+            <span class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-gray-50
+                         text-[12.5px] font-medium text-gray-400 cursor-not-allowed">← Prev</span>
+          {% endif %}
+
+          {% for num in page_obj.paginator.page_range %}
+            {% if num == page_obj.number %}
+              <span aria-current="page"
+                    class="inline-flex items-center justify-center h-9 w-9 rounded-lg
+                           bg-mapgreen text-white text-[12.5px] font-semibold">{{ num }}</span>
+            {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+              <a href="?page={{ num }}"
+                 class="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-mapborder
+                        bg-white text-[12.5px] font-medium text-gray-700 hover:bg-gray-50 transition">{{ num }}</a>
+            {% endif %}
+          {% endfor %}
+
+          {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}"
+               class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-white
+                      text-[12.5px] font-medium text-gray-700 hover:bg-gray-50 transition">Next →</a>
+          {% else %}
+            <span class="inline-flex items-center h-9 px-3 rounded-lg border border-mapborder bg-gray-50
+                         text-[12.5px] font-medium text-gray-400 cursor-not-allowed">Next →</span>
+          {% endif %}
+        </div>
+      </nav>
+    {% endif %}
+
   {% else %}
-    <div class="text-center py-16 text-gray-500"><p class="text-lg">No events published yet.</p></div>
+    <!-- EMPTY STATE -->
+    <div class="card p-10 sm:p-14 text-center max-w-xl mx-auto">
+      <div class="mx-auto h-14 w-14 rounded-full bg-mapgreen-50 overflow-hidden flex items-center justify-center mb-4">
+        {% if site.logo %}
+          <img src="{{ site.logo.url }}" alt="" class="w-full h-full object-contain p-2">
+        {% else %}
+          <span class="text-2xl" aria-hidden="true">📅</span>
+        {% endif %}
+      </div>
+      <h2 class="text-[16px] font-semibold text-mapnavy">No events yet</h2>
+      <p class="text-[13px] text-gray-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
+        We're planning our next events and activities. Check back soon, or follow us to be first to know.
+      </p>
+      <div class="mt-5 flex flex-wrap items-center justify-center gap-2">
+        <a href="/programs/" class="btn-secondary inline-flex items-center justify-center h-10 px-4 text-[13px]">
+          Browse programs
+        </a>
+        <a href="/volunteer/" class="btn-secondary inline-flex items-center justify-center h-10 px-4 text-[13px]">
+          Volunteer
+        </a>
+        <a href="/donate/" class="btn-primary inline-flex items-center justify-center h-10 px-5 text-[13px]">
+          Support our work
+        </a>
+      </div>
+    </div>
   {% endif %}
-</section>
+</main>
+
+<!-- Sticky mobile donate -->
+<div class="lg:hidden fixed bottom-0 inset-x-0 z-40 p-3 bg-white/95 backdrop-blur border-t border-mapborder">
+  <a href="/donate/"
+     class="btn-primary inline-flex items-center justify-center w-full h-11 text-[14px] font-semibold rounded-lg">
+    💚 Support our work
+  </a>
+</div>
+<div class="lg:hidden h-20" aria-hidden="true"></div>
+
+<style>
+  .clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  @media print {
+    .lg\:hidden, form, .card-hover, nav[aria-label="Pagination"] { display: none !important; }
+    .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+  }
+</style>
+
 {% endblock %}

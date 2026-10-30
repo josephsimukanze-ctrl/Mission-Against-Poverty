@@ -1,8 +1,11 @@
 # projects/models.py
+from decimal import Decimal
+
 from django.conf import settings
 from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
+
 from core.models import AuthoredModel, TimeStampedModel, UUIDModel
 
 
@@ -71,13 +74,43 @@ class Project(AuthoredModel, UUIDModel):
     def get_absolute_url(self):
         return reverse("projects:detail", args=[self.slug])
 
+    # ============================================================
+    # Fundraising helpers — the ONLY place donation sums are computed
+    # ============================================================
+
+    def _raised_total(self):
+        """
+        Sum of *received* donations allocated to this project.
+        Returns Decimal('0.00') when none exist.
+        """
+        return (
+            self.donations.filter(status="received").aggregate(
+                total=models.Sum("amount")
+            )["total"]
+            or Decimal("0.00")
+        )
+
+    @property
+    def raised_amount(self):
+        """
+        Total of received donations for this project.
+        Templates: {{ project.raised_amount|floatformat:0|intcomma }}
+        """
+        return self._raised_total()
+
     @property
     def progress_percent(self):
+        """0–100. Shares `_raised_total()` with `raised_amount` so they never disagree."""
         if not self.fundraising_target or self.fundraising_target == 0:
             return 0
-        raised = self.donations.filter(status="received").aggregate(
-            total=models.Sum("amount"))["total"] or 0
-        return min(100, round(float(raised) / float(self.fundraising_target) * 100))
+        pct = (float(self._raised_total()) / float(self.fundraising_target)) * 100
+        return min(100, round(pct))
+
+    @property
+    def remaining_amount(self):
+        """Target − raised, floored at 0. Useful for 'X left to go' copy."""
+        remaining = self.fundraising_target - self.raised_amount
+        return remaining if remaining > 0 else Decimal("0.00")
 
 
 class ProjectMilestone(TimeStampedModel, UUIDModel):

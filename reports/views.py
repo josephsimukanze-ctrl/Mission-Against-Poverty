@@ -3,26 +3,32 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from decimal import Decimal
 import csv
+import logging
 import re
 
 from django import forms
 from django.apps import apps
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import PermissionDenied
+from django.db import transaction as db_transaction
 from django.db.models import Count, Q, Sum
 from django.db.models.functions import TruncDate
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
+from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.decorators.http import require_POST
 from django.views.generic import ListView
 
 from accounts.models import STAFF_ROLES, Role, User
 from audit.models import AuditLog
 from audit.services import log_action
 
-from settings_app.forms import SiteConfigForm
+from settings_app.models import SiteConfig
+
 from donations.models import Campaign, Donation
 from events.models import Event
 from news.models import Article, NewsCategory
@@ -30,7 +36,6 @@ from pages.models import HeroSlide, LeadershipMember, Page
 from programs.models import Program
 from projects.models import Project, ProjectCategory
 
-import logging
 logger = logging.getLogger(__name__)
 # ============================================================
 # Auth helpers
@@ -2083,3 +2088,175 @@ class HeroSlidePhotoUploadView(StaffRequiredMixin, View):
         log_action(request, "hero_slide.photo_upload", target=slide)
         messages.success(request, f"Image updated for slide '{slide.title or slide.headline or 'Untitled'}'.")
         return redirect("/management/hero-slides/")
+
+
+
+# ============================================================
+# Shared base for proof / status actions
+# ============================================================
+
+class _ProofActionBase(LoginRequiredMixin, UserPassesTestMixin, View):
+    """Shared guards + helpers for proof / mark-received actions."""
+    raise_exception = True  # 403 instead of a redirect loop if test fails
+
+    def test_func(self):
+        u = self.request.user
+        return u.is_authenticated and (
+            u.is_superuser
+            or getattr(u, "is_staff", False)
+            or getattr(u, "is_staff_member", False)
+        )
+
+    def _get_donation(self):
+        return get_object_or_404(Donation, pk=self.kwargs["pk"])
+
+    def _redirect(self):
+        return redirect(
+            reverse("management:donation_detail", kwargs={"pk": self.kwargs["pk"]})
+        )
+
+    @staticmethod
+    def _has_field(instance, field_name):
+        return any(f.name == field_name for f in instance._meta.get_fields())
+
+
+# ============================================================
+# Approve proof
+# ============================================================
+
+@method_decorator(require_POST, name="dispatch")
+class DonationApproveProofView(_ProofActionBase):
+    def post(self, request, pk):
+        donation = self._get_donation()
+
+        if not getattr(donation, "proof_submitted_at", None):
+            messages.error(request, "No proof has been submitted yet.")
+            return self._redirect()
+
+        if donation.proof_verified_at and not donation.proof_rejected:
+            messages.info(request, "Proof of payment is already approved.")
+            return self._redirect()
+
+        donation.proof_verified_at = timezone.now()
+        donation.proof_rejected = False
+        donation.proof_rejection_reason = ""
+
+        update_fields = [
+            "proof_verified_at",
+            "proof_rejected",
+            "proof_rejection_reason",
+        ]
+        if self._has_field(donation, "proof_verified_by"):
+            donation.proof_verified_by_id = request.user.pk
+            update_fields.append("proof_verified_by")
+        if self._has_field(donation, "updated_at"):
+            update_fields.append("updated_at")
+
+        donation.save(update_fields=update_fields)
+        messages.success(request, f"Proof for {donation.reference} approved.")
+        return self._redirect()
+
+
+# ============================================================
+# Reject proof
+# ============================================================
+
+@method_decorator(require_POST, name="dispatch")
+class DonationRejectProofView(_ProofActionBase):
+    def post(self, request, pk):
+        donation = self._get_donation()
+
+        if not getattr(donation, "proof_submitted_at", None):
+            messages.error(request, "No proof has been submitted yet.")
+            return self._redirect()
+
+        reason = (request.POST.get("reason") or "").strip()[:500]
+        if not reason:
+            messages.error(request, "Please provide a reason for rejection.")
+            return self._redirect()
+
+        donation.proof_rejected = True
+        donation.proof_rejection_reason = reason
+        donation.proof_verified_at = None
+
+        update_fields = [
+            "proof_rejected",
+            "proof_rejection_reason",
+            "proof_verified_at",
+        ]
+        if self._has_field(donation, "proof_verified_by"):
+            donation.proof_verified_by_id = None
+            update_fields.append("proof_verified_by")
+        if self._has_field(donation, "updated_at"):
+            update_fields.append("updated_at")
+
+        donation.save(update_fields=update_fields)
+        messages.warning(
+            request, f"Proof for {donation.reference} rejected: {reason}"
+        )
+        return self._redirect()
+
+
+# ============================================================
+# Mark as received (+ best-effort receipt issuance)
+# ============================================================
+
+@method_decorator(require_POST, name="dispatch")
+class DonationMarkReceivedView(_ProofActionBase):
+    def post(self, request, pk):
+        donation = self._get_donation()
+
+        if donation.status == "received":
+            messages.info(request, "This donation is already marked as received.")
+            return self._redirect()
+
+        donation.status = "received"
+
+        update_fields = ["status"]
+        if self._has_field(donation, "received_at"):
+            donation.received_at = timezone.now()
+            update_fields.append("received_at")
+        if self._has_field(donation, "received_by"):
+            donation.received_by_id = request.user.pk
+            update_fields.append("received_by")
+        if self._has_field(donation, "updated_at"):
+            update_fields.append("updated_at")
+
+        donation.save(update_fields=update_fields)
+
+        # Best-effort receipt issuance — never let a missing/broken service 500
+        receipt_issued = False
+        receipt_error = None
+        try:
+            from donations.services import issue_receipt
+        except (ImportError, ModuleNotFoundError) as exc:
+            # Service doesn't exist yet — safe to skip
+            import logging
+            logging.getLogger(__name__).debug(
+                "Receipt service unavailable: %s", exc
+            )
+        else:
+            try:
+                receipt = issue_receipt(donation)
+                receipt_issued = bool(receipt)
+            except Exception as exc:
+                import logging
+                logging.getLogger(__name__).exception(
+                    "Receipt issuance failed for donation %s", donation.reference
+                )
+                receipt_error = str(exc)
+
+        if receipt_issued:
+            msg = f"{donation.reference} marked as received. Receipt issued."
+        elif receipt_error:
+            msg = (
+                f"{donation.reference} marked as received, but the receipt "
+                f"could not be generated. Please check manually."
+            )
+        else:
+            msg = f"{donation.reference} marked as received."
+
+        messages.success(request, msg)
+        return self._redirect()
+
+

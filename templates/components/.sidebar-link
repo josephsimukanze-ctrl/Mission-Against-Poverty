@@ -1,0 +1,30 @@
+@layer components {
+  .sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    color: #cbd5e1;
+    font-size: 13px;
+    text-decoration: none;
+    transition: background-color 150ms, color 150ms;
+  }
+  .sidebar-link:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+  }
+  .sidebar-link.active {
+    background-color: rgba(30, 158, 95, 0.18);
+    color: #ffffff;
+    font-weight: 600;
+  }
+  .sidebar-section {
+    padding: 1rem 0.75rem 0.25rem;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 700;
+    color: #94a3b8;
+  }
+}

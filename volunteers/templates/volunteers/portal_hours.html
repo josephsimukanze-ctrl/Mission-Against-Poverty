@@ -1,4 +1,5 @@
 {% extends "portal_base.html" %}
+{% load humanize %}
 {% block title %}Volunteer Hours — {{ ORG_NAME }}{% endblock %}
 {% block nav %}
   <a href="{% url 'volunteer_portal:portal_assignments' %}" class="sidebar-link">My Assignments</a>
@@ -6,34 +7,419 @@
   <a href="{% url 'volunteer_portal:portal_certificates' %}" class="sidebar-link">Certificates</a>
 {% endblock %}
 {% block breadcrumb %}Volunteer Hours{% endblock %}
+
 {% block content %}
-<h1 class="text-2xl font-bold text-mapnavy mb-6">Volunteer Hours</h1>
 
-<div class="card p-5 mb-6">
-  <h2 class="font-semibold text-mapnavy mb-3 text-[15px]">Log hours</h2>
-  <form method="post" class="grid md:grid-cols-4 gap-3 items-end">
-    {% csrf_token %}
-    <div><label class="form-label">Date</label><input type="date" name="date" class="form-input" required></div>
-    <div><label class="form-label">Hours</label><input type="number" step="0.25" min="0.25" name="hours" class="form-input" required></div>
-    <div class="md:col-span-2"><label class="form-label">Notes (optional)</label><input name="notes" class="form-input" placeholder="e.g., Food distribution at Kabwata"></div>
-    <div class="md:col-span-4"><button class="btn-primary">Log hours</button></div>
-  </form>
-</div>
+<a href="#main-content"
+   class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100]
+          focus:px-4 focus:py-2.5 focus:rounded-lg focus:bg-mapnavy focus:text-white
+          focus:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen">
+  Skip to main content
+</a>
 
-<div class="table-wrapper">
-  <table class="table-base">
-    <thead><tr><th>Date</th><th>Hours</th><th>Notes</th></tr></thead>
-    <tbody>
-      {% for h in hours %}
-        <tr>
-          <td>{{ h.date|date:"M d, Y" }}</td>
-          <td class="font-semibold">{{ h.hours }}</td>
-          <td class="text-gray-600">{{ h.notes|default:"—" }}</td>
-        </tr>
-      {% empty %}
-        <tr><td colspan="3" class="text-center text-gray-500 py-8">No hours logged yet.</td></tr>
+<!-- HEADER -->
+<div class="mb-6">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-bold text-mapnavy tracking-tight">Volunteer Hours</h1>
+      <p class="text-[13px] text-gray-500 mt-1">
+        Log your time and track your contribution over time.
+      </p>
+    </div>
+    <div class="flex items-center gap-2">
+      <button type="button"
+              onclick="document.getElementById('log-hours-form').scrollIntoView({behavior:'smooth', block:'center'}); document.getElementById('hours-input').focus();"
+              class="btn-primary inline-flex items-center gap-1.5 h-9 text-[12.5px] !px-3.5">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        Log hours
+      </button>
+    </div>
+  </div>
+
+  {% if messages %}
+    <div class="space-y-2 mt-4">
+      {% for m in messages %}
+        <div role="alert"
+             class="rounded-xl px-4 py-3 text-[13px] border flex items-start gap-2.5
+                    {% if m.tags == 'error' %}bg-red-50 text-red-700 border-red-200{% else %}bg-green-50 text-green-700 border-green-200{% endif %}">
+          <span class="mt-0.5 shrink-0" aria-hidden="true">{% if m.tags == 'error' %}⚠{% else %}✓{% endif %}</span>
+          <span class="flex-1">{{ m }}</span>
+        </div>
       {% endfor %}
-    </tbody>
-  </table>
+    </div>
+  {% endif %}
 </div>
+
+<!-- SUMMARY STATS -->
+{% if hours %}
+  <div class="grid grid-cols-3 gap-4 mb-6">
+    <div class="card p-5">
+      <div class="text-[10.5px] uppercase tracking-wider font-semibold text-gray-500">Total hours</div>
+      <div class="mt-1 text-[26px] font-bold text-mapnavy tabular-nums leading-none">
+        {{ total_hours|floatformat:"-1"|intcomma|default:"0" }}
+      </div>
+    </div>
+    <div class="card p-5">
+      <div class="text-[10.5px] uppercase tracking-wider font-semibold text-gray-500">This month</div>
+      <div class="mt-1 text-[26px] font-bold text-mapgreen tabular-nums leading-none">
+        {{ hours_this_month|floatformat:"-1"|intcomma|default:"0" }}
+      </div>
+    </div>
+    <div class="card p-5">
+      <div class="text-[10.5px] uppercase tracking-wider font-semibold text-gray-500">Sessions</div>
+      <div class="mt-1 text-[26px] font-bold text-mapnavy tabular-nums leading-none">
+        {{ hours|length }}
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+<main id="main-content">
+
+  <!-- LOG HOURS FORM -->
+  <section class="card p-6 mb-6" id="log-hours-form">
+    <header class="mb-5">
+      <h2 class="text-[15px] font-semibold text-mapnavy">Log hours</h2>
+      <p class="text-[12px] text-gray-500 mt-0.5">
+        Add a session you've completed. Rounds are automatically added to your profile.
+      </p>
+    </header>
+
+    <form method="post" class="space-y-4" id="log-form">
+      {% csrf_token %}
+
+      <div class="grid md:grid-cols-4 gap-4">
+        <div>
+          <label for="date" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+            Date <span class="text-red-500">*</span>
+          </label>
+          <input type="date"
+                 id="date" name="date"
+                 class="form-input w-full text-[13px]"
+                 value="{% now 'Y-m-d' %}"
+                 max="{% now 'Y-m-d' %}"
+                 required>
+        </div>
+
+        <div>
+          <label for="hours-input" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+            Hours <span class="text-red-500">*</span>
+          </label>
+          <input type="number"
+                 id="hours-input" name="hours"
+                 step="0.25" min="0.25" max="24"
+                 placeholder="e.g. 2"
+                 class="form-input w-full text-[13px]"
+                 required>
+        </div>
+
+        <div class="md:col-span-2">
+          <label for="notes" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+            Notes <span class="text-gray-400 font-normal">(optional)</span>
+          </label>
+          <input type="text"
+                 id="notes" name="notes"
+                 class="form-input w-full text-[13px]"
+                 placeholder="e.g., Food distribution at Kabwata"
+                 maxlength="200">
+        </div>
+      </div>
+
+      <!-- Quick-fill -->
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-[11.5px] text-gray-500 font-medium">Quick fill:</span>
+        {% for h in "0.5,1,2,4,8"|cut:" "|slice:":0" %}{% endfor %}
+        <button type="button" data-hours="0.5"
+                class="quick-hours inline-flex items-center h-7 px-2.5 rounded-md border border-mapborder bg-white
+                       text-[11.5px] font-semibold text-gray-700 hover:bg-mapgreen-50 hover:border-mapgreen transition">
+          30 min
+        </button>
+        <button type="button" data-hours="1"
+                class="quick-hours inline-flex items-center h-7 px-2.5 rounded-md border border-mapborder bg-white
+                       text-[11.5px] font-semibold text-gray-700 hover:bg-mapgreen-50 hover:border-mapgreen transition">
+          1 h
+        </button>
+        <button type="button" data-hours="2"
+                class="quick-hours inline-flex items-center h-7 px-2.5 rounded-md border border-mapborder bg-white
+                       text-[11.5px] font-semibold text-gray-700 hover:bg-mapgreen-50 hover:border-mapgreen transition">
+          2 h
+        </button>
+        <button type="button" data-hours="4"
+                class="quick-hours inline-flex items-center h-7 px-2.5 rounded-md border border-mapborder bg-white
+                       text-[11.5px] font-semibold text-gray-700 hover:bg-mapgreen-50 hover:border-mapgreen transition">
+          4 h
+        </button>
+        <button type="button" data-hours="8"
+                class="quick-hours inline-flex items-center h-7 px-2.5 rounded-md border border-mapborder bg-white
+                       text-[11.5px] font-semibold text-gray-700 hover:bg-mapgreen-50 hover:border-mapgreen transition">
+          8 h
+        </button>
+      </div>
+
+      <div class="flex items-center justify-end pt-2 border-t border-mapborder">
+        <button type="submit" id="log-submit"
+                class="btn-primary inline-flex items-center gap-2 h-10 text-[13px] !px-5
+                       disabled:opacity-60 disabled:cursor-not-allowed">
+          <svg id="log-spinner" class="hidden animate-spin" width="14" height="14" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+          </svg>
+          <span id="log-label">Log hours</span>
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <!-- HOURS TABLE -->
+  {% if hours %}
+    <!-- Mini bar chart (last 8 weeks) -->
+    {% if weekly_hours %}
+      <div class="card p-5 mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-[14px] font-semibold text-mapnavy">Last 8 weeks</h2>
+          <span class="text-[11.5px] text-gray-500">
+            Max {{ weekly_max|floatformat:"-1" }}h
+          </span>
+        </div>
+        <div class="flex items-end justify-between gap-2 h-24">
+          {% for w in weekly_hours %}
+            <div class="flex-1 flex flex-col items-center justify-end gap-1.5">
+              <div class="w-full bg-mapgreen rounded-t transition-all duration-500 hover:bg-mapgreen-600"
+                   style="height: {% widthratio w.hours weekly_max 100 %}%; min-height: {% if w.hours > 0 %}4px{% else %}0{% endif %};"
+                   title="{{ w.hours }}h the week of {{ w.week_start|date:'M j' }}">
+              </div>
+              <span class="text-[9.5px] text-gray-500 truncate w-full text-center">
+                {{ w.week_start|date:"M j" }}
+              </span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="card overflow-hidden p-0">
+      <div class="px-5 py-3 border-b border-mapborder bg-mapbg flex items-center justify-between">
+        <h2 class="text-[14px] font-semibold text-mapnavy">All entries</h2>
+        <span class="text-[12px] text-gray-500">
+          {{ hours|length }} entr{{ hours|length|pluralize:"y,ies" }}
+        </span>
+      </div>
+
+      <!-- Desktop table -->
+      <div class="hidden md:block overflow-x-auto">
+        <table class="table-base w-full">
+          <caption class="sr-only">Your volunteer hour log</caption>
+          <thead class="border-b border-mapborder">
+            <tr>
+              <th scope="col" class="text-left text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+                Date
+              </th>
+              <th scope="col" class="text-right text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+                Hours
+              </th>
+              <th scope="col" class="text-left text-[10.5px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+                Notes
+              </th>
+              <th scope="col" class="w-16 text-right">
+                <span class="sr-only">Actions</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-mapborder">
+            {% for h in hours %}
+              <tr class="hover:bg-mapbg/60 transition-colors group">
+                <td class="py-3 align-middle">
+                  <div class="flex items-center gap-2.5">
+                    <div class="h-8 w-8 rounded-full bg-mapgreen-50 text-mapgreen flex items-center justify-center text-[11px] font-bold shrink-0 tabular-nums">
+                      {{ h.date|date:"j" }}
+                    </div>
+                    <div class="min-w-0">
+                      <div class="text-[13px] text-mapnavy font-medium">
+                        <time datetime="{{ h.date|date:'c' }}">{{ h.date|date:"l, F j, Y" }}</time>
+                      </div>
+                      <div class="text-[10.5px] text-gray-500">
+                        {{ h.date|timesince }} ago
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td class="py-3 align-middle text-right">
+                  <span class="inline-flex items-baseline gap-1 font-semibold text-mapnavy tabular-nums text-[14px]">
+                    {{ h.hours|floatformat:"-2" }}<span class="text-gray-400 text-[11px] font-normal">h</span>
+                  </span>
+                </td>
+                <td class="py-3 align-middle text-[12.5px] text-gray-600 max-w-md">
+                  {{ h.notes|default:"—" }}
+                </td>
+                <td class="py-3 pr-3 align-middle text-right">
+                  <button type="button"
+                          class="delete-hours inline-flex items-center justify-center h-7 w-7 rounded-md
+                                 text-gray-400 hover:text-red-600 hover:bg-red-50 transition
+                                 md:opacity-0 md:group-hover:opacity-100"
+                          data-hours-id="{{ h.pk }}"
+                          data-hours-date="{{ h.date|date:'M j, Y' }}"
+                          data-hours-amount="{{ h.hours }}"
+                          aria-label="Delete hour entry from {{ h.date|date:'M j, Y' }}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Mobile cards -->
+      <div class="md:hidden divide-y divide-mapborder">
+        {% for h in hours %}
+          <div class="p-4 flex items-start gap-3">
+            <div class="h-10 w-10 rounded-full bg-mapgreen-50 text-mapgreen flex items-center justify-center text-[12px] font-bold shrink-0 tabular-nums">
+              {{ h.date|date:"j" }}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-baseline justify-between gap-2">
+                <div class="text-[13px] text-mapnavy font-medium">
+                  <time datetime="{{ h.date|date:'c' }}">{{ h.date|date:"M j, Y" }}</time>
+                </div>
+                <span class="font-semibold text-mapnavy tabular-nums text-[14px] shrink-0">
+                  {{ h.hours|floatformat:"-2" }}<span class="text-gray-400 text-[10.5px] ml-0.5">h</span>
+                </span>
+              </div>
+              {% if h.notes %}
+                <div class="text-[11.5px] text-gray-600 mt-1">{{ h.notes }}</div>
+              {% endif %}
+            </div>
+            <button type="button"
+                    class="delete-hours inline-flex items-center justify-center h-7 w-7 rounded-md
+                           text-gray-400 hover:text-red-600 hover:bg-red-50 transition shrink-0"
+                    data-hours-id="{{ h.pk }}"
+                    data-hours-date="{{ h.date|date:'M j, Y' }}"
+                    data-hours-amount="{{ h.hours }}"
+                    aria-label="Delete hour entry">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+              </svg>
+            </button>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  {% else %}
+    <!-- EMPTY STATE -->
+    <div class="card p-10 sm:p-14 text-center max-w-lg mx-auto">
+      <div class="mx-auto h-14 w-14 rounded-full bg-mapgreen-50 text-mapgreen flex items-center justify-center mb-4">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+        </svg>
+      </div>
+      <h2 class="text-[16px] font-semibold text-mapnavy">No hours logged yet</h2>
+      <p class="text-[13px] text-gray-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
+        Use the form above to log your first session. Certificates and milestone progress are based on hours logged here.
+      </p>
+      <div class="mt-5 flex flex-wrap items-center justify-center gap-2">
+        <button type="button"
+                onclick="document.getElementById('log-hours-form').scrollIntoView({behavior:'smooth'}); document.getElementById('hours-input').focus();"
+                class="btn-primary inline-flex items-center h-10 px-5 text-[13px]">
+          Log your first hour
+        </button>
+        <a href="{% url 'volunteer_portal:portal_assignments' %}"
+           class="btn-secondary inline-flex items-center h-10 px-4 text-[13px]">
+          View assignments
+        </a>
+      </div>
+    </div>
+  {% endif %}
+</main>
+
+<!-- DELETE CONFIRMATION DIALOG -->
+<dialog id="delete-dialog" class="rounded-xl p-0 max-w-sm w-full backdrop:bg-black/40 backdrop:backdrop-blur-sm">
+  <form method="post" id="delete-form" class="p-6">
+    {% csrf_token %}
+    <h2 class="text-[15px] font-semibold text-mapnavy">Delete this entry?</h2>
+    <p class="text-[12.5px] text-gray-600 mt-1.5" id="delete-message">
+      This will remove the logged hours from your profile. This cannot be undone.
+    </p>
+    <div class="flex justify-end gap-2 mt-5">
+      <button type="button" id="delete-cancel" class="btn-secondary text-[13px]">Cancel</button>
+      <button type="submit" class="btn-primary text-[13px] !bg-red-600 hover:!bg-red-700">
+        Delete entry
+      </button>
+    </div>
+  </form>
+</dialog>
+
+<style>
+  @media print {
+    nav, button, .quick-hours, #delete-dialog { display: none !important; }
+    .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+    section#log-hours-form { display: none !important; }
+  }
+</style>
+
+<script>
+(function () {
+  // Quick-fill buttons
+  document.querySelectorAll('.quick-hours').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById('hours-input');
+      if (input) {
+        input.value = btn.dataset.hours;
+        input.focus();
+      }
+    });
+  });
+
+  // Submit guard
+  const form = document.getElementById('log-form');
+  const submit = document.getElementById('log-submit');
+  const label = document.getElementById('log-label');
+  const spinner = document.getElementById('log-spinner');
+  form?.addEventListener('submit', () => {
+    if (submit) submit.disabled = true;
+    if (label) label.textContent = 'Logging…';
+    spinner?.classList.remove('hidden');
+  });
+
+  // Delete dialog
+  const dialog = document.getElementById('delete-dialog');
+  const deleteForm = document.getElementById('delete-form');
+  const deleteMessage = document.getElementById('delete-message');
+  const cancelBtn = document.getElementById('delete-cancel');
+
+  if (dialog && "showModal" in dialog) {
+    document.querySelectorAll('.delete-hours').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const id = btn.dataset.hoursId;
+        const date = btn.dataset.hoursDate || '';
+        const amount = btn.dataset.hoursAmount || '';
+        // Where does the form submit? — uses the same URL with a `delete` parameter
+        deleteForm.action = `?delete=${id}`;
+        deleteMessage.textContent = `Remove ${amount} hours logged on ${date}? This cannot be undone.`;
+        dialog.showModal();
+      });
+    });
+
+    cancelBtn?.addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+  } else {
+    // Fallback
+    document.querySelectorAll('.delete-hours').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (confirm(`Delete this entry?`)) {
+          window.location.href = `?delete=${btn.dataset.hoursId}`;
+        }
+      });
+    });
+  }
+})();
+</script>
+
 {% endblock %}

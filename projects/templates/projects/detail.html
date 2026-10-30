@@ -1,13 +1,46 @@
 {% extends "public_base.html" %}
 {% load humanize %}
 {% block title %}{{ project.name }} — {{ ORG_NAME }}{% endblock %}
-{% block meta_description %}{{ project.summary|default:project.name }}{% endblock %}
+{% block meta_description %}{{ project.summary|default:project.name|truncatechars:160 }}{% endblock %}
+
+{% block head %}
+{{ block.super }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Project",
+  "name": "{{ project.name|escapejs }}",
+  "description": "{{ project.summary|default:project.name|escapejs }}",
+  "url": "{{ request.build_absolute_uri|escapejs }}",
+  {% if project.cover_image %}"image": "{{ request.scheme }}://{{ request.get_host }}{{ project.cover_image.url|escapejs }}",{% elif site.about_hero_image %}"image": "{{ request.scheme }}://{{ request.get_host }}{{ site.about_hero_image.url|escapejs }}",{% endif %}
+  {% if project.start_date %}"startDate": "{{ project.start_date|date:'c' }}",{% endif %}
+  "funder": {
+    "@type": "NGO",
+    "name": "{{ site.site_name|default:ORG_NAME|escapejs }}",
+    "url": "{{ request.scheme }}://{{ request.get_host }}/"
+  }
+}
+</script>
+<meta property="og:title" content="{{ project.name }} — {{ ORG_NAME }}">
+<meta property="og:description" content="{{ project.summary|default:project.name|truncatechars:160 }}">
+{% if project.cover_image %}
+  <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ project.cover_image.url }}">
+{% elif site.about_hero_image %}
+  <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ site.about_hero_image.url }}">
+{% endif %}
+<meta property="og:type" content="article">
+{% endblock %}
 
 {% block content %}
 
-<!-- ============================================================
-     HERO
-     ============================================================ -->
+<a href="#main-content"
+   class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100]
+          focus:px-4 focus:py-2.5 focus:rounded-lg focus:bg-mapnavy focus:text-white
+          focus:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen">
+  Skip to main content
+</a>
+
+<!-- HERO -->
 <section class="relative bg-mapnavy overflow-hidden">
   <div class="absolute inset-0 opacity-25 pointer-events-none"
        style="background-image:
@@ -16,18 +49,16 @@
 
   <div class="relative max-w-5xl mx-auto px-5 lg:px-8 py-12 lg:py-16">
 
-    <!-- Breadcrumb -->
     <nav aria-label="Breadcrumb" class="mb-5">
       <ol class="flex items-center gap-2 text-[12.5px] text-white/50">
         <li><a href="/" class="hover:text-white transition-colors">Home</a></li>
         <li aria-hidden="true">/</li>
         <li><a href="{% url 'projects:list' %}" class="hover:text-white transition-colors">Projects</a></li>
         <li aria-hidden="true">/</li>
-        <li class="text-white/80 truncate max-w-[16rem]">{{ project.name }}</li>
+        <li class="text-white/80 truncate max-w-[16rem]" aria-current="page">{{ project.name }}</li>
       </ol>
     </nav>
 
-    <!-- Status pill -->
     <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full
                 bg-white/10 border border-white/15 mb-4">
       <span class="h-1.5 w-1.5 rounded-full
@@ -51,7 +82,6 @@
       </p>
     {% endif %}
 
-    <!-- Metadata row -->
     <ul class="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-[12.5px] text-white/60">
       {% if project.location %}
         <li class="flex items-center gap-1.5">
@@ -99,46 +129,83 @@
   </div>
 </section>
 
-<!-- ============================================================
-     COVER IMAGE (floating over hero boundary)
-     ============================================================ -->
-{% if project.cover_image %}
+<!-- COVER IMAGE -->
+{% if project.cover_image or site.about_hero_image %}
   <div class="max-w-5xl mx-auto px-5 lg:px-8 -mt-8 lg:-mt-12 relative z-10">
     <div class="rounded-2xl overflow-hidden shadow-2xl border-4 border-white">
-      <img src="{{ project.cover_image.url }}"
-           alt="{{ project.name }}"
-           class="w-full aspect-[16/9] object-cover"
-           loading="eager"
-           decoding="async">
+      {% if project.cover_image %}
+        <img src="{{ project.cover_image.url }}"
+             alt="{{ project.name }}"
+             class="w-full aspect-[16/9] object-cover"
+             loading="eager" decoding="async" fetchpriority="high">
+      {% else %}
+        <img src="{{ site.about_hero_image.url }}"
+             alt="{{ project.name }}"
+             class="w-full aspect-[16/9] object-cover"
+             loading="eager" decoding="async" fetchpriority="high">
+      {% endif %}
     </div>
   </div>
 {% endif %}
 
-<!-- ============================================================
-     BODY
-     ============================================================ -->
-<section class="max-w-5xl mx-auto px-5 lg:px-8 py-12 lg:py-16">
+<!-- IMPACT STRIP -->
+{% if project.fundraising_target or project.beneficiary_target or project.progress_percent %}
+  <section class="max-w-5xl mx-auto px-5 lg:px-8 -mt-6 relative z-10">
+    <div class="card p-5 grid grid-cols-2 md:grid-cols-3 gap-4">
+      {% if project.fundraising_target %}
+        <div>
+          <div class="text-[10.5px] uppercase tracking-wider font-semibold text-gray-500">Raised</div>
+          <div class="mt-1 text-[20px] font-bold text-mapnavy tabular-nums leading-none">
+            K {{ project.raised_amount|default:0|floatformat:0|intcomma }}
+          </div>
+          <div class="text-[11.5px] text-gray-500 mt-1">
+            of K {{ project.fundraising_target|floatformat:0|intcomma }}
+          </div>
+        </div>
+      {% endif %}
+      {% if project.progress_percent %}
+        <div>
+          <div class="text-[10.5px] uppercase tracking-wider font-semibold text-gray-500">Progress</div>
+          <div class="mt-1 text-[20px] font-bold text-mapgreen tabular-nums leading-none">
+            {{ project.progress_percent }}%
+          </div>
+          <div class="text-[11.5px] text-gray-500 mt-1">funded</div>
+        </div>
+      {% endif %}
+      {% if project.beneficiary_target %}
+        <div>
+          <div class="text-[10.5px] uppercase tracking-wider font-semibold text-gray-500">Reached</div>
+          <div class="mt-1 text-[20px] font-bold text-mapnavy tabular-nums leading-none">
+            {{ project.beneficiaries_reached|default:0|intcomma }}
+          </div>
+          <div class="text-[11.5px] text-gray-500 mt-1">
+            of {{ project.beneficiary_target|intcomma }} targeted
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </section>
+{% endif %}
+
+<!-- BODY -->
+<main id="main-content" class="max-w-5xl mx-auto px-5 lg:px-8 py-12 lg:py-16">
 
   <div class="grid lg:grid-cols-3 gap-6 lg:gap-8 items-start">
 
-    <!-- ==========================================
-         MAIN CONTENT
-         ========================================== -->
+    <!-- MAIN CONTENT -->
     <div class="lg:col-span-2 space-y-6">
 
-      <div class="card p-7 sm:p-8" id="about-project">
-
+      <article class="card p-7 sm:p-8" id="about-project">
         <div class="text-[11px] uppercase tracking-[0.14em] font-semibold text-mapgreen mb-3">
           About this project
         </div>
 
         {% if project.description %}
-          <div class="text-[14.5px] leading-relaxed text-gray-700
-                      whitespace-pre-line">
+          <div class="text-[14.5px] leading-relaxed text-gray-700 whitespace-pre-line">
             {{ project.description }}
           </div>
         {% else %}
-          <p class="text-[13.5px] text-gray-500">
+          <p class="text-[13.5px] text-gray-500 italic">
             A detailed description will be added soon.
           </p>
         {% endif %}
@@ -173,6 +240,11 @@
                     </div>
                     {% if m.target_date %}
                       <div class="text-[11.5px] text-gray-400 mt-0.5">
+                        {% if m.completed %}
+                          Done
+                        {% else %}
+                          Due
+                        {% endif %}
                         <time datetime="{{ m.target_date|date:'c' }}">
                           {{ m.target_date|date:"M j, Y" }}
                         </time>
@@ -184,16 +256,53 @@
             </ol>
           </div>
         {% endif %}
+      </article>
 
-      </div>
+      <!-- Recent donations -->
+      {% if recent_donations %}
+        <section class="card p-7 sm:p-8">
+          <div class="flex items-baseline justify-between mb-4">
+            <div>
+              <div class="text-[11px] uppercase tracking-[0.14em] font-semibold text-mapgreen mb-1">
+                Community
+              </div>
+              <h2 class="text-[16px] font-semibold text-mapnavy">Recent gifts</h2>
+            </div>
+            {% if project.donations_count and project.donations_count > recent_donations|length %}
+              <span class="text-[12px] text-gray-500">
+                {{ project.donations_count }} total
+              </span>
+            {% endif %}
+          </div>
+
+          <ul class="divide-y divide-mapborder">
+            {% for d in recent_donations %}
+              <li class="py-3 flex items-center gap-3">
+                <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-mapgreen-50 text-mapgreen text-[13px] font-semibold shrink-0">
+                  {{ d.donor_display_name|default:"A"|first|upper }}
+                </span>
+                <div class="flex-1 min-w-0">
+                  <div class="text-[13px] text-mapnavy font-medium">
+                    {{ d.donor_display_name|default:"Anonymous" }}
+                  </div>
+                  <div class="text-[11.5px] text-gray-500">
+                    {{ d.created_at|timesince }} ago
+                  </div>
+                </div>
+                <div class="text-[13px] font-semibold text-mapnavy tabular-nums shrink-0">
+                  K {{ d.amount|floatformat:0|intcomma }}
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        </section>
+      {% endif %}
+
     </div>
 
-    <!-- ==========================================
-         SIDEBAR
-         ========================================== -->
+    <!-- SIDEBAR -->
     <aside class="lg:sticky lg:top-24 space-y-4">
 
-      <!-- Fundraising -->
       {% if project.fundraising_target %}
         <div class="card p-6">
           <div class="text-[11px] uppercase tracking-[0.14em] font-semibold text-gray-500">
@@ -215,6 +324,8 @@
                role="progressbar"
                aria-valuenow="{{ project.progress_percent|default:0 }}"
                aria-valuemin="0" aria-valuemax="100"
+               aria-valuetext="{{ project.progress_percent|default:0 }}% funded"
+               aria-live="polite"
                aria-label="Fundraising progress">
             <div class="h-full rounded-full bg-mapgreen transition-all duration-700"
                  style="width: {{ project.progress_percent|default:0 }}%"></div>
@@ -237,19 +348,46 @@
             Donate now
           </a>
 
-          <div class="mt-3 flex items-center justify-center gap-2 text-[11.5px] text-gray-500">
+          <!-- Donation presets -->
+          <div class="mt-3 grid grid-cols-3 gap-1.5">
+            <a href="/donate/?project={{ project.pk }}&amount=100"
+               class="inline-flex items-center justify-center h-9 rounded-lg border border-mapborder
+                      text-[12px] font-semibold text-mapnavy hover:bg-mapgreen-50 hover:border-mapgreen transition">
+              K 100
+            </a>
+            <a href="/donate/?project={{ project.pk }}&amount=500"
+               class="inline-flex items-center justify-center h-9 rounded-lg border border-mapborder
+                      text-[12px] font-semibold text-mapnavy hover:bg-mapgreen-50 hover:border-mapgreen transition">
+              K 500
+            </a>
+            <a href="/donate/?project={{ project.pk }}&amount=1000"
+               class="inline-flex items-center justify-center h-9 rounded-lg border border-mapborder
+                      text-[12px] font-semibold text-mapnavy hover:bg-mapgreen-50 hover:border-mapgreen transition">
+              K 1,000
+            </a>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-mapborder flex items-center justify-center gap-2 text-[11.5px] text-gray-500 flex-wrap">
             <span>Share:</span>
+            <a href="https://wa.me/?text={{ project.name|urlencode }}%20{{ request.build_absolute_uri|urlencode }}"
+               target="_blank" rel="noopener noreferrer"
+               class="text-gray-400 hover:text-mapnavy transition px-1"
+               aria-label="Share on WhatsApp">💬</a>
             <a href="https://twitter.com/intent/tweet?text={{ project.name|urlencode }}&url={{ request.build_absolute_uri|urlencode }}"
                target="_blank" rel="noopener noreferrer"
-               class="text-gray-400 hover:text-mapnavy transition"
+               class="text-gray-400 hover:text-mapnavy transition px-1"
                aria-label="Share on X">𝕏</a>
             <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri|urlencode }}"
                target="_blank" rel="noopener noreferrer"
-               class="text-gray-400 hover:text-mapnavy transition"
+               class="text-gray-400 hover:text-mapnavy transition px-1"
                aria-label="Share on Facebook">f</a>
             <a href="mailto:?subject={{ project.name|urlencode }}&body={{ request.build_absolute_uri|urlencode }}"
-               class="text-gray-400 hover:text-mapnavy transition"
+               class="text-gray-400 hover:text-mapnavy transition px-1"
                aria-label="Share by email">✉</a>
+            <button type="button"
+                    onclick="navigator.clipboard.writeText('{{ request.build_absolute_uri|escapejs }}').then(()=>{this.textContent='✓'; setTimeout(()=>{this.textContent='🔗'},1500)})"
+                    class="text-gray-400 hover:text-mapnavy transition px-1"
+                    aria-label="Copy link">🔗</button>
           </div>
         </div>
       {% endif %}
@@ -309,17 +447,24 @@
       <div class="card p-5">
         <div class="text-[13px] font-semibold text-mapnavy mb-1.5">Questions?</div>
         <p class="text-[12px] text-gray-600 leading-relaxed">
-          Email our team at
-          <a href="mailto:info@map.org" class="text-mapgreen hover:underline">info@map.org</a>.
+          Email
+          <a href="mailto:{{ site.contact_email|default:'info@map.org' }}"
+             class="text-mapgreen hover:underline break-all">
+            {{ site.contact_email|default:"info@map.org" }}
+          </a>
+          {% if site.contact_phone %}
+            or call
+            <a href="tel:{{ site.contact_phone }}" class="text-mapgreen hover:underline">
+              {{ site.contact_phone }}
+            </a>.
+          {% endif %}
         </p>
       </div>
     </aside>
   </div>
-</section>
+</main>
 
-<!-- ============================================================
-     CLOSING CTA
-     ============================================================ -->
+<!-- CLOSING CTA -->
 {% if project.fundraising_target %}
 <section class="relative bg-mapnavy overflow-hidden">
   <div class="absolute inset-0 pointer-events-none opacity-30"
@@ -342,5 +487,25 @@
   </div>
 </section>
 {% endif %}
+
+<!-- Sticky mobile donate -->
+{% if project.fundraising_target %}
+  <div class="lg:hidden fixed bottom-0 inset-x-0 z-40 p-3 bg-white/95 backdrop-blur border-t border-mapborder">
+    <a href="/donate/?project={{ project.pk }}"
+       class="btn-primary inline-flex items-center justify-center w-full h-11 text-[14px] font-semibold rounded-lg">
+      💚 Donate to this project
+    </a>
+  </div>
+  <div class="lg:hidden h-20" aria-hidden="true"></div>
+{% endif %}
+
+<style>
+  @media print {
+    .lg\:hidden, aside .card:not(:first-child) { display: none !important; }
+    section, main { padding: 0 !important; }
+    .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+    a[href]::after { content: " (" attr(href) ")"; font-size: 10px; color: #666; }
+  }
+</style>
 
 {% endblock %}

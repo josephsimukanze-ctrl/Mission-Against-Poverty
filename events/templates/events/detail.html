@@ -1,26 +1,565 @@
 {% extends "public_base.html" %}
+{% load humanize %}
 {% block title %}{{ event.name }} — {{ ORG_NAME }}{% endblock %}
-{% block content %}
-<section class="max-w-4xl mx-auto px-6 py-12">
-  <a href="{% url 'events:list' %}" class="text-sm text-mapgreen hover:underline">← All events</a>
-  <h1 class="text-3xl md:text-4xl font-bold text-mapnavy mt-3">{{ event.name }}</h1>
-  <div class="flex flex-wrap gap-3 mt-3 text-sm text-gray-500">
-    {% if event.starts_at %}<span>📅 {{ event.starts_at|date:"F j, Y · H:i" }}</span>{% endif %}
-    {% if event.location %}<span>📍 {{ event.location }}</span>{% endif %}
-  </div>
-  {% if event.cover_image %}<img src="{{ event.cover_image.url }}" alt="{{ event.name }}" class="w-full rounded-xl mt-6">{% endif %}
-  {% if event.description %}<div class="prose prose-slate mt-6 max-w-none whitespace-pre-line">{{ event.description }}</div>{% endif %}
-  {% if registration_open %}
-  <div class="mt-10 rounded-xl border border-[#e5e9f0] bg-white p-6">
-    <h2 class="font-semibold text-mapnavy mb-4">Register for this event</h2>
-    <form method="post" action="{% url 'events:register' event.pk %}" class="grid md:grid-cols-3 gap-3">
-      {% csrf_token %}
-      <div><label class="form-label">Full name</label><input class="form-input" name="full_name" required value="{{ user.get_full_name|default:'' }}"></div>
-      <div><label class="form-label">Email</label><input type="email" class="form-input" name="email" required value="{{ user.email|default:'' }}"></div>
-      <div><label class="form-label">Phone</label><input class="form-input" name="phone" value="{{ user.phone|default:'' }}"></div>
-      <div class="md:col-span-3"><button class="btn-primary">Register</button></div>
-    </form>
-  </div>
+{% block meta_description %}{{ event.description|default:event.name|striptags|truncatechars:160 }}{% endblock %}
+
+{% block head %}
+{{ block.super }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Event",
+  "name": "{{ event.name|escapejs }}",
+  "description": "{{ event.description|default:event.name|striptags|truncatechars:160|escapejs }}",
+  "url": "{{ request.build_absolute_uri|escapejs }}",
+  {% if event.starts_at %}"startDate": "{{ event.starts_at|date:'c' }}",{% endif %}
+  {% if event.ends_at %}"endDate": "{{ event.ends_at|date:'c' }}",{% endif %}
+  {% if event.location %}
+  "location": {
+    "@type": "Place",
+    "name": "{{ event.location|escapejs }}"
+  },
   {% endif %}
-</section>
+  {% if event.cover_image %}"image": "{{ request.scheme }}://{{ request.get_host }}{{ event.cover_image.url|escapejs }}",{% endif %}
+  "eventStatus": "https://schema.org/EventScheduled",
+  "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+  "organizer": {
+    "@type": "NGO",
+    "name": "{{ site.site_name|default:ORG_NAME|escapejs }}",
+    "url": "{{ request.scheme }}://{{ request.get_host }}/"
+  }
+}
+</script>
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="{{ event.name }} — {{ ORG_NAME }}">
+<meta property="og:description" content="{{ event.description|default:event.name|striptags|truncatechars:160 }}">
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+{% if event.cover_image %}
+  <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ event.cover_image.url }}">
+{% elif site.og_image %}
+  <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ site.og_image.url }}">
+{% endif %}
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ event.name }}">
+<meta name="twitter:description" content="{{ event.description|default:event.name|striptags|truncatechars:160 }}">
+{% if event.cover_image %}
+  <meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ event.cover_image.url }}">
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+<a href="#main-content"
+   class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100]
+          focus:px-4 focus:py-2.5 focus:rounded-lg focus:bg-mapnavy focus:text-white
+          focus:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen">
+  Skip to main content
+</a>
+
+<main id="main-content">
+
+  <!-- HERO -->
+  <section class="relative bg-mapnavy overflow-hidden text-white">
+    <div class="absolute inset-0 opacity-25 pointer-events-none"
+         style="background-image:
+           radial-gradient(circle at 20% 20%, #1e9e5f 0, transparent 40%),
+           radial-gradient(circle at 80% 80%, #1f3350 0, transparent 40%);"></div>
+
+    <div class="relative max-w-4xl mx-auto px-5 lg:px-8 py-12 lg:py-16">
+
+      <nav aria-label="Breadcrumb" class="mb-5">
+        <ol class="flex flex-wrap items-center gap-2 text-[12.5px] text-white/50">
+          <li><a href="/" class="hover:text-white transition-colors">Home</a></li>
+          <li aria-hidden="true">/</li>
+          <li><a href="{% url 'events:list' %}" class="hover:text-white transition-colors">Events</a></li>
+          <li aria-hidden="true">/</li>
+          <li class="text-white/80 truncate max-w-[20rem]" aria-current="page">{{ event.name }}</li>
+        </ol>
+      </nav>
+
+      <div class="flex flex-col sm:flex-row sm:items-start gap-5 sm:gap-6">
+
+        <!-- Date badge -->
+        {% if event.starts_at %}
+          <div class="inline-flex flex-col items-center justify-center shrink-0
+                      w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white text-mapnavy shadow-xl">
+            <span class="text-[10.5px] sm:text-[11px] uppercase tracking-[0.14em] font-bold text-mapgreen">
+              {{ event.starts_at|date:"M" }}
+            </span>
+            <span class="text-[32px] sm:text-[40px] font-extrabold leading-none tabular-nums">
+              {{ event.starts_at|date:"j" }}
+            </span>
+            <span class="text-[10.5px] text-gray-500 mt-0.5">
+              {{ event.starts_at|date:"D · Y" }}
+            </span>
+          </div>
+        {% endif %}
+
+        <div class="min-w-0">
+          {% if event.starts_at %}
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full
+                        bg-white/10 border border-white/15
+                        text-[11px] uppercase tracking-[0.14em] font-semibold mb-3">
+              <span class="h-1.5 w-1.5 rounded-full bg-mapgreen animate-pulse" aria-hidden="true"></span>
+              {{ event.starts_at|timeuntil }}
+            </div>
+          {% endif %}
+
+          <h1 class="text-3xl md:text-4xl lg:text-[42px] font-bold tracking-tight leading-tight drop-shadow-sm">
+            {{ event.name }}
+          </h1>
+
+          {% if event.description %}
+            <p class="mt-3 text-[15px] leading-relaxed text-gray-300 max-w-2xl line-clamp-2">
+              {{ event.description|striptags|truncatechars:200 }}
+            </p>
+          {% endif %}
+
+          <ul class="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-[12.5px] text-white/70">
+            {% if event.starts_at %}
+              <li class="flex items-center gap-1.5">
+                <span aria-hidden="true">🕐</span>
+                <time datetime="{{ event.starts_at|date:'c' }}">
+                  {{ event.starts_at|date:"l, F j · H:i" }}
+                </time>
+              </li>
+            {% endif %}
+            {% if event.location %}
+              <li class="flex items-center gap-1.5">
+                <span aria-hidden="true">📍</span>
+                <a href="https://www.google.com/maps/search/?api=1&query={{ event.location|urlencode }}"
+                   target="_blank" rel="noopener"
+                   class="hover:text-white underline-offset-2 hover:underline">
+                  {{ event.location }}
+                </a>
+              </li>
+            {% endif %}
+            {% if event.program %}
+              <li class="flex items-center gap-1.5">
+                <span aria-hidden="true">🎯</span>
+                <a href="{{ event.program.get_absolute_url }}"
+                   class="hover:text-white underline-offset-2 hover:underline">
+                  {{ event.program.name }}
+                </a>
+              </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+
+      {% if registration_open %}
+        <div class="mt-7 flex flex-wrap items-center gap-3">
+          <a href="#register"
+             class="inline-flex items-center justify-center h-11 px-6 rounded-lg
+                    bg-mapgreen text-white font-semibold text-[14px]
+                    hover:bg-mapgreen-600 transition shadow-sm
+                    focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/50">
+            Register for this event
+          </a>
+          {% if event.starts_at %}
+            <a href="data:text/calendar;charset=utf-8,{{ event.name|urlencode }}%0A{{ event.starts_at|date:'Ymd\\THis' }}Z%0A{{ event.location|default:''|urlencode }}"
+               download="{{ event.name|slugify }}.ics"
+               class="inline-flex items-center justify-center h-11 px-5 rounded-lg
+                      border border-white/25 text-white font-semibold text-[14px]
+                      hover:bg-white/10 transition
+                      focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40">
+              📅 Add to calendar
+            </a>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- COVER IMAGE -->
+  {% if event.cover_image or site.about_hero_image %}
+    <div class="max-w-4xl mx-auto px-5 lg:px-8 -mt-8 lg:-mt-12 relative z-10">
+      <div class="rounded-2xl overflow-hidden shadow-2xl border-4 border-white">
+        {% if event.cover_image %}
+          <img src="{{ event.cover_image.url }}"
+               alt="{{ event.name }}"
+               class="w-full aspect-[16/9] object-cover"
+               loading="eager" decoding="async" fetchpriority="high">
+        {% else %}
+          <img src="{{ site.about_hero_image.url }}"
+               alt="{{ event.name }}"
+               class="w-full aspect-[16/9] object-cover"
+               loading="eager" decoding="async" fetchpriority="high">
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- BODY + SIDEBAR -->
+  <div class="max-w-5xl mx-auto px-5 lg:px-8 py-12 lg:py-16">
+    <div class="grid lg:grid-cols-3 gap-8 items-start">
+
+      <!-- MAIN -->
+      <div class="lg:col-span-2 space-y-6">
+
+        {% if event.description %}
+          <article class="card p-7 sm:p-8">
+            <div class="text-[11px] uppercase tracking-[0.14em] font-semibold text-mapgreen mb-3">
+              About this event
+            </div>
+            <div class="prose prose-slate prose-lg max-w-none
+                        prose-headings:text-mapnavy prose-headings:font-bold
+                        prose-a:text-mapgreen prose-a:no-underline hover:prose-a:underline
+                        text-[15px] leading-[1.75] text-gray-700
+                        whitespace-pre-line">
+              {{ event.description }}
+            </div>
+          </article>
+        {% endif %}
+
+        <!-- REGISTRATION -->
+        {% if registration_open %}
+          <section id="register" class="card p-7 sm:p-8">
+            <header class="mb-5">
+              <h2 class="text-[16px] font-semibold text-mapnavy">Register for this event</h2>
+              <p class="text-[12.5px] text-gray-500 mt-1">
+                Fill in your details and we'll confirm by email.
+                {% if event.capacity %}
+                  <span class="block mt-1">
+                    <strong class="text-mapnavy">{{ event.registration_count|default:0 }}</strong>
+                    of <strong class="text-mapnavy">{{ event.capacity }}</strong> spots taken
+                    {% if event.spots_remaining is not None %}
+                      · <span class="text-mapgreen font-semibold">{{ event.spots_remaining }} remaining</span>
+                    {% endif %}
+                  </span>
+                {% endif %}
+              </p>
+            </header>
+
+            {% if event.registration_deadline and event.starts_at %}
+              <div class="mb-4 rounded-lg bg-amber-50 border border-amber-200 px-3.5 py-2.5 text-[12px] text-amber-900">
+                <strong>Register by</strong>
+                <time datetime="{{ event.registration_deadline|date:'c' }}">
+                  {{ event.registration_deadline|date:"F j, Y" }}
+                </time>
+                ({{ event.registration_deadline|timeuntil }}).
+              </div>
+            {% endif %}
+
+            <form method="post" action="{% url 'events:register' event.pk %}" class="space-y-4">
+              {% csrf_token %}
+
+              <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label for="full_name" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                    Full name <span class="text-red-500">*</span>
+                  </label>
+                  <input class="form-input w-full"
+                         id="full_name" name="full_name" required
+                         value="{{ user.get_full_name|default:'' }}"
+                         placeholder="Jane Doe"
+                         autocomplete="name">
+                </div>
+                <div>
+                  <label for="email" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                    Email <span class="text-red-500">*</span>
+                  </label>
+                  <input type="email" class="form-input w-full"
+                         id="email" name="email" required
+                         value="{{ user.email|default:'' }}"
+                         placeholder="jane@example.com"
+                         autocomplete="email">
+                </div>
+              </div>
+
+              <div>
+                <label for="phone" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                  Phone <span class="text-gray-400 font-normal">(optional)</span>
+                </label>
+                <input class="form-input w-full"
+                       id="phone" name="phone"
+                       value="{{ user.phone|default:'' }}"
+                       placeholder="+260 97 000 0000"
+                       autocomplete="tel">
+              </div>
+
+              <div class="pt-2 flex items-center gap-3">
+                <button type="submit"
+                        class="btn-primary inline-flex items-center gap-2 h-11 px-6 text-[14px] font-semibold rounded-lg">
+                  Register
+                  <span aria-hidden="true">→</span>
+                </button>
+                <span class="text-[12px] text-gray-500">
+                  Free · No payment required
+                </span>
+              </div>
+            </form>
+          </section>
+        {% else %}
+          <!-- Registration closed -->
+          <section class="card p-7 sm:p-8 bg-gray-50 border-gray-200">
+            <div class="flex items-start gap-3">
+              <span class="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white text-gray-500 text-lg shrink-0"
+                    aria-hidden="true">🔒</span>
+              <div>
+                <h2 class="text-[15px] font-semibold text-mapnavy">
+                  Registration is closed
+                </h2>
+                <p class="text-[13px] text-gray-600 mt-1 leading-relaxed">
+                  {% if event.registration_deadline %}
+                    The deadline was
+                    <time datetime="{{ event.registration_deadline|date:'c' }}">{{ event.registration_deadline|date:"F j, Y" }}</time>.
+                  {% else %}
+                    This event is no longer accepting registrations.
+                  {% endif %}
+                  Questions? Contact us at
+                  <a href="mailto:{{ site.contact_email|default:'info@map.org' }}"
+                     class="text-mapgreen hover:underline break-all">
+                    {{ site.contact_email|default:"info@map.org" }}
+                  </a>.
+                </p>
+              </div>
+            </div>
+          </section>
+        {% endif %}
+
+        <!-- SHARE -->
+        {% with share_url=request.build_absolute_uri share_text=event.name|urlencode %}
+          <div class="pt-4">
+            <div class="flex flex-wrap items-center gap-3">
+              <span class="text-[11px] uppercase tracking-[0.14em] font-semibold text-gray-500">
+                Share this event
+              </span>
+              <div class="flex flex-wrap items-center gap-2">
+                <a href="https://wa.me/?text={{ share_text }}%20{{ share_url|urlencode }}"
+                   target="_blank" rel="noopener noreferrer"
+                   class="inline-flex items-center justify-center h-9 px-3 rounded-lg
+                          border border-mapborder text-[12px] text-gray-700
+                          hover:bg-mapgreen-50 hover:border-mapgreen transition">
+                  💬 WhatsApp
+                </a>
+                <a href="https://twitter.com/intent/tweet?text={{ share_text }}&url={{ share_url|urlencode }}"
+                   target="_blank" rel="noopener noreferrer"
+                   class="inline-flex items-center justify-center h-9 px-3 rounded-lg
+                          border border-mapborder text-[12px] text-gray-700
+                          hover:bg-mapgreen-50 hover:border-mapgreen transition">
+                  𝕏 X
+                </a>
+                <a href="https://www.facebook.com/sharer/sharer.php?u={{ share_url|urlencode }}"
+                   target="_blank" rel="noopener noreferrer"
+                   class="inline-flex items-center justify-center h-9 px-3 rounded-lg
+                          border border-mapborder text-[12px] text-gray-700
+                          hover:bg-mapgreen-50 hover:border-mapgreen transition">
+                  f Facebook
+                </a>
+                <a href="mailto:?subject={{ share_text }}&body={{ share_url|urlencode }}"
+                   class="inline-flex items-center justify-center h-9 px-3 rounded-lg
+                          border border-mapborder text-[12px] text-gray-700
+                          hover:bg-mapgreen-50 hover:border-mapgreen transition">
+                  ✉ Email
+                </a>
+                <button type="button"
+                        onclick="navigator.clipboard.writeText('{{ share_url|escapejs }}').then(()=>{this.textContent='✓ Copied'; setTimeout(()=>{this.textContent='🔗 Copy link'},1500)})"
+                        class="inline-flex items-center justify-center h-9 px-3 rounded-lg
+                               border border-mapborder text-[12px] text-gray-700
+                               hover:bg-mapgreen-50 hover:border-mapgreen transition">
+                  🔗 Copy link
+                </button>
+              </div>
+            </div>
+          </div>
+        {% endwith %}
+
+        <div class="pt-4">
+          <a href="{% url 'events:list' %}"
+             class="text-[13px] text-mapgreen hover:underline font-semibold">
+            ← Back to all events
+          </a>
+        </div>
+      </div>
+
+      <!-- SIDEBAR -->
+      <aside class="lg:sticky lg:top-24 space-y-4">
+
+        <div class="card p-5">
+          <div class="text-[11px] uppercase tracking-[0.14em] font-semibold text-gray-500 mb-3">
+            When & where
+          </div>
+          <dl class="space-y-2.5 text-[12.5px]">
+            {% if event.starts_at %}
+              <div class="flex items-start justify-between gap-3">
+                <dt class="text-gray-500 shrink-0">Starts</dt>
+                <dd class="text-mapnavy text-right">
+                  <time datetime="{{ event.starts_at|date:'c' }}">
+                    {{ event.starts_at|date:"M j, Y · H:i" }}
+                  </time>
+                </dd>
+              </div>
+            {% endif %}
+            {% if event.ends_at %}
+              <div class="flex items-start justify-between gap-3">
+                <dt class="text-gray-500 shrink-0">Ends</dt>
+                <dd class="text-mapnavy text-right">
+                  <time datetime="{{ event.ends_at|date:'c' }}">
+                    {{ event.ends_at|date:"M j, Y · H:i" }}
+                  </time>
+                </dd>
+              </div>
+            {% endif %}
+            {% if event.location %}
+              <div class="flex items-start justify-between gap-3">
+                <dt class="text-gray-500 shrink-0">Location</dt>
+                <dd class="text-mapnavy text-right">
+                  <a href="https://www.google.com/maps/search/?api=1&query={{ event.location|urlencode }}"
+                     target="_blank" rel="noopener"
+                     class="text-mapgreen hover:underline">
+                    {{ event.location }}
+                  </a>
+                </dd>
+              </div>
+            {% endif %}
+            {% if event.capacity %}
+              <div class="flex items-start justify-between gap-3">
+                <dt class="text-gray-500 shrink-0">Capacity</dt>
+                <dd class="text-mapnavy text-right tabular-nums">
+                  {{ event.registration_count|default:0 }} / {{ event.capacity }}
+                </dd>
+              </div>
+            {% endif %}
+          </dl>
+        </div>
+
+        {% if event.program %}
+          <div class="card p-5">
+            <div class="text-[11px] uppercase tracking-[0.14em] font-semibold text-gray-500 mb-2">
+              Program
+            </div>
+            <a href="{{ event.program.get_absolute_url }}"
+               class="block font-semibold text-mapnavy text-[14px] hover:text-mapgreen hover:underline">
+              {{ event.program.name }}
+            </a>
+          </div>
+        {% endif %}
+
+        <div class="card p-5 bg-mapgreen-50 border-mapgreen-50">
+          <div class="flex items-start gap-3">
+            <span class="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white text-mapgreen text-lg shrink-0"
+                  aria-hidden="true">💚</span>
+            <div>
+              <div class="font-semibold text-mapnavy text-[14px]">
+                Can't make it?
+              </div>
+              <p class="text-[12.5px] text-gray-700 mt-1 leading-relaxed">
+                You can still support our work by donating today.
+              </p>
+              <a href="/donate/"
+                 class="btn-primary inline-flex items-center justify-center w-full h-10 mt-3
+                        text-[13px] font-semibold rounded-lg">
+                Donate instead
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card p-5">
+          <div class="text-[13px] font-semibold text-mapnavy mb-1.5">Questions?</div>
+          <p class="text-[12px] text-gray-600 leading-relaxed">
+            Email
+            <a href="mailto:{{ site.contact_email|default:'info@map.org' }}"
+               class="text-mapgreen hover:underline break-all">
+              {{ site.contact_email|default:"info@map.org" }}
+            </a>.
+          </p>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- RELATED UPCOMING EVENTS -->
+  {% if related_events %}
+    <section class="bg-mapbg py-12 lg:py-16">
+      <div class="max-w-5xl mx-auto px-5 lg:px-8">
+        <div class="flex items-end justify-between gap-3 mb-6">
+          <div>
+            <div class="text-[11px] uppercase tracking-[0.14em] font-semibold text-mapgreen mb-1">
+              More events
+            </div>
+            <h2 class="text-[20px] font-bold text-mapnavy">Coming up next</h2>
+          </div>
+          <a href="{% url 'events:list' %}"
+             class="text-[12.5px] font-medium text-mapgreen hover:underline shrink-0">
+            View all →
+          </a>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-5">
+          {% for r in related_events %}
+            <a href="{% url 'events:detail' r.pk %}"
+               class="group card card-hover overflow-hidden flex flex-col h-full
+                      focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40">
+              <div class="aspect-[16/10] bg-gray-100 overflow-hidden shrink-0 relative">
+                {% if r.cover_image %}
+                  <img src="{{ r.cover_image.url }}" alt="{{ r.name }}"
+                       loading="lazy" decoding="async"
+                       class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500">
+                {% elif site.about_hero_image %}
+                  <img src="{{ site.about_hero_image.url }}" alt="{{ r.name }}"
+                       loading="lazy" decoding="async"
+                       class="w-full h-full object-cover opacity-90 group-hover:scale-[1.03] transition-transform duration-500">
+                {% else %}
+                  <div class="w-full h-full flex items-center justify-center bg-mapgreen-50 text-mapgreen text-3xl"
+                       aria-hidden="true">📅</div>
+                {% endif %}
+              </div>
+              <div class="p-4 flex flex-col flex-1">
+                {% if r.starts_at %}
+                  <time datetime="{{ r.starts_at|date:'c' }}"
+                        class="text-[11.5px] font-semibold text-mapgreen mb-1">
+                    {{ r.starts_at|date:"D, M j · H:i" }}
+                  </time>
+                {% endif %}
+                <h3 class="font-semibold text-[14px] text-mapnavy leading-snug clamp-2
+                           group-hover:text-mapgreen transition-colors">
+                  {{ r.name }}
+                </h3>
+                {% if r.location %}
+                  <p class="text-[11.5px] text-gray-500 mt-1">📍 {{ r.location }}</p>
+                {% endif %}
+                <div class="mt-auto pt-3">
+                  <span class="text-[12px] font-semibold text-mapgreen group-hover:underline inline-flex items-center gap-1">
+                    Details
+                    <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span>
+                  </span>
+                </div>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+  {% endif %}
+</main>
+
+<!-- Sticky mobile donate -->
+<div class="lg:hidden fixed bottom-0 inset-x-0 z-40 p-3 bg-white/95 backdrop-blur border-t border-mapborder">
+  <a href="/donate/"
+     class="btn-primary inline-flex items-center justify-center w-full h-11 text-[14px] font-semibold rounded-lg">
+    💚 Support our work
+  </a>
+</div>
+<div class="lg:hidden h-20" aria-hidden="true"></div>
+
+<style>
+  .clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  @media print {
+    .lg\:hidden, aside, form, button, .pt-4:has(a[href*="donate"]) { display: none !important; }
+    .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+    section.bg-mapnavy { background: white !important; color: black !important; }
+    section.bg-mapnavy h1 { color: black !important; }
+    article { padding: 0 !important; }
+  }
+</style>
+
 {% endblock %}

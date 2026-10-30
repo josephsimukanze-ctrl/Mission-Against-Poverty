@@ -3,18 +3,18 @@
 {% block body %}
 
 <header id="site-header"
-  class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-[#e5e9f0] transition-shadow">
+  class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-mapborder transition-shadow">
   <div class="max-w-7xl mx-auto px-4 lg:px-8 flex items-center gap-3 h-16">
 
     <!-- Brand -->
     <a href="{% url 'pages:home' %}"
        class="flex items-center gap-2.5 shrink-0 group focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40 rounded-lg">
       {% if site.logo %}
-        <img src="{{ site.logo.url }}" alt="{{ site.site_name }}"
+        <img src="{{ site.logo.url }}" alt="{{ site.site_name|default:ORG_NAME }}"
              class="h-9 w-auto object-contain">
       {% else %}
         <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-mapgreen text-white text-base
-                     ring-1 ring-mapgreen/20 group-hover:ring-mapgreen/40 transition">♥</span>
+                     ring-1 ring-mapgreen/20 group-hover:ring-mapgreen/40 transition" aria-hidden="true">♥</span>
       {% endif %}
       <span class="hidden md:block leading-tight">
         <span class="block text-[12px] font-extrabold text-mapnavy tracking-[0.08em] uppercase">
@@ -26,42 +26,62 @@
     <!-- Desktop nav -->
     <nav class="hidden lg:flex items-center gap-1 ml-4 text-[13px] font-medium text-gray-600">
       {% with path=request.path %}
-      <a href="{% url 'programs:list' %}"
-         class="relative px-3 py-2 rounded-lg hover:text-mapnavy hover:bg-gray-50 transition
-                {% if '/programs/' in path %}text-mapnavy{% endif %}">
-        Programs
-        {% if '/programs/' in path %}<span class="absolute left-3 right-3 -bottom-0.5 h-0.5 rounded bg-mapgreen"></span>{% endif %}
-      </a>
-      <a href="{% url 'projects:list' %}"
-         class="relative px-3 py-2 rounded-lg hover:text-mapnavy hover:bg-gray-50 transition
-                {% if '/projects/' in path %}text-mapnavy{% endif %}">
-        Projects
-        {% if '/projects/' in path %}<span class="absolute left-3 right-3 -bottom-0.5 h-0.5 rounded bg-mapgreen"></span>{% endif %}
-      </a>
-      <a href="/news/"
-         class="relative px-3 py-2 rounded-lg hover:text-mapnavy hover:bg-gray-50 transition
-                {% if '/news/' in path %}text-mapnavy{% endif %}">
-        News
-        {% if '/news/' in path %}<span class="absolute left-3 right-3 -bottom-0.5 h-0.5 rounded bg-mapgreen"></span>{% endif %}
-      </a>
-      <a href="/events/"
-         class="relative px-3 py-2 rounded-lg hover:text-mapnavy hover:bg-gray-50 transition
-                {% if '/events/' in path %}text-mapnavy{% endif %}">
-        Events
-        {% if '/events/' in path %}<span class="absolute left-3 right-3 -bottom-0.5 h-0.5 rounded bg-mapgreen"></span>{% endif %}
-      </a>
-      <a href="/volunteer/"
-         class="relative px-3 py-2 rounded-lg hover:text-mapnavy hover:bg-gray-50 transition
-                {% if '/volunteer/' in path %}text-mapnavy{% endif %}">
-        Volunteer
-        {% if '/volunteer/' in path %}<span class="absolute left-3 right-3 -bottom-0.5 h-0.5 rounded bg-mapgreen"></span>{% endif %}
-      </a>
-      <a href="/partnerships/"
-         class="relative px-3 py-2 rounded-lg hover:text-mapnavy hover:bg-gray-50 transition
-                {% if '/partnerships/' in path %}text-mapnavy{% endif %}">
-        Partnerships
-        {% if '/partnerships/' in path %}<span class="absolute left-3 right-3 -bottom-0.5 h-0.5 rounded bg-mapgreen"></span>{% endif %}
-      </a>
+        {% url 'programs:list' as programs_url %}
+        {% url 'projects:list' as projects_url %}
+
+        <a href="{{ programs_url }}"
+           {% if '/programs/' in path %}aria-current="page"{% endif %}
+           class="relative px-3 py-2 rounded-lg hover:text-mapnavy hover:bg-gray-50 transition
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40
+                  {% if '/programs/' in path %}text-mapnavy{% endif %}">
+          Programs
+          {% if '/programs/' in path %}<span class="absolute left-3 right-3 -bottom-0.5 h-0.5 rounded bg-mapgreen" aria-hidden="true"></span>{% endif %}
+        </a>
+
+        <a href="{{ projects_url }}"
+           {% if '/projects/' in path %}aria-current="page"{% endif %}
+           class="relative px-3 py-2 rounded-lg hover:text-mapnavy hover:bg-gray-50 transition
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40
+                  {% if '/projects/' in path %}text-mapnavy{% endif %}">
+          Projects
+          {% if '/projects/' in path %}<span class="absolute left-3 right-3 -bottom-0.5 h-0.5 rounded bg-mapgreen" aria-hidden="true"></span>{% endif %}
+        </a>
+
+        <a href="/news/"
+           {% if '/news/' in path %}aria-current="page"{% endif %}
+           class="relative px-3 py-2 rounded-lg hover:text-mapnavy hover:bg-gray-50 transition
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40
+                  {% if '/news/' in path %}text-mapnavy{% endif %}">
+          News
+          {% if '/news/' in path %}<span class="absolute left-3 right-3 -bottom-0.5 h-0.5 rounded bg-mapgreen" aria-hidden="true"></span>{% endif %}
+        </a>
+
+        <a href="/events/"
+           {% if '/events/' in path %}aria-current="page"{% endif %}
+           class="relative px-3 py-2 rounded-lg hover:text-mapnavy hover:bg-gray-50 transition
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40
+                  {% if '/events/' in path %}text-mapnavy{% endif %}">
+          Events
+          {% if '/events/' in path %}<span class="absolute left-3 right-3 -bottom-0.5 h-0.5 rounded bg-mapgreen" aria-hidden="true"></span>{% endif %}
+        </a>
+
+        <a href="/volunteer/"
+           {% if '/volunteer/' in path %}aria-current="page"{% endif %}
+           class="relative px-3 py-2 rounded-lg hover:text-mapnavy hover:bg-gray-50 transition
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40
+                  {% if '/volunteer/' in path %}text-mapnavy{% endif %}">
+          Volunteer
+          {% if '/volunteer/' in path %}<span class="absolute left-3 right-3 -bottom-0.5 h-0.5 rounded bg-mapgreen" aria-hidden="true"></span>{% endif %}
+        </a>
+
+        <a href="/partnerships/"
+           {% if '/partnerships/' in path %}aria-current="page"{% endif %}
+           class="relative px-3 py-2 rounded-lg hover:text-mapnavy hover:bg-gray-50 transition
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40
+                  {% if '/partnerships/' in path %}text-mapnavy{% endif %}">
+          Partnerships
+          {% if '/partnerships/' in path %}<span class="absolute left-3 right-3 -bottom-0.5 h-0.5 rounded bg-mapgreen" aria-hidden="true"></span>{% endif %}
+        </a>
       {% endwith %}
     </nav>
 
@@ -84,30 +104,36 @@
         <div class="relative hidden sm:block" id="profile-dropdown-root">
           <button type="button" id="profile-dropdown-toggle"
             class="inline-flex items-center gap-2 h-9 pl-1 pr-2 rounded-lg
-                   border border-transparent hover:border-[#e5e9f0] hover:bg-gray-50 transition
+                   border border-transparent hover:border-mapborder hover:bg-gray-50 transition
                    focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40"
             aria-haspopup="menu" aria-expanded="false" aria-controls="profile-dropdown">
             <span class="h-7 w-7 rounded-full bg-mapgreen-50 text-mapgreen flex items-center justify-center
-                         font-semibold text-[12px] ring-1 ring-mapgreen/15">
-              {{ user.first_name|default:user.username|first|upper }}
+                         font-semibold text-[12px] ring-1 ring-mapgreen/15 overflow-hidden">
+              {% if user.userprofile.photo %}
+  <img src="{{ user.userprofile.photo.url }}" alt="" class="w-full h-full object-cover rounded-full">
+{% elif site.logo %}
+  <img src="{{ site.logo.url }}" alt="" class="w-full h-full object-contain p-0.5">
+{% else %}
+  <span aria-hidden="true">{{ user.first_name|default:user.username|first|upper }}</span>
+{% endif %}
             </span>
             <span class="hidden md:block text-[13px] text-gray-700 max-w-[8rem] truncate">
-              {{ user.first_name|default:user.username }}
+              {{ user.first_name|default:"Account" }}
             </span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="2.5" class="text-gray-400 transition-transform duration-200"
-                 id="profile-caret">
+                 id="profile-caret" aria-hidden="true">
               <path d="M6 9l6 6 6-6"/>
             </svg>
           </button>
 
           <div id="profile-dropdown" role="menu" aria-labelledby="profile-dropdown-toggle"
                class="hidden absolute right-0 mt-2 w-64 origin-top-right rounded-xl
-                      border border-[#e5e9f0] bg-white shadow-xl shadow-gray-900/5
+                      border border-mapborder bg-white shadow-xl shadow-gray-900/5
                       py-1.5 text-[13px] z-50
                       transition ease-out duration-150
                       opacity-0 scale-95">
-            <div class="px-3 py-2.5 border-b border-[#e5e9f0]">
+            <div class="px-3 py-2.5 border-b border-mapborder">
               <div class="font-semibold text-mapnavy truncate">
                 {{ user.get_full_name|default:user.username }}
               </div>
@@ -140,7 +166,7 @@
               <span class="text-gray-400" aria-hidden="true">👤</span> My Profile
             </a>
 
-            <div class="border-t border-[#e5e9f0] my-1.5"></div>
+            <div class="border-t border-mapborder my-1.5"></div>
 
             <form method="post" action="{% url 'accounts:logout' %}">
               {% csrf_token %}
@@ -155,10 +181,12 @@
       {% else %}
         <a href="{% url 'accounts:login' %}"
            class="hidden sm:inline-flex items-center h-9 px-3 rounded-lg text-[13px] text-gray-700
-                  hover:text-mapnavy hover:bg-gray-50 transition">Sign in</a>
+                  hover:text-mapnavy hover:bg-gray-50 transition
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40">Sign in</a>
         <a href="{% url 'accounts:register' %}"
-           class="hidden sm:inline-flex items-center h-9 px-3.5 rounded-lg border border-[#e5e9f0]
-                  bg-white text-[12.5px] font-semibold text-mapnavy hover:bg-gray-50 transition">
+           class="hidden sm:inline-flex items-center h-9 px-3.5 rounded-lg border border-mapborder
+                  bg-white text-[12.5px] font-semibold text-mapnavy hover:bg-gray-50 transition
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40">
           Register
         </a>
       {% endif %}
@@ -171,13 +199,13 @@
 
       <button type="button" id="mobile-menu-toggle"
         class="lg:hidden inline-flex items-center justify-center h-9 w-9 rounded-lg
-               border border-[#e5e9f0] text-gray-700 hover:bg-gray-50 transition
+               border border-mapborder text-gray-700 hover:bg-gray-50 transition
                focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40"
         aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
-        <svg id="mobile-menu-icon-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg id="mobile-menu-icon-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path d="M4 6h16M4 12h16M4 18h16"/>
         </svg>
-        <svg id="mobile-menu-icon-close" class="hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg id="mobile-menu-icon-close" class="hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path d="M18 6L6 18M6 6l12 12"/>
         </svg>
       </button>
@@ -186,15 +214,19 @@
 
   <!-- Mobile menu -->
   <div id="mobile-menu"
-       class="lg:hidden overflow-hidden border-t border-[#e5e9f0] bg-white
-              max-h-0 opacity-0 transition-[max-height,opacity] duration-300 ease-out">
+       class="lg:hidden overflow-hidden border-t border-mapborder bg-white
+              max-h-0 transition-[max-height] duration-300 ease-out">
     <nav class="max-w-7xl mx-auto px-3 py-2 flex flex-col gap-0.5 text-[14px]">
 
       {% if user.is_authenticated %}
-        <div class="px-3 py-3 border-b border-[#e5e9f0] flex items-center gap-3">
+        <div class="px-3 py-3 border-b border-mapborder flex items-center gap-3">
           <span class="h-9 w-9 rounded-full bg-mapgreen-50 text-mapgreen flex items-center justify-center
-                       font-semibold text-[13px] ring-1 ring-mapgreen/15">
-            {{ user.first_name|default:user.username|first|upper }}
+                       font-semibold text-[13px] ring-1 ring-mapgreen/15 overflow-hidden">
+            {% if user.userprofile.photo %}
+              <img src="{{ user.userprofile.photo.url }}" alt="" class="w-full h-full object-cover rounded-full">
+            {% else %}
+              <span aria-hidden="true">{{ user.first_name|default:user.username|first|upper }}</span>
+            {% endif %}
           </span>
           <div class="min-w-0">
             <div class="font-semibold text-mapnavy text-[13.5px] truncate">
@@ -236,7 +268,7 @@
       <a href="/contact/" class="px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">Contact</a>
 
       {% if user.is_authenticated %}
-        <div class="border-t border-[#e5e9f0] mt-2 pt-2">
+        <div class="border-t border-mapborder mt-2 pt-2">
           <a href="{% url 'accounts:profile' %}" class="block px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">My Profile</a>
           <form method="post" action="{% url 'accounts:logout' %}">
             {% csrf_token %}
@@ -244,8 +276,8 @@
           </form>
         </div>
       {% else %}
-        <div class="border-t border-[#e5e9f0] mt-2 pt-3 grid grid-cols-2 gap-2 mb-2">
-          <a href="{% url 'accounts:login' %}" class="px-3 py-2.5 rounded-lg border border-[#e5e9f0] text-center font-medium hover:bg-gray-50 transition-colors">Sign in</a>
+        <div class="border-t border-mapborder mt-2 pt-3 grid grid-cols-2 gap-2 mb-2">
+          <a href="{% url 'accounts:login' %}" class="px-3 py-2.5 rounded-lg border border-mapborder text-center font-medium hover:bg-gray-50 transition-colors">Sign in</a>
           <a href="{% url 'accounts:register' %}" class="px-3 py-2.5 rounded-lg bg-mapgreen text-white text-center font-semibold hover:bg-mapgreen-600 transition-colors">Register</a>
         </div>
       {% endif %}
@@ -258,9 +290,11 @@
     {% for m in messages %}
       <div role="alert"
            class="rounded-xl px-4 py-3 text-[13.5px] border flex items-start gap-3
-                  {% if m.tags == 'error' %}bg-red-50 text-red-700 border-red-200{% else %}bg-green-50 text-green-700 border-green-200{% endif %}">
+                  {% if m.tags == 'error' %}bg-red-50 text-red-700 border-red-200
+                  {% elif m.tags == 'warning' %}bg-amber-50 text-amber-700 border-amber-200
+                  {% else %}bg-green-50 text-green-700 border-green-200{% endif %}">
         <span class="mt-0.5 shrink-0" aria-hidden="true">
-          {% if m.tags == 'error' %}⚠{% else %}✓{% endif %}
+          {% if m.tags == 'error' %}⚠{% elif m.tags == 'warning' %}⚠{% else %}✓{% endif %}
         </span>
         <span class="flex-1">{{ m }}</span>
       </div>
@@ -277,21 +311,13 @@
     <div class="sm:col-span-2 md:col-span-1">
       <div class="flex items-center gap-3 mb-4">
         {% if site.logo_light %}
-          <img src="{{ site.logo_light.url }}" alt="{{ site.site_name }}"
+          <img src="{{ site.logo_light.url }}" alt="{{ site.site_name|default:ORG_NAME }}"
                class="h-10 w-auto object-contain">
         {% elif site.logo %}
-          <img src="{{ site.logo.url }}" alt="{{ site.site_name }}"
+          <img src="{{ site.logo.url }}" alt="{{ site.site_name|default:ORG_NAME }}"
                class="h-10 w-auto object-contain">
         {% else %}
-        <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-mapgreen text-white text-lg ring-1 ring-white/10 overflow-hidden">
-  {% if site.logo_light %}
-    <img src="{{ site.logo_light.url }}" alt="{{ ORG_NAME }} logo" class="w-full h-full object-contain">
-  {% elif site.logo %}
-    <img src="{{ site.logo.url }}" alt="{{ ORG_NAME }} logo" class="w-full h-full object-contain">
-  {% else %}
-    ♥
-  {% endif %}
-</span>
+          <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-mapgreen text-white text-lg ring-1 ring-white/10 overflow-hidden" aria-hidden="true">♥</span>
         {% endif %}
         <span class="leading-tight">
           <span class="block text-[13px] font-extrabold text-white uppercase tracking-[0.08em]">
@@ -375,6 +401,7 @@
         {% csrf_token %}
         <input type="hidden" name="source" value="footer">
         <input type="email" name="email" placeholder="Your email" required
+               aria-label="Email address"
                class="flex-1 min-w-0 rounded-lg bg-white/10 border border-white/20 px-3 py-2 text-[13px] text-white
                       placeholder-gray-400 focus:outline-none focus:border-white/40 focus:bg-white/15 transition">
         <button type="submit" aria-label="Subscribe"
@@ -407,8 +434,6 @@
   if (mToggle && mMenu) {
     const openMenu = () => {
       mMenu.style.maxHeight = mMenu.scrollHeight + 'px';
-      mMenu.classList.remove('opacity-0');
-      mMenu.classList.add('opacity-100');
       mOpen?.classList.add('hidden');
       mClose?.classList.remove('hidden');
       mToggle.setAttribute('aria-expanded', 'true');
@@ -416,8 +441,6 @@
     };
     const closeMenu = () => {
       mMenu.style.maxHeight = '0px';
-      mMenu.classList.add('opacity-0');
-      mMenu.classList.remove('opacity-100');
       mOpen?.classList.remove('hidden');
       mClose?.classList.add('hidden');
       mToggle.setAttribute('aria-expanded', 'false');
@@ -429,15 +452,20 @@
       expanded ? closeMenu() : openMenu();
     });
 
-    window.addEventListener('resize', () => {
+    const recompute = () => {
       if (mToggle.getAttribute('aria-expanded') === 'true') {
         mMenu.style.maxHeight = mMenu.scrollHeight + 'px';
       }
-    });
+    };
+    window.addEventListener('resize', recompute);
+    if (window.ResizeObserver) {
+      new ResizeObserver(recompute).observe(mMenu);
+    }
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && mToggle.getAttribute('aria-expanded') === 'true') {
         closeMenu();
+        mToggle.focus();
       }
     });
   }
@@ -448,9 +476,15 @@
   const pCaret  = document.getElementById('profile-caret');
 
   if (pToggle && pMenu) {
+    let closeTimeout = null;
+
     const setOpen = (open) => {
       pToggle.setAttribute('aria-expanded', String(open));
       if (open) {
+        if (closeTimeout) {
+          clearTimeout(closeTimeout);
+          closeTimeout = null;
+        }
         pMenu.classList.remove('hidden');
         requestAnimationFrame(() => {
           pMenu.classList.remove('opacity-0', 'scale-95');
@@ -461,7 +495,7 @@
         pMenu.classList.add('opacity-0', 'scale-95');
         pMenu.classList.remove('opacity-100', 'scale-100');
         pCaret?.classList.remove('rotate-180');
-        setTimeout(() => {
+        closeTimeout = setTimeout(() => {
           if (pToggle.getAttribute('aria-expanded') === 'false') pMenu.classList.add('hidden');
         }, 150);
       }
@@ -483,6 +517,10 @@
         setOpen(false);
         pToggle.focus();
       }
+    });
+
+    pMenu.querySelectorAll('a[role="menuitem"]').forEach((a) => {
+      a.addEventListener('click', () => setOpen(false));
     });
   }
 

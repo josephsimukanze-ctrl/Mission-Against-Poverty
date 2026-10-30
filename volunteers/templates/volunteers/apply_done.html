@@ -1,13 +1,222 @@
 {% extends "public_base.html" %}
-{% block title %}Thank you — {{ ORG_NAME }}{% endblock %}
+{% block title %}Thank you for applying — {{ ORG_NAME }}{% endblock %}
+{% block meta_description %}Thank you for applying to volunteer with {{ ORG_NAME }}. Here's what happens next.{% endblock %}
+
+{% block head %}
+{{ block.super }}
+{# Don't let search engines index a thank-you page #}
+<meta name="robots" content="noindex, nofollow">
+{% endblock %}
+
 {% block content %}
-<section class="max-w-xl mx-auto px-5 lg:px-8 py-16 text-center">
-  <div class="mx-auto h-16 w-16 rounded-full bg-mapgreen-50 text-mapgreen flex items-center justify-center text-3xl">✓</div>
-  <h1 class="text-2xl font-bold text-mapnavy mt-6">Application received</h1>
-  <p class="text-gray-600 mt-3">Thank you for your interest in volunteering. Our team will review your application and be in touch soon.</p>
-  <div class="mt-8 flex justify-center gap-3">
-    <a href="/" class="btn-secondary">Back to home</a>
-    <a href="{% url 'projects:list' %}" class="btn-primary">Browse our projects</a>
-  </div>
-</section>
+
+<a href="#main-content"
+   class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100]
+          focus:px-4 focus:py-2.5 focus:rounded-lg focus:bg-mapnavy focus:text-white
+          focus:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen">
+  Skip to main content
+</a>
+
+<main id="main-content" class="bg-mapbg">
+
+  <!-- CELEBRATION HERO -->
+  <section class="relative overflow-hidden bg-mapnavy text-white">
+    <div class="absolute inset-0 opacity-25 pointer-events-none"
+         style="background-image:
+           radial-gradient(circle at 20% 20%, #1e9e5f 0, transparent 40%),
+           radial-gradient(circle at 80% 80%, #1f3350 0, transparent 40%);"></div>
+
+    <div class="relative max-w-2xl mx-auto px-5 lg:px-8 py-16 lg:py-20 text-center">
+
+      <!-- Animated check -->
+      <div class="relative inline-flex mb-6">
+        <span class="absolute inset-0 rounded-full bg-mapgreen opacity-20 animate-ping"></span>
+        <div class="relative inline-flex h-20 w-20 rounded-full bg-mapgreen items-center justify-center text-white shadow-2xl">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="3"
+               stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
+        </div>
+      </div>
+
+      <p class="text-[11px] uppercase tracking-[0.18em] font-semibold text-mapgreen mb-2">
+        Application received
+      </p>
+
+      <h1 class="text-3xl md:text-4xl lg:text-[42px] font-bold tracking-tight leading-tight">
+        Thank you{% if application.full_name %}, {{ application.full_name|truncatewords:2 }}{% endif %}!
+      </h1>
+
+      <p class="mt-4 text-gray-300 text-[15px] max-w-lg mx-auto leading-relaxed">
+        Your volunteer application is in. Our team will review it and get back to you
+        within 3–5 working days.
+      </p>
+
+      <div class="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
+        <a href="/"
+           class="inline-flex items-center justify-center h-11 px-6 rounded-lg
+                  border border-white/25 text-white font-semibold text-[14px]
+                  hover:bg-white/10 transition
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40">
+          Back to home
+        </a>
+        <a href="{% url 'projects:list' %}"
+           class="inline-flex items-center justify-center h-11 px-6 rounded-lg
+                  bg-mapgreen text-white font-semibold text-[14px]
+                  hover:bg-mapgreen-600 transition shadow-sm
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/50">
+          Browse our projects
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT HAPPENS NEXT -->
+  <section class="max-w-3xl mx-auto px-5 lg:px-8 py-14 lg:py-16">
+    <div class="text-center mb-10">
+      <div class="text-[11px] uppercase tracking-[0.14em] font-semibold text-mapgreen mb-2">
+        Next steps
+      </div>
+      <h2 class="text-[22px] md:text-[26px] font-bold text-mapnavy tracking-tight">
+        What happens now
+      </h2>
+    </div>
+
+    <ol class="relative space-y-8 pl-10">
+      <!-- Vertical line -->
+      <div class="absolute left-4 top-2 bottom-2 w-0.5 bg-mapborder" aria-hidden="true"></div>
+
+      <!-- Step 1 -->
+      <li class="relative">
+        <span class="absolute -left-10 top-0 inline-flex h-8 w-8 rounded-full bg-mapgreen text-white items-center justify-center font-bold text-[12px] shadow-sm">
+          1
+        </span>
+        <div class="card p-5">
+          <div class="flex items-center gap-2 mb-1">
+            <h3 class="font-semibold text-mapnavy text-[15px]">We review your application</h3>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 text-[10px] uppercase tracking-wider font-semibold">
+              In progress
+            </span>
+          </div>
+          <p class="text-[13px] text-gray-600 leading-relaxed">
+            Our volunteer coordinator reads every application and matches skills and availability to current opportunities.
+          </p>
+        </div>
+      </li>
+
+      <!-- Step 2 -->
+      <li class="relative">
+        <span class="absolute -left-10 top-0 inline-flex h-8 w-8 rounded-full bg-white border-2 border-mapborder text-mapnavy items-center justify-center font-bold text-[12px]">
+          2
+        </span>
+        <div class="card p-5">
+          <h3 class="font-semibold text-mapnavy text-[15px] mb-1">We get in touch</h3>
+          <p class="text-[13px] text-gray-600 leading-relaxed">
+            Within 3–5 working days, you'll hear from us — usually with a short call or email to talk through next steps.
+          </p>
+        </div>
+      </li>
+
+      <!-- Step 3 -->
+      <li class="relative">
+        <span class="absolute -left-10 top-0 inline-flex h-8 w-8 rounded-full bg-white border-2 border-mapborder text-mapnavy items-center justify-center font-bold text-[12px]">
+          3
+        </span>
+        <div class="card p-5">
+          <h3 class="font-semibold text-mapnavy text-[15px] mb-1">You join the team</h3>
+          <p class="text-[13px] text-gray-600 leading-relaxed">
+            Once matched, we'll introduce you to a program, arrange orientation, and welcome you on your first day.
+          </p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <!-- SHARE + TIP -->
+  <section class="max-w-3xl mx-auto px-5 lg:px-8 pb-14 lg:pb-16">
+    <div class="grid md:grid-cols-2 gap-5">
+
+      <!-- Share -->
+      <div class="card p-6">
+        <div class="flex items-start gap-3">
+          <span class="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-mapgreen-50 text-mapgreen text-lg shrink-0"
+                aria-hidden="true">💬</span>
+          <div class="flex-1">
+            <h3 class="font-semibold text-mapnavy text-[14px]">Know someone who'd like to volunteer?</h3>
+            <p class="text-[12.5px] text-gray-600 mt-1 leading-relaxed">
+              Share the volunteer page with friends, family, and colleagues.
+            </p>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <a href="https://wa.me/?text=Join%20me%20volunteering%20at%20{{ ORG_NAME|urlencode }}%20{{ request.scheme }}://{{ request.get_host }}{% url 'volunteers:apply' %}"
+                 target="_blank" rel="noopener noreferrer"
+                 class="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-mapborder
+                        text-[11.5px] text-gray-700 hover:bg-mapgreen-50 hover:border-mapgreen transition">
+                💬 WhatsApp
+              </a>
+              <a href="https://twitter.com/intent/tweet?text=Join%20me%20volunteering%20at%20{{ ORG_NAME|urlencode }}&url={{ request.scheme }}://{{ request.get_host }}{% url 'volunteers:apply' %}"
+                 target="_blank" rel="noopener noreferrer"
+                 class="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-mapborder
+                        text-[11.5px] text-gray-700 hover:bg-mapgreen-50 hover:border-mapgreen transition">
+                𝕏 X
+              </a>
+              <button type="button"
+                      onclick="navigator.clipboard.writeText('{{ request.scheme }}://{{ request.get_host }}{% url 'volunteers:apply' %}').then(()=>{this.textContent='✓ Copied'; setTimeout(()=>{this.textContent='🔗 Copy link'},1500)})"
+                      class="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-mapborder
+                             text-[11.5px] text-gray-700 hover:bg-mapgreen-50 hover:border-mapgreen transition">
+                🔗 Copy link
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Support while you wait -->
+      <div class="card p-6 bg-mapgreen-50 border-mapgreen-50">
+        <div class="flex items-start gap-3">
+          <span class="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white text-mapgreen text-lg shrink-0"
+                aria-hidden="true">💚</span>
+          <div class="flex-1">
+            <h3 class="font-semibold text-mapnavy text-[14px]">Can't wait to get involved?</h3>
+            <p class="text-[12.5px] text-gray-700 mt-1 leading-relaxed">
+              While we process your application, you can already support the work.
+            </p>
+            <a href="/donate/"
+               class="btn-primary inline-flex items-center justify-center h-9 mt-3 px-4
+                      text-[12.5px] font-semibold rounded-lg">
+              Make a donation
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SUBTLE FOOTER REFERENCE -->
+  <section class="max-w-3xl mx-auto px-5 lg:px-8 pb-16">
+    <p class="text-center text-[12px] text-gray-500">
+      Questions in the meantime? Email us at
+      <a href="mailto:{{ site.contact_email|default:'info@map.org' }}"
+         class="text-mapgreen hover:underline break-all">
+        {{ site.contact_email|default:"info@map.org" }}
+      </a>.
+    </p>
+  </section>
+
+</main>
+
+<style>
+  @keyframes subtle-fade {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @media print {
+    .btn-primary, a[href*="wa.me"], a[href*="twitter"], button { display: none !important; }
+    .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+    section.bg-mapnavy { background: white !important; color: black !important; }
+    section.bg-mapnavy h1 { color: black !important; }
+  }
+</style>
+
 {% endblock %}

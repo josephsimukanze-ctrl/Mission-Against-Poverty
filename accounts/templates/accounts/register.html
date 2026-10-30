@@ -1,45 +1,406 @@
 {% extends "base.html" %}
-{% block title %}Register — {{ ORG_NAME }}{% endblock %}
+{% load static %}
+{% block title %}Create account — {{ ORG_NAME }}{% endblock %}
+{% block meta_description %}Create your {{ ORG_NAME }} account to donate, volunteer, or partner with us.{% endblock %}
+
 {% block body %}
-<div class="min-h-screen flex items-center justify-center bg-mapbg p-6">
-  <div class="w-full max-w-2xl rounded-2xl bg-white p-8 shadow">
-    <div class="flex items-center gap-2 font-bold text-mapnavy text-lg mb-6">
-      <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-mapgreen text-white">♥</span>
-      {{ ORG_NAME }}
-    </div>
-    <h1 class="text-xl font-bold text-mapnavy mb-4">Create your account</h1>
-    {% if form.non_field_errors %}
-      <div class="mb-4 rounded-lg bg-red-50 text-red-700 text-sm px-3 py-2">{{ form.non_field_errors|join:", " }}</div>
-    {% endif %}
-    <form method="post" class="space-y-4">
-      {% csrf_token %}
-      <div class="grid md:grid-cols-2 gap-4">
-        <div><label class="form-label">First name</label>{{ form.first_name }}{% if form.first_name.errors %}<p class="form-error">{{ form.first_name.errors|join:", " }}</p>{% endif %}</div>
-        <div><label class="form-label">Last name</label>{{ form.last_name }}{% if form.last_name.errors %}<p class="form-error">{{ form.last_name.errors|join:", " }}</p>{% endif %}</div>
-      </div>
-      <div class="grid md:grid-cols-2 gap-4">
-        <div><label class="form-label">Username</label>{{ form.username }}{% if form.username.errors %}<p class="form-error">{{ form.username.errors|join:", " }}</p>{% endif %}</div>
-        <div><label class="form-label">Email</label>{{ form.email }}{% if form.email.errors %}<p class="form-error">{{ form.email.errors|join:", " }}</p>{% endif %}</div>
-      </div>
-      <div><label class="form-label">Phone (optional)</label>{{ form.phone }}{% if form.phone.errors %}<p class="form-error">{{ form.phone.errors|join:", " }}</p>{% endif %}</div>
-      <div>
-        <label class="form-label">I am registering as</label>
-        <div class="space-y-2">
-          {% for choice in form.role %}
-            <label class="flex items-center gap-2 text-sm text-gray-700">
-              {{ choice.tag }} <span>{{ choice.choice_label }}</span>
-            </label>
-          {% endfor %}
+<div class="min-h-screen flex bg-mapbg">
+
+  <!-- LEFT: Brand panel (desktop only) -->
+  <aside class="hidden lg:flex lg:w-[45%] xl:w-[42%] relative overflow-hidden bg-mapnavy text-white">
+    <div class="absolute inset-0 opacity-[0.12] pointer-events-none"
+         style="background-image: radial-gradient(circle at 20% 20%, #1e9e5f 0, transparent 45%), radial-gradient(circle at 80% 80%, #1e9e5f 0, transparent 40%);"></div>
+
+    <div class="relative z-10 flex flex-col p-12 xl:p-16 w-full">
+      <a href="/" class="inline-flex items-center gap-3 group">
+        <span class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-mapgreen text-white text-lg ring-1 ring-white/20 overflow-hidden shrink-0">
+          {% if site.logo_light %}
+            <img src="{{ site.logo_light.url }}" alt="{{ ORG_NAME }} logo" class="w-full h-full object-contain p-1">
+          {% elif site.logo %}
+            <img src="{{ site.logo.url }}" alt="{{ ORG_NAME }} logo" class="w-full h-full object-contain p-1">
+          {% else %}
+            <span aria-hidden="true">♥</span>
+          {% endif %}
+        </span>
+        <span class="leading-tight">
+          <span class="block text-[12px] font-extrabold uppercase tracking-[0.1em] text-white">
+            {{ site.site_name|default:ORG_NAME }}
+          </span>
+          <span class="block text-[10px] tracking-[0.18em] text-white/50 mt-0.5 uppercase">
+            {{ site.tagline|default:"Hope · Opportunity · Dignity" }}
+          </span>
+        </span>
+      </a>
+
+      {% if site.about_hero_image %}
+        <div class="mt-10 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10">
+          <img src="{{ site.about_hero_image.url }}" alt="{{ ORG_NAME }}" class="w-full h-48 xl:h-56 object-cover">
         </div>
-        {% if form.role.errors %}<p class="form-error">{{ form.role.errors|join:", " }}</p>{% endif %}
+      {% endif %}
+
+      <div class="mt-10 max-w-md">
+        <h2 class="text-3xl xl:text-4xl font-extrabold leading-tight tracking-tight">
+          Join the mission.
+        </h2>
+        <p class="mt-4 text-[15px] text-white/70 leading-relaxed">
+          Create an account to donate, volunteer, partner with us, or request support.
+          Every contribution moves a family forward.
+        </p>
+
+        <ul class="mt-8 space-y-3 text-[13.5px] text-white/80">
+          <li class="flex items-start gap-3">
+            <span class="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-mapgreen/20 text-mapgreen text-[11px] shrink-0" aria-hidden="true">✓</span>
+            <span>Give securely and track your donation history</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-mapgreen/20 text-mapgreen text-[11px] shrink-0" aria-hidden="true">✓</span>
+            <span>Sign up to volunteer for programs near you</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-mapgreen/20 text-mapgreen text-[11px] shrink-0" aria-hidden="true">✓</span>
+            <span>Apply for assistance if you need support</span>
+          </li>
+        </ul>
       </div>
-      <div class="grid md:grid-cols-2 gap-4">
-        <div><label class="form-label">Password</label>{{ form.password1 }}{% if form.password1.errors %}<p class="form-error">{{ form.password1.errors|join:", " }}</p>{% endif %}</div>
-        <div><label class="form-label">Confirm password</label>{{ form.password2 }}{% if form.password2.errors %}<p class="form-error">{{ form.password2.errors|join:", " }}</p>{% endif %}</div>
+
+      <div class="mt-auto pt-12 text-[11.5px] text-white/40">
+        © {% now "Y" %} {{ site.site_name|default:ORG_NAME }} · Lusaka, Zambia
       </div>
-      <button class="btn-primary w-full justify-center">Create account</button>
-    </form>
-    <p class="text-sm text-gray-500 mt-4">Already have an account? <a href="{% url 'accounts:login' %}" class="text-mapgreen hover:underline">Sign in</a></p>
-  </div>
+    </div>
+  </aside>
+
+  <!-- RIGHT: Form -->
+  <main class="flex-1 flex items-center justify-center p-6 sm:p-10">
+    <div class="w-full max-w-2xl">
+
+      <!-- Mobile brand -->
+      <a href="/" class="lg:hidden flex items-center gap-2.5 mb-8 justify-center">
+        <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-mapgreen text-white text-base overflow-hidden shrink-0">
+          {% if site.logo_light %}
+            <img src="{{ site.logo_light.url }}" alt="{{ ORG_NAME }} logo" class="w-full h-full object-contain p-0.5">
+          {% elif site.logo %}
+            <img src="{{ site.logo.url }}" alt="{{ ORG_NAME }} logo" class="w-full h-full object-contain p-0.5">
+          {% else %}
+            <span aria-hidden="true">♥</span>
+          {% endif %}
+        </span>
+        <span class="text-[12px] font-extrabold text-mapnavy uppercase tracking-[0.08em]">
+          {{ site.site_name|default:ORG_NAME }}
+        </span>
+      </a>
+
+      <!-- Card -->
+      <div class="rounded-2xl bg-white border border-mapborder shadow-card p-8 sm:p-10">
+
+        <div class="mb-7">
+          <h1 class="text-[22px] font-bold text-mapnavy tracking-tight">Create your account</h1>
+          <p class="mt-1.5 text-[13.5px] text-gray-500">
+            It takes less than a minute.
+          </p>
+        </div>
+
+        <!-- Error summary -->
+        {% if form.errors or form.non_field_errors %}
+          <div role="alert" class="error-summary mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-700" tabindex="-1">
+            <div class="font-semibold">
+              {% with error_count=form.errors|length %}
+                Please fix the following{% if error_count > 1 %} ({{ error_count }} issues){% endif %}:
+              {% endwith %}
+            </div>
+            <ul class="mt-1.5 space-y-1 list-disc list-inside">
+              {% for e in form.non_field_errors %}
+                <li>{{ e }}</li>
+              {% endfor %}
+              {% for field in form %}
+                {% if field.errors %}
+                  <li>
+                    <a href="#{{ field.id_for_label }}" class="font-medium underline-offset-2 hover:underline">
+                      {{ field.label }}
+                    </a>: {{ field.errors|join:" " }}
+                  </li>
+                {% endif %}
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        <form method="post" id="register-form" novalidate>
+          {% csrf_token %}
+
+          <!-- Name -->
+          <div class="grid md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label for="{{ form.first_name.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                {{ form.first_name.label }}
+              </label>
+              {{ form.first_name }}
+              {% if form.first_name.errors %}
+                <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.first_name.errors|join:" " }}</p>
+              {% endif %}
+            </div>
+            <div>
+              <label for="{{ form.last_name.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                {{ form.last_name.label }}
+              </label>
+              {{ form.last_name }}
+              {% if form.last_name.errors %}
+                <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.last_name.errors|join:" " }}</p>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Username + Email -->
+          <div class="grid md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label for="{{ form.username.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                {{ form.username.label }}
+              </label>
+              {{ form.username }}
+              {% if form.username.help_text %}
+                <p class="text-[11.5px] text-gray-500 mt-1.5">{{ form.username.help_text }}</p>
+              {% endif %}
+              {% if form.username.errors %}
+                <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.username.errors|join:" " }}</p>
+              {% endif %}
+            </div>
+            <div>
+              <label for="{{ form.email.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                {{ form.email.label }}
+              </label>
+              {{ form.email }}
+              {% if form.email.errors %}
+                <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.email.errors|join:" " }}</p>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Phone -->
+          <div class="mb-4">
+            <label for="{{ form.phone.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+              {{ form.phone.label }}
+              <span class="text-gray-400 font-normal ml-1">(optional)</span>
+            </label>
+            {{ form.phone }}
+            {% if form.phone.errors %}
+              <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.phone.errors|join:" " }}</p>
+            {% endif %}
+          </div>
+
+          <!-- Role — cards -->
+          <div class="mb-4">
+            <label class="block text-[12.5px] font-semibold text-mapnavy mb-2">
+              I am registering as
+            </label>
+            <div class="grid sm:grid-cols-2 gap-2">
+              {% for choice in form.role %}
+                <label for="{{ choice.id_for_label }}"
+                       class="role-card flex items-start gap-3 p-3 rounded-lg border border-mapborder bg-white
+                              hover:border-mapgreen hover:bg-mapgreen-50 cursor-pointer transition
+                              {% if choice.data.selected %}border-mapgreen bg-mapgreen-50{% endif %}">
+                  <span class="pt-0.5">{{ choice.tag }}</span>
+                  <span class="text-[13px] text-gray-700 flex-1">
+                    <span class="block font-semibold text-mapnavy">{{ choice.choice_label }}</span>
+                    <span class="block text-[11.5px] text-gray-500 mt-0.5">
+                      {% if "donor" in choice.choice_label|lower %}Give and support our work
+                      {% elif "volunteer" in choice.choice_label|lower %}Offer your time and skills
+                      {% elif "partner" in choice.choice_label|lower %}Collaborate with us
+                      {% elif "beneficiary" in choice.choice_label|lower %}Request support
+                      {% else %}Join our community{% endif %}
+                    </span>
+                  </span>
+                </label>
+              {% endfor %}
+            </div>
+            {% if form.role.errors %}
+              <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.role.errors|join:" " }}</p>
+            {% endif %}
+          </div>
+
+          <!-- Password -->
+          <div class="grid md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label for="{{ form.password1.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                {{ form.password1.label }}
+              </label>
+              <div class="relative">
+                {{ form.password1 }}
+                <button type="button"
+                        class="pw-toggle absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-mapnavy transition focus:outline-none"
+                        data-target="{{ form.password1.id_for_label }}"
+                        aria-label="Show password">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                  </svg>
+                </button>
+              </div>
+              <p id="pw-strength" class="mt-1.5 text-[11px] text-gray-500 hidden"></p>
+              {% if form.password1.help_text %}
+                <div class="text-[11.5px] text-gray-500 mt-1.5 leading-relaxed">{{ form.password1.help_text|safe }}</div>
+              {% endif %}
+              {% if form.password1.errors %}
+                <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.password1.errors|join:" " }}</p>
+              {% endif %}
+            </div>
+            <div>
+              <label for="{{ form.password2.id_for_label }}" class="block text-[12.5px] font-semibold text-mapnavy mb-1.5">
+                {{ form.password2.label }}
+              </label>
+              <div class="relative">
+                {{ form.password2 }}
+                <button type="button"
+                        class="pw-toggle absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-mapnavy transition focus:outline-none"
+                        data-target="{{ form.password2.id_for_label }}"
+                        aria-label="Show password">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                  </svg>
+                </button>
+              </div>
+              <p id="pw-match" class="mt-1.5 text-[11.5px] hidden"></p>
+              {% if form.password2.errors %}
+                <p class="mt-1.5 text-[12.5px] text-red-600">{{ form.password2.errors|join:" " }}</p>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Submit -->
+          <button type="submit" id="register-submit"
+                  class="btn-primary w-full justify-center h-11 text-[14px] font-semibold rounded-lg
+                         disabled:opacity-60 disabled:cursor-not-allowed">
+            <span id="submit-label">Create account</span>
+            <svg id="submit-spinner" class="hidden animate-spin ml-2" width="16" height="16" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+            </svg>
+          </button>
+        </form>
+
+        <!-- Sign in CTA -->
+        <p class="mt-6 text-center text-[13.5px] text-gray-600">
+          Already have an account?
+          <a href="{% url 'accounts:login' %}" class="font-semibold text-mapgreen hover:underline">Sign in</a>
+        </p>
+      </div>
+
+      <!-- Terms -->
+      <p class="mt-6 text-center text-[11.5px] text-gray-400 leading-relaxed">
+        By creating an account you agree to our
+        <a href="/terms/" class="text-gray-500 hover:text-mapnavy underline-offset-2 hover:underline">Terms</a>
+        and
+        <a href="/privacy/" class="text-gray-500 hover:text-mapnavy underline-offset-2 hover:underline">Privacy Policy</a>.
+      </p>
+    </div>
+  </main>
 </div>
+
+<style>
+  #register-form input[type="text"],
+  #register-form input[type="email"],
+  #register-form input[type="tel"],
+  #register-form input[type="password"],
+  #register-form select {
+    display: block;
+    width: 100%;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e9f0;
+    background: #fff;
+    padding: 0.625rem 0.75rem;
+    font-size: 14px;
+    color: #16253d;
+    transition: border-color 150ms, box-shadow 150ms;
+  }
+  #register-form input:focus {
+    outline: none;
+    border-color: #1e9e5f;
+    box-shadow: 0 0 0 3px rgba(30,158,95,0.2);
+  }
+  #register-form input[aria-invalid="true"] {
+    border-color: #fca5a5;
+    background-color: #fef2f2;
+  }
+  #register-form input[type="password"] {
+    padding-right: 2.75rem;
+  }
+  #register-form input[type="radio"] {
+    width: 1rem;
+    height: 1rem;
+    accent-color: #1e9e5f;
+    margin-top: 0.25rem;
+  }
+  .role-card:has(input[type="radio"]:checked) {
+    border-color: #1e9e5f;
+    background-color: #e8f7ef;
+  }
+</style>
+
+<script>
+(function () {
+  const form    = document.getElementById('register-form');
+  const submit  = document.getElementById('register-submit');
+  const label   = document.getElementById('submit-label');
+  const spinner = document.getElementById('submit-spinner');
+  if (!form) return;
+
+  // Password visibility toggles
+  document.querySelectorAll('.pw-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.dataset.target);
+      if (!input) return;
+      const show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    });
+  });
+
+  // Password match check (live)
+  const pw1 = document.getElementById("{{ form.password1.id_for_label }}");
+  const pw2 = document.getElementById("{{ form.password2.id_for_label }}");
+  const matchMsg = document.getElementById('pw-match');
+  const strengthMsg = document.getElementById('pw-strength');
+
+  const checkMatch = () => {
+    if (!pw1 || !pw2 || !matchMsg) return;
+    if (!pw2.value) { matchMsg.classList.add('hidden'); return; }
+    matchMsg.classList.remove('hidden');
+    if (pw1.value === pw2.value) {
+      matchMsg.textContent = '✓ Passwords match';
+      matchMsg.className = 'mt-1.5 text-[11.5px] text-mapgreen font-medium';
+    } else {
+      matchMsg.textContent = '✗ Passwords do not match';
+      matchMsg.className = 'mt-1.5 text-[11.5px] text-red-600 font-medium';
+    }
+  };
+  pw1?.addEventListener('input', checkMatch);
+  pw2?.addEventListener('input', checkMatch);
+
+  // Simple strength indicator
+  const checkStrength = () => {
+    if (!pw1 || !strengthMsg) return;
+    const v = pw1.value;
+    if (!v) { strengthMsg.classList.add('hidden'); return; }
+    strengthMsg.classList.remove('hidden');
+    let score = 0;
+    if (v.length >= 8) score++;
+    if (/[A-Z]/.test(v)) score++;
+    if (/[0-9]/.test(v)) score++;
+    if (/[^A-Za-z0-9]/.test(v)) score++;
+    const labels = ['Very weak', 'Weak', 'Okay', 'Strong', 'Very strong'];
+    const colors = ['text-red-600', 'text-amber-600', 'text-amber-600', 'text-mapgreen', 'text-mapgreen'];
+    strengthMsg.textContent = 'Strength: ' + labels[score];
+    strengthMsg.className = 'mt-1.5 text-[11px] font-medium ' + colors[score];
+  };
+  pw1?.addEventListener('input', checkStrength);
+
+  // Submit guard
+  form.addEventListener('submit', () => {
+    if (submit) submit.disabled = true;
+    if (label) label.textContent = 'Creating account…';
+    spinner?.classList.remove('hidden');
+  });
+
+  // Focus first errored field
+  const firstErr = form.querySelector('[aria-invalid="true"]');
+  if (firstErr) setTimeout(() => firstErr.focus(), 100);
+})();
+</script>
 {% endblock %}

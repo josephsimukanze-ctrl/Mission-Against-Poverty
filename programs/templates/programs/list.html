@@ -3,11 +3,37 @@
 {% block title %}Programs — {{ ORG_NAME }}{% endblock %}
 {% block meta_description %}Explore the programs of {{ ORG_NAME }} — education, healthcare, skills development and community support across Zambia.{% endblock %}
 
+{% block head %}
+{{ block.super }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "{{ ORG_NAME }} Programs",
+  "url": "{{ request.build_absolute_uri|escapejs }}",
+  "numberOfItems": {{ programs|length }},
+  "itemListElement": [
+    {% for p in programs %}{
+      "@type": "ListItem",
+      "position": {{ forloop.counter }},
+      "name": "{{ p.name|escapejs }}",
+      "url": "{{ request.scheme }}://{{ request.get_host }}{{ p.get_absolute_url }}"
+    }{% if not forloop.last %},{% endif %}{% endfor %}
+  ]
+}
+</script>
+{% endblock %}
+
 {% block content %}
 
-<!-- ============================================================
-     HERO
-     ============================================================ -->
+<a href="#main-content"
+   class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100]
+          focus:px-4 focus:py-2.5 focus:rounded-lg focus:bg-mapnavy focus:text-white
+          focus:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen">
+  Skip to main content
+</a>
+
+<!-- HERO -->
 <section class="relative bg-mapnavy overflow-hidden">
   <div class="absolute inset-0 opacity-25 pointer-events-none"
        style="background-image:
@@ -16,12 +42,11 @@
 
   <div class="relative max-w-7xl mx-auto px-5 lg:px-8 py-16">
 
-    <!-- Breadcrumb -->
     <nav aria-label="Breadcrumb" class="mb-5">
       <ol class="flex items-center gap-2 text-[12.5px] text-white/50">
         <li><a href="/" class="hover:text-white transition-colors">Home</a></li>
         <li aria-hidden="true">/</li>
-        <li class="text-white/80">Programs</li>
+        <li class="text-white/80" aria-current="page">Programs</li>
       </ol>
     </nav>
 
@@ -49,80 +74,199 @@
   </div>
 </section>
 
-<!-- ============================================================
-     CONTENT
-     ============================================================ -->
-<section class="max-w-7xl mx-auto px-5 lg:px-8 py-14 lg:py-16">
+<!-- CONTENT -->
+<main id="main-content" class="max-w-7xl mx-auto px-5 lg:px-8 py-14 lg:py-16">
 
   {% if programs %}
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
 
-      {% for p in programs %}
-        <article>
-          <a href="{{ p.get_absolute_url }}"
-             class="group card card-hover overflow-hidden flex flex-col h-full
+    <!-- Search / filter bar -->
+    <div class="mb-8 card p-4">
+      <form method="get" action="" class="flex flex-wrap items-center gap-3">
+        <label for="program-search" class="sr-only">Search programs</label>
+        <div class="flex-1 min-w-[220px] relative">
+          <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/>
+            </svg>
+          </span>
+          <input type="search" id="program-search" name="q" value="{{ q|default:'' }}"
+                 placeholder="Search programs…"
+                 class="form-input w-full pl-9 text-[13.5px]"
+                 aria-label="Search programs by name or summary">
+        </div>
+        {% if q %}
+          <a href="{{ request.path }}" class="btn-secondary inline-flex items-center h-10 text-[12.5px]">
+            Clear
+          </a>
+        {% endif %}
+        <button type="submit" class="btn-primary inline-flex items-center h-10 text-[12.5px]">
+          Search
+        </button>
+      </form>
+    </div>
+
+    <!-- Featured program (first one, larger card) -->
+    {% if not q %}
+      {% with featured=programs.0 %}
+        <div class="mb-8">
+          <a href="{{ featured.get_absolute_url }}"
+             class="group card card-hover overflow-hidden flex flex-col lg:flex-row h-full
                     focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40">
-
-            <!-- Cover image (optional) or icon fallback -->
-            {% if p.cover_image %}
-              <div class="aspect-[16/10] bg-gray-100 overflow-hidden shrink-0">
-                <img src="{{ p.cover_image.url }}"
-                     alt="{{ p.name }}"
+            <div class="lg:w-1/2 aspect-[16/10] lg:aspect-auto bg-gray-100 overflow-hidden shrink-0">
+              {% if featured.cover_image %}
+                <img src="{{ featured.cover_image.url }}"
+                     alt="{{ featured.name }}"
                      loading="lazy" decoding="async"
                      class="w-full h-full object-cover
                             group-hover:scale-[1.03] transition-transform duration-500">
+              {% elif site.about_hero_image %}
+                <img src="{{ site.about_hero_image.url }}"
+                     alt="{{ featured.name }}"
+                     loading="lazy" decoding="async"
+                     class="w-full h-full object-cover
+                            group-hover:scale-[1.03] transition-transform duration-500">
+              {% else %}
+                <div class="w-full h-full flex items-center justify-center text-gray-300 text-5xl"
+                     aria-hidden="true">
+                  {% if featured.icon and featured.icon != "non" and featured.icon|length < 5 %}
+                    {{ featured.icon }}
+                  {% else %}🎯{% endif %}
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="p-7 lg:p-9 flex flex-col flex-1 justify-center">
+              <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full
+                          bg-mapgreen-50 text-mapgreen text-[10.5px] uppercase tracking-[0.14em] font-semibold mb-3">
+                <span class="h-1.5 w-1.5 rounded-full bg-mapgreen" aria-hidden="true"></span>
+                Featured program
               </div>
-            {% endif %}
 
-            <div class="p-6 flex flex-col flex-1">
-
-              <!-- Icon (also shown above if there's no cover image) -->
-              <div class="stat-icon bg-mapgreen-50 text-mapgreen
-                          group-hover:bg-mapgreen group-hover:text-white transition">
-                {% if p.icon and p.icon != "non" and p.icon|length < 5 %}
-                  {{ p.icon }}
-                {% else %}
-                  <span aria-hidden="true">●</span>
-                {% endif %}
-              </div>
-
-              <h2 class="font-semibold text-[16px] text-mapnavy mt-3 leading-snug
+              <h2 class="font-semibold text-[20px] lg:text-[24px] text-mapnavy leading-snug
                          group-hover:text-mapgreen transition-colors">
-                {{ p.name }}
+                {{ featured.name }}
               </h2>
 
-              {% if p.summary and p.summary != "non" and p.summary|length > 3 %}
-                <p class="text-[13px] text-gray-600 mt-2 leading-relaxed clamp-3">
-                  {{ p.summary }}
-                </p>
-              {% else %}
-                <p class="text-[13px] text-gray-400 mt-2 leading-relaxed italic">
-                  Learn more about this program.
+              {% if featured.summary and featured.summary != "non" and featured.summary|length > 3 %}
+                <p class="text-[14px] text-gray-600 mt-3 leading-relaxed clamp-4">
+                  {{ featured.summary }}
                 </p>
               {% endif %}
 
-              <!-- Footer CTA -->
-              <div class="mt-auto pt-4 flex items-center justify-between text-[12px]">
-                <span class="font-semibold text-mapgreen
+              <div class="mt-5 flex items-center gap-4 text-[12.5px]">
+                {% if featured.projects_count %}
+                  <span class="text-gray-500">
+                    {{ featured.projects_count }} project{{ featured.projects_count|pluralize }}
+                  </span>
+                {% endif %}
+                <span class="ml-auto inline-flex items-center gap-1 font-semibold text-mapgreen
                              group-hover:underline underline-offset-2">
-                  Learn more
+                  Explore program
+                  <span aria-hidden="true">→</span>
                 </span>
-                <span class="text-mapgreen transition-transform
-                             group-hover:translate-x-0.5" aria-hidden="true">→</span>
               </div>
             </div>
           </a>
-        </article>
-      {% endfor %}
+        </div>
+      {% endwith %}
 
+      <div class="mt-10 mb-4">
+        <div class="text-[11px] uppercase tracking-[0.14em] font-semibold text-gray-500 mb-1">
+          All programs
+        </div>
+        <h2 class="text-[17px] font-semibold text-mapnavy">Everything else we do</h2>
+      </div>
+    {% endif %}
+
+    <!-- Grid of programs (skip the first when it was already featured) -->
+    <div role="list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {% for p in programs %}
+        {% if q or not forloop.first %}
+          <article role="listitem">
+            <a href="{{ p.get_absolute_url }}"
+               class="group card card-hover overflow-hidden flex flex-col h-full
+                      focus:outline-none focus-visible:ring-2 focus-visible:ring-mapgreen/40">
+
+              <div class="aspect-[16/10] bg-gray-100 overflow-hidden shrink-0">
+                {% if p.cover_image %}
+                  <img src="{{ p.cover_image.url }}"
+                       alt="{{ p.name }}"
+                       loading="lazy" decoding="async"
+                       class="w-full h-full object-cover
+                              group-hover:scale-[1.03] transition-transform duration-500">
+                {% elif site.about_hero_image %}
+                  <img src="{{ site.about_hero_image.url }}"
+                       alt="{{ p.name }}"
+                       loading="lazy" decoding="async"
+                       class="w-full h-full object-cover opacity-90
+                              group-hover:scale-[1.03] transition-transform duration-500">
+                {% else %}
+                  <div class="w-full h-full flex items-center justify-center
+                              bg-mapgreen-50 text-mapgreen text-4xl"
+                       aria-hidden="true">
+                    {% if p.icon and p.icon != "non" and p.icon|length < 5 %}
+                      {{ p.icon }}
+                    {% else %}🎯{% endif %}
+                  </div>
+                {% endif %}
+              </div>
+
+              <div class="p-6 flex flex-col flex-1">
+                <h2 class="font-semibold text-[16px] text-mapnavy leading-snug
+                           group-hover:text-mapgreen transition-colors">
+                  {{ p.name }}
+                </h2>
+
+                {% if p.summary and p.summary != "non" and p.summary|length > 3 %}
+                  <p class="text-[13px] text-gray-600 mt-2 leading-relaxed clamp-3">
+                    {{ p.summary }}
+                  </p>
+                {% else %}
+                  <p class="text-[13px] text-gray-400 mt-2 leading-relaxed italic">
+                    Learn more about this program.
+                  </p>
+                {% endif %}
+
+                <div class="mt-auto pt-4 flex items-center justify-between text-[12px]">
+                  {% if p.projects_count %}
+                    <span class="text-gray-500">
+                      {{ p.projects_count }} project{{ p.projects_count|pluralize }}
+                    </span>
+                  {% else %}
+                    <span></span>
+                  {% endif %}
+                  <span class="font-semibold text-mapgreen
+                               group-hover:underline underline-offset-2 inline-flex items-center gap-1">
+                    Learn more
+                    <span class="transition-transform group-hover:translate-x-0.5" aria-hidden="true">→</span>
+                  </span>
+                </div>
+              </div>
+            </a>
+          </article>
+        {% endif %}
+      {% endfor %}
     </div>
+
+    {% if q and not programs %}
+      <div class="card p-10 text-center">
+        <p class="text-[14px] text-gray-600">No programs match "{{ q }}".</p>
+        <a href="{{ request.path }}" class="btn-secondary inline-flex items-center h-10 mt-3 text-[12.5px]">
+          Show all programs
+        </a>
+      </div>
+    {% endif %}
 
   {% else %}
     <!-- Empty state -->
     <div class="card p-10 sm:p-14 text-center max-w-xl mx-auto">
-      <div class="mx-auto h-14 w-14 rounded-full bg-mapgreen-50 text-mapgreen
-                  flex items-center justify-center mb-4 text-2xl">
-        🎯
+      <div class="mx-auto h-14 w-14 rounded-full bg-mapgreen-50 overflow-hidden
+                  flex items-center justify-center mb-4">
+        {% if site.logo %}
+          <img src="{{ site.logo.url }}" alt="" class="w-full h-full object-contain p-2">
+        {% else %}
+          <span class="text-2xl" aria-hidden="true">🎯</span>
+        {% endif %}
       </div>
       <h2 class="text-[16px] font-semibold text-mapnavy">Programs coming soon</h2>
       <p class="text-[13px] text-gray-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
@@ -138,20 +282,45 @@
            class="btn-secondary inline-flex items-center justify-center h-10 px-4 text-[13px]">
           See our projects
         </a>
+        {% if site.contact_email %}
+          <a href="mailto:{{ site.contact_email }}"
+             class="text-[12.5px] text-gray-500 hover:text-mapnavy underline">
+            Or email us
+          </a>
+        {% endif %}
       </div>
     </div>
   {% endif %}
-</section>
+</main>
 
-<!-- ============================================================
-     Local utilities
-     ============================================================ -->
+<!-- Sticky mobile donate -->
+{% if programs %}
+  <div class="lg:hidden fixed bottom-0 inset-x-0 z-40 p-3 bg-white/95 backdrop-blur border-t border-mapborder">
+    <a href="/donate/"
+       class="btn-primary inline-flex items-center justify-center w-full h-11 text-[14px] font-semibold rounded-lg">
+      💚 Support our work
+    </a>
+  </div>
+  <div class="lg:hidden h-20" aria-hidden="true"></div>
+{% endif %}
+
 <style>
   .clamp-3 {
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+  .clamp-4 {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  @media print {
+    .lg\:hidden, form, .card-hover { display: none !important; }
+    .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+    a[href]::after { content: " (" attr(href) ")"; font-size: 10px; color: #666; }
   }
 </style>
 
