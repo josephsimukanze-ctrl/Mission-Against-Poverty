@@ -1,11 +1,13 @@
-{% load static %}<!DOCTYPE html>
+
+{% load static %}
+<!DOCTYPE html>
 <html lang="{% block html_lang %}en{% endblock %}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
-  <!-- ============ Title & Description ============ -->
+  <!-- SEO -->
   <title>{% block title %}{{ ORG_NAME }}{% endblock %}</title>
   <meta name="description" content="{% block meta_description %}Mission Against Poverty is a community-driven organization working to reduce poverty through education, healthcare, skills development and sustainable community support in Zambia.{% endblock %}">
   <meta name="author" content="{{ ORG_NAME }}">
@@ -13,14 +15,13 @@
   <meta name="format-detection" content="telephone=no">
   <meta name="referrer" content="strict-origin-when-cross-origin">
 
-  <!-- ============ Theme ============ -->
-  <meta name="theme-color" content="#16253d" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#0f1e33" media="(prefers-color-scheme: dark)">
+  <!-- Theme -->
+  <meta name="theme-color" content="#16253d">
   <meta name="color-scheme" content="light">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-  <!-- ============ Open Graph ============ -->
+  <!-- Open Graph and Twitter -->
   {% with og_url=request.build_absolute_uri %}
     {% with og_img=site.og_image|default:None %}
       <meta property="og:site_name" content="{{ ORG_NAME }}">
@@ -30,9 +31,8 @@
       <meta property="og:url" content="{{ og_url }}">
       <meta property="og:image" content="{% block og_image %}{% if og_img %}{{ request.scheme }}://{{ request.get_host }}{{ og_img.url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-default.png' %}{% endif %}{% endblock %}">
       <meta property="og:image:alt" content="{{ ORG_NAME }}">
-      <meta property="og:locale" content="en_US">
+      <meta property="og:locale" content="en_ZM">
 
-      <!-- ============ Twitter ============ -->
       <meta name="twitter:card" content="summary_large_image">
       <meta name="twitter:title" content="{% block tw_title %}{{ ORG_NAME }}{% endblock %}">
       <meta name="twitter:description" content="{% block tw_description %}Together we can end poverty.{% endblock %}">
@@ -40,10 +40,12 @@
     {% endwith %}
   {% endwith %}
 
-  <!-- ============ Canonical ============ -->
-  {% block canonical %}<link rel="canonical" href="{{ request.build_absolute_uri }}">{% endblock %}
+  <!-- Canonical URL -->
+  {% block canonical %}
+    <link rel="canonical" href="{{ request.build_absolute_uri }}">
+  {% endblock %}
 
-  <!-- ============ Fonts ============ -->
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preload" as="style"
@@ -51,14 +53,15 @@
   <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
 
-  <!-- ============ Tailwind (CDN) — preconnect + load ============ -->
-  <link rel="preconnect" href="https://cdn.tailwindcss.com">
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
-          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif']
+          },
           colors: {
             mapnavy: '#16253d',
             'mapnavy-700': '#1f3350',
@@ -82,41 +85,66 @@
         function ({ addComponents }) {
           addComponents({
             '.form-input': {
-              display: 'block', width: '100%', borderRadius: '0.5rem',
-              borderWidth: '1px', borderStyle: 'solid', borderColor: '#e5e9f0',
-              backgroundColor: '#fff', padding: '0.5rem 0.75rem',
-              fontSize: '0.875rem', color: '#16253d',
+              display: 'block',
+              width: '100%',
+              borderRadius: '0.5rem',
+              borderWidth: '1px',
+              borderStyle: 'solid',
+              borderColor: '#e5e9f0',
+              backgroundColor: '#fff',
+              padding: '0.5rem 0.75rem',
+              fontSize: '0.875rem',
+              color: '#16253d',
               transition: 'border-color 150ms, box-shadow 150ms',
             },
             '.form-input:focus': {
-              outline: 'none', borderColor: '#1e9e5f',
+              outline: 'none',
+              borderColor: '#1e9e5f',
               boxShadow: '0 0 0 3px rgba(30,158,95,0.2)',
             },
             '.card': {
-              borderRadius: '0.75rem', borderWidth: '1px', borderStyle: 'solid',
-              borderColor: '#e5e9f0', backgroundColor: '#fff',
+              borderRadius: '0.75rem',
+              borderWidth: '1px',
+              borderStyle: 'solid',
+              borderColor: '#e5e9f0',
+              backgroundColor: '#fff',
               boxShadow: '0 1px 2px rgba(16,24,40,.05)',
             },
             '.btn-primary': {
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              borderRadius: '0.5rem', backgroundColor: '#1e9e5f',
-              padding: '0.5rem 1rem', fontSize: '0.875rem', fontWeight: '600',
-              color: '#fff', border: 'none', cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '0.5rem',
+              backgroundColor: '#1e9e5f',
+              padding: '0.5rem 1rem',
+              fontSize: '0.875rem',
+              fontWeight: '600',
+              color: '#fff',
+              border: 'none',
+              cursor: 'pointer',
             },
             '.btn-secondary': {
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              borderRadius: '0.5rem', borderWidth: '1px', borderStyle: 'solid',
-              borderColor: '#e5e9f0', backgroundColor: '#fff',
-              padding: '0.5rem 1rem', fontSize: '0.875rem', fontWeight: '600',
-              color: '#16253d', cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '0.5rem',
+              borderWidth: '1px',
+              borderStyle: 'solid',
+              borderColor: '#e5e9f0',
+              backgroundColor: '#fff',
+              padding: '0.5rem 1rem',
+              fontSize: '0.875rem',
+              fontWeight: '600',
+              color: '#16253d',
+              cursor: 'pointer',
             },
           });
         },
       ],
-    }
+    };
   </script>
 
-  <!-- ============ Favicon (uploaded → brand mark fallback) ============ -->
+  <!-- Favicon -->
   {% if site.favicon %}
     <link rel="icon" href="{{ site.favicon.url }}">
   {% else %}
@@ -124,25 +152,16 @@
           href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%231e9e5f'/%3E%3Ctext x='16' y='22' font-size='16' text-anchor='middle' fill='white' font-family='system-ui'%3E%E2%99%A5%3C/text%3E%3C/svg%3E">
   {% endif %}
 
-  <!-- Optional static icons — omit silently if files don't exist -->
-  {% comment %}
-    These links assume the files exist under /static/img/. If not,
-    remove them or add them back when the files are ready.
-  {% endcomment %}
-  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'img/apple-touch-icon.png' %}">
-
-  <!-- ============ App CSS ============ -->
+  <!-- App CSS -->
   <link rel="stylesheet" href="{% static 'css/theme.css' %}">
 
   {% block head %}{% endblock %}
-
-  <!-- Chart.js is only needed on pages that render charts -->
   {% block chart_scripts %}{% endblock %}
 </head>
 
 <body class="antialiased bg-mapbg text-mapnavy min-h-screen flex flex-col">
 
-  <!-- Skip link -->
+  <!-- Accessibility: Skip navigation -->
   <a href="#main"
      class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100]
             focus:px-4 focus:py-2.5 focus:rounded-lg focus:bg-mapnavy focus:text-white
@@ -153,5 +172,6 @@
   {% block body %}{% endblock %}
 
   {% block scripts %}{% endblock %}
+
 </body>
 </html>
